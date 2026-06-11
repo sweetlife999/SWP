@@ -1,69 +1,109 @@
 # MVP v0 Report — Student Union Portal
 
-> **Status: pending deployment.**
-> This file will be completed once MVP v0 is accessible over the internet.
+**Status:** реализован статический frontend (SPA). Backend и БД — вне скоупа MVP v0.
 
 ---
 
-## Purpose and description
+## Описание
 
-<!-- Describe what the MVP v0 foundation implements:
-- Which components are running (e.g., React frontend scaffold, FastAPI/SpringBoot backend with health endpoint, database schema)
-- Which user stories are partially addressed
-- What is mocked vs. implemented
--->
+MVP v0 — это кликабельный React-фронтенд, точно воспроизводящий HTML-прототип. Он демонстрирует полный UX портала без подключения к серверу: данные статические, навигация работает через React Router.
 
-_TODO_
+### Что реализовано
+
+| Экран | Путь | Покрываемые US |
+|-------|------|---------------|
+| Главная (Home) | `/` | US-08 (dept info), US-01 (events preview) |
+| Events | `/events` | US-01 (browse events) |
+| Event Detail | `/events/:id` | US-01 |
+| Members & History | `/members` | US-05 (member directory) |
+| Questionnaires | `/questionnaires` | US-12 (fill questionnaire) |
+| Donations | `/donations` | — |
+| SU:Core Kanban | `/admin/kanban` | US-11 (admin task tracking) |
+| Forms Builder | `/admin/forms/builder` | US-13 (create questionnaire) |
+| Admin Accounts | `/admin/accounts` | — |
+
+### Что замоковано / статично
+
+- Все данные (ивенты, участники, опросы) — статические константы в компонентах
+- Авторизация отсутствует; пользователь фиксирован как «Иван Петров, B22-DS-02»
+- Формы не отправляют данные — кнопки интерактивны визуально, но без API-вызовов
+- Пагинация («Загрузить ещё») не подгружает реальные данные
+
+---
+
+## Технический стек
+
+```
+frontend/
+  src/
+    components/   AppShell, Sidebar, Header, Icon
+    pages/        9 страниц (по одной на экран прототипа)
+    styles.css    единая design system (токены + page-specific CSS)
+  public/
+    icons.svg     SVG-спрайт (Lucide)
+```
+
+- **Vite 5** + **React 18** + **TypeScript**
+- **React Router v6** (HashRouter — работает без сервера)
+- Зависимости: только `react`, `react-dom`, `react-router-dom`
 
 ---
 
 ## Deployment URL
 
-_TODO_ — public URL accessible until course grading is complete.
+MVP v0 запускается локально. Публичного деплоя нет — для сдачи используется локальный запуск или сборка `dist/`.
 
 ---
 
 ## Public video demonstration
 
-_TODO_ — link to a public video (< 2 minutes) demonstrating MVP v0.
+_TODO_ — запись экрана < 2 минут будет добавлена перед дедлайном.
 
 ---
 
-## Relationship to prototype and MVP v1
+## Связь с прототипом и MVP v1
 
-<!-- Explain which MVP v1 stories (US-01, US-05, US-08, US-11, US-12, US-13) are reflected in MVP v0,
-and how the prototype and the running foundation relate. -->
+MVP v0 реализует все экраны прототипа (HTML → React). MVP v1 добавит:
+- REST API (Spring Boot / Django) и PostgreSQL
+- JWT-авторизацию
+- Реальные CRUD-операции для ивентов, опросов, участников
 
-_TODO_
-
----
-
-## Current limitations, placeholders, and mocks
-
-_TODO_
+Истории MVP v1 (US-01, US-05, US-08, US-11, US-12, US-13) визуально присутствуют в MVP v0, но без серверной логики.
 
 ---
 
-## Local setup instructions
+## Локальный запуск
 
-See [README.md](../../README.md) for installation and run instructions.
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173
+```
+
+```bash
+npm run build      # production-сборка → dist/
+npm run preview    # preview dist/ на http://localhost:4173
+```
 
 ---
 
-## Smoke-check scenario
+## Smoke-check сценарий
 
-> A repeatable scenario demonstrating that MVP v0 is accessible and usable.
+### Шаги
 
-### Access
+1. `cd frontend && npm install && npm run dev`
+2. Открыть http://localhost:5173
+3. Убедиться, что отображается главная страница: hero-секция, 3 карточки департаментов, лента новостей, виджеты справа
+4. Кликнуть **Events** в сайдбаре → страница ивентов с карточками и фильтрами
+5. Кликнуть на featured-карточку ивента → страница EventDetail
+6. Кликнуть **Members & History** → список участников; переключить таб на «History» и «Roadmap 2026»
+7. Кликнуть **Questionnaires** → выбрать опрос слева, пройти шаги 1–4 кнопками Next/Back
+8. Кликнуть **SU:Core Board** (Admin) → kanban с карточками по колонкам
+9. Убедиться, что сайдбар подсвечивает активный пункт зелёным на каждой странице
+10. Уменьшить окно до < 1024 px → сайдбар прячется, появляется кнопка «☰», клик открывает drawer
 
-_TODO_ — URL and any test credentials needed.
+### Ожидаемый результат
 
-### Steps
-
-1. _TODO_
-2. _TODO_
-3. _TODO_
-
-### Expected results
-
-_TODO_
+- Все 9 экранов доступны без ошибок в консоли
+- Визуальное совпадение с HTML-прототипом (`internal/docs/design/`)
+- Интерактивные элементы (tabs, segmented controls, questionnaire stepper, kanban) работают

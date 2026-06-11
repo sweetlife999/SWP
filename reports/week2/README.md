@@ -17,59 +17,53 @@ Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, an
 
 ## 2. Prototype and Interface Artifacts
 
-> **Status: pending** — Figma prototype is being designed. This section will be updated before the customer review meeting.
+**Figma-файл:** [`jQF7Hpaw4iLGrZM8Ei8ieT`](https://www.figma.com/design/jQF7Hpaw4iLGrZM8Ei8ieT) — «SU Portal — Week 2 Prototype»
 
-<!-- Once the prototype is published:
-- Interactive Figma prototype (view-only link): _TODO_
-- Coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 scope)
--->
+Страницы: Student View · Admin Panel · Cover & Flow
+
+| Экран | Статус |
+|-------|--------|
+| Home (sidebar, header, hero, dept cards, news, widgets) | ✅ готов |
+| Events | ⏳ в работе (hit Figma rate limit) |
+| Members, Questionnaires, Donations | ⏳ в работе |
+| Admin Panel (Kanban, Forms Builder, Accounts) | ⏳ в работе |
+
+Покрытие прототипом: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 scope)
 
 ### Screenshots
 
-> To be added to `reports/week2/images/` after prototype is complete.
+> To be added to `reports/week2/images/` after prototype screens are complete.
 
 ---
 
 ## 3. MVP v0
 
-> **Status: pending** — MVP v0 is being implemented. This section will be updated once deployed.
+**Status: реализован.** React + TypeScript + Vite SPA, 9 экранов, статические данные.
 
-[reports/week2/mvp-v0-report.md](mvp-v0-report.md) _(to be filled)_
+[mvp-v0-report.md](mvp-v0-report.md) — полный отчёт, smoke-check, tech stack
 
-<!-- Once deployed:
-- Deployment URL: _TODO_
-- Public video demonstration: _TODO_ (< 2 minutes)
-- Local setup instructions: [README.md](../../README.md)
-- Smoke-check scenario: documented in mvp-v0-report.md
--->
+- **Запуск:** `cd frontend && npm install && npm run dev` → http://localhost:5173
+- **Видео-демо:** _TODO_ (< 2 минут, будет добавлено перед дедлайном)
 
 ### Screenshots
 
-> To be added to `reports/week2/images/` after deployment.
+> To be added to `reports/week2/images/` after recording.
 
 ---
 
 ## 4. PR/MR Workflow
 
-> To be linked after Week 2 PRs are merged.
-
-<!-- Once available:
-- PR/MR template: `.github/pull_request_template.md`
-- Reviewed PRs created during Week 2: _TODO_
--->
+- PR-шаблон: [`.github/pull_request_template.md`](../../.github/pull_request_template.md) ✅
+- Reviewed PRs: _TODO_ (будут добавлены после мержа Week 2 PR)
 
 ---
 
 ## 5. Lychee Link Checking
 
-> To be confirmed after CI pipeline runs.
-
-<!-- Once configured:
-- Lychee configuration: `.github/workflows/lychee.yml`
-- Latest successful run: _TODO_ (link to GitHub Actions run)
-- Excluded links with justification: _TODO_
-- Manual verification confirmation: _TODO_
--->
+- CI workflow: [`.github/workflows/link-check.yml`](../../.github/workflows/link-check.yml) ✅
+- Запускается: при push/PR на `*.md`, еженедельно по понедельникам (07:00 UTC), и вручную
+- Исключены: `figma.com` (требует логина), `moodle.*` (внутренний), `localhost`, `127.*`
+- Последний успешный run: _TODO_ (ссылка появится после первого пуша в `main`)
 
 ---
 
