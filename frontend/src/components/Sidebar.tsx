@@ -54,6 +54,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <Icon id="i-edit" className="ic" />
             Forms Builder
           </NavLink>
+          <NavLink className="nav-item" to="/admin/forms/viewer" onClick={onClose}>
+            <Icon id="i-clipboard" className="ic" />
+            Forms Viewer
+          </NavLink>
         </nav>
 
         <div className="sidebar-user">
