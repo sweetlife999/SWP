@@ -4,45 +4,34 @@
 
 | Tool | Purpose |
 |------|---------|
-| Claude (Anthropic) | Drafting and structuring user stories; writing analysis.md; writing this LLM report; structuring README.md index |
-| Claude (Anthropic) — Week 1 | Transcribing and translating interview audio recording to English |
+| Claude (Anthropic) | analysis.md; nginx configuration; Figma prototype construction via MCP; customer meeting transcript translation and sanitisation; customer meeting summary; |
+
+---
 
 ## How AI tools were used
 
-### User story generation
+### Figma prototype construction
 
-The team provided the following inputs to the LLM:
-- Initial draft user stories from the lab 2 activity worksheet (10 stories in xlsx format)
-- The Week 1 interview transcript and notes (SWP_Interview_Script.pdf)
-- The customer's product requirements document (SU website Ideas.pdf)
-- The technical questions document prepared before the interview (Вопросы к ТЗ_ SU Portal.pdf)
+All seven prototype screens were constructed programmatically using the Figma MCP plugin (`use_figma` tool), which executes JavaScript in the Figma plugin context. Claude authored each screen's layout script (sidebar, header, content area, state variations) based on team-provided design direction. The team reviewed and approved each screen in Figma.
 
-Claude was asked to:
-1. Review the xlsx draft stories and identify which were valid requirements and which were placeholder/joke stories
-2. Supplement the draft stories with additional stories derived from the interview transcript and product spec
-3. Format all stories according to the assignment specification (stable IDs, MoSCoW priorities, notes sections)
-4. Propose an initial MVP v1 scope grounded in the customer's stated minimum expectations
+### Customer meeting transcript and summary
 
-All generated stories were reviewed by a team member before acceptance. The team made the final judgement on priorities, removed stories, and MVP scope.
+The raw Russian transcript was provided by the team. Claude translated, sanitised (removed profanity and off-topic exchanges), and structured the English transcript published in this repository. Claude also wrote the meeting summary (`customer-meeting-summary.md`) based on the translated transcript. The team reviewed both documents for accuracy before committing.
 
 ### Analysis
 
-Claude was used to structure the `analysis.md` document by:
+Claude was used to structure the `analysis.md` document:
 - Extracting validated assumptions from the interview notes
 - Identifying open questions and unresolved constraints
 - Proposing a planned response table linking findings to affected stories
 
-Team members added, removed, and adjusted entries based on their direct knowledge of the customer interaction.
+The post-meeting sections (interface design, MVP v0 deployment, customer validation) were written by Claude based on team-provided context after the meeting. Team members reviewed all entries.
 
-### What AI was NOT used for
-
-- The actual customer interview was conducted by team members without AI assistance.
-- User research, competitor analysis, and product research (Miro board) were done manually.
-- Meeting summaries, transcript sanitisation, and customer approvals are team responsibilities.
-- The prototype and MVP v0 implementation are authored by team members.
+---
 
 ## Limitations and safeguards
 
 - All AI-generated content was reviewed for accuracy against source documents before inclusion.
 - No real credentials, personal data, or confidential business information were passed to external LLM services.
 - Generic or filler AI output was rejected and replaced with team-specific analysis.
+- The team retains full understanding of all AI-assisted outputs and can explain every decision made.

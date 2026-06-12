@@ -60,10 +60,9 @@ so that I can financially support SU activities that benefit all students.
 
 #### Notes and constraints
 
-- The customer currently collects donations informally. A formal payment gateway requires a registered legal entity, which the SU may not currently have.
-- The most likely implementation is a redirect to an external donation link (e.g., T-Bank collection page).
+- **Clarified in Week 2 customer meeting:** The donation page must be a static informational page only. It should describe what the money is collected for, provide a QR code, and include a direct link (e.g., to a T-Bank collection page). No donation counters, progress bars, or financial tracking — the SU has no mechanism to maintain such data in real time.
+- A formal payment gateway is out of scope; an external redirect is the only feasible option given the absence of a registered legal entity.
 - Recurring payments (subscriptions) are out of scope for the course period.
-- A visual donation progress bar for specific goals is a Could Have enhancement.
 
 ---
 
@@ -100,18 +99,19 @@ so that I can share concerns, ideas, or compliments without attending a meeting 
 
 ---
 
-### US-07: Fill anonymous survey
+### US-07: Collect survey responses anonymously
 
 **Requirement Status:** Active
 **MoSCoW priority:** Could Have
 
-As a student,
-I want to submit a survey response anonymously,
-so that I can give candid feedback without fear of being identified.
+As the Student Union,
+we want to collect survey responses anonymously,
+so that students can give candid feedback without fear of being identified.
 
 #### Notes and constraints
 
-- Protection against duplicate submissions (ballot stuffing) needs design: options include cookies, session tokens, or rate-limiting by IP. Full server-side enforcement is complex.
+- **Perspective updated in Week 2 customer meeting:** The story was rewritten from the SU's perspective. Anonymity is a trust-building measure the SU offers — it is not a student preference. Original framing ("As a student, I want to submit anonymously") was identified by the customer as awkward.
+- Protection against duplicate submissions (ballot stuffing) needs design: options include cookies, session tokens, or IP rate-limiting. Full server-side enforcement is complex.
 - The customer confirmed anonymity is desirable but did not flag duplicate-submission abuse as a historical problem.
 - Works in conjunction with US-12 (fill questionnaire) and US-13 (admin creates questionnaire).
 
@@ -208,17 +208,18 @@ so that I can collect structured feedback from students through the portal.
 
 ---
 
-### US-14: Export questionnaire results to XLSX
+### US-14: View and export questionnaire results
 
 **Requirement Status:** Active
 **MoSCoW priority:** Should Have
 
 As an admin,
-I want to export survey responses to an XLSX file,
-so that I can analyse the data in spreadsheet tools without manually copying results.
+I want to view survey responses in the portal and export them to an XLSX file,
+so that I can review results without leaving the site and analyse the data in spreadsheet tools.
 
 #### Notes and constraints
 
+- **Updated in Week 2 customer meeting:** In-site result viewing is a Must Have and is already covered by US-13 notes. XLSX export is a Should Have addition. The customer explicitly stated that viewing results in the interface must come first; export is a secondary convenience.
 - The customer explicitly listed "Questionnaires: xlsx export" in the product spec.
 - The export should include all responses with timestamps.
 - Chart/diagram generation inside the export is optional (lower priority than raw data).
