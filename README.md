@@ -32,21 +32,10 @@ npm run build      # dist/ — статика, открывается через
 npm run preview    # локальный preview сборки на http://localhost:4173
 ```
 
-### HTML-прототип (дизайн)
-
-Прямо из браузера — без сборки:
-
-```bash
-open internal/docs/design/home.html
-# или любой другой экран: events.html, members.html, …
-```
-
 ### Структура
 
 ```
 frontend/          — React + TypeScript + Vite
-internal/docs/
-  design/          — HTML-прототип (дизайн-источник)
 reports/week2/     — отчёты Assignment 2
 .github/
   workflows/       — CI: link-check (Lychee)

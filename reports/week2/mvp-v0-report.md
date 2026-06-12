@@ -105,5 +105,5 @@ npm run preview    # preview dist/ на http://localhost:4173
 ### Ожидаемый результат
 
 - Все 9 экранов доступны без ошибок в консоли
-- Визуальное совпадение с HTML-прототипом (`internal/docs/design/`)
+- Визуальное совпадение с Figma-прототипом
 - Интерактивные элементы (tabs, segmented controls, questionnaire stepper, kanban) работают
