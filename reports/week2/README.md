@@ -17,16 +17,17 @@ Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, an
 
 ## 2. Prototype and Interface Artifacts
 
-**Figma-файл:** [`jQF7Hpaw4iLGrZM8Ei8ieT`](https://www.figma.com/design/jQF7Hpaw4iLGrZM8Ei8ieT) — «SU Portal — Week 2 Prototype»
+**Figma (view-only):** [SU Portal — Week 2 Prototype](https://www.figma.com/design/jQF7Hpaw4iLGrZM8Ei8ieT/SU-Portal-%E2%80%94-Week-2-Prototype?node-id=0-1&t=ialB7LSIfMm7k9u4-1)
 
-Страницы: Student View · Admin Panel · Cover & Flow
-
-| Экран | Статус |
-|-------|--------|
-| Home (sidebar, header, hero, dept cards, news, widgets) | ✅ готов |
-| Events | ⏳ в работе (hit Figma rate limit) |
-| Members, Questionnaires, Donations | ⏳ в работе |
-| Admin Panel (Kanban, Forms Builder, Accounts) | ⏳ в работе |
+| Screen | Status |
+|--------|--------|
+| Home (sidebar, header, hero, dept cards, news, widgets) | ✅ |
+| Events (filters, event cards, mini calendar, stats) | ✅ |
+| Events — Empty state | ✅ |
+| Members & History (member grid, history timeline) | ✅ |
+| Questionnaires (list + active survey step 1/4) | ✅ |
+| Questionnaires — Success state | ✅ |
+| Admin / Forms Builder (form list + editor) | ✅ |
 
 Покрытие прототипом: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 scope)
 
@@ -38,11 +39,12 @@ Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, an
 
 ## 3. MVP v0
 
-**Status: реализован.** React + TypeScript + Vite SPA, 9 экранов, статические данные.
+**Status: реализован и задеплоен.** React + TypeScript + Vite SPA, 9 экранов, статические данные.
 
 [mvp-v0-report.md](mvp-v0-report.md) — полный отчёт, smoke-check, tech stack
 
-- **Запуск:** `cd frontend && npm install && npm run dev` → http://localhost:5173
+- **Деплой:** https://su.fblrkus.ru
+- **Запуск локально:** `cd frontend && npm install && npm run dev` → http://localhost:5173
 - **Видео-демо:** _TODO_ (< 2 минут, будет добавлено перед дедлайном)
 
 ### Screenshots
