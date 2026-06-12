@@ -15,7 +15,6 @@ function getCrumbs(pathname: string): { label: string; href?: string }[] {
   if (pathname === '/donations') return [{ label: 'Donations' }]
   if (pathname === '/admin/kanban') return [{ label: 'Admin' }, { label: 'SU:Core Board' }]
   if (pathname === '/admin/forms/builder') return [{ label: 'Admin' }, { label: 'Forms Builder' }, { label: 'Опрос #025 · Welcome Week фидбек' }]
-  if (pathname === '/admin/accounts') return [{ label: 'Admin' }, { label: 'Accounts' }]
   return [{ label: pathname }]
 }
 
