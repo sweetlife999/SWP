@@ -27,7 +27,6 @@ jobs:
           args: >
             --verbose
             --no-progress
-            --exclude-mail
             --exclude '^https?://localhost'
             --exclude '^https?://127\.'
             --exclude 'figma\.com'
