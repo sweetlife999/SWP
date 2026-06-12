@@ -12,4 +12,43 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 ## Local setup
 
-> Setup instructions will be added once the technology stack is finalised and MVP v0 is implemented.
+### Requirements
+
+- Node.js ≥ 18 (tested on v24)
+- npm ≥ 9
+
+### Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173
+```
+
+Для production-сборки:
+
+```bash
+npm run build      # dist/ — статика, открывается через любой HTTP-сервер
+npm run preview    # локальный preview сборки на http://localhost:4173
+```
+
+### HTML-прототип (дизайн)
+
+Прямо из браузера — без сборки:
+
+```bash
+open internal/docs/design/home.html
+# или любой другой экран: events.html, members.html, …
+```
+
+### Структура
+
+```
+frontend/          — React + TypeScript + Vite
+internal/docs/
+  design/          — HTML-прототип (дизайн-источник)
+reports/week2/     — отчёты Assignment 2
+.github/
+  workflows/       — CI: link-check (Lychee)
+  pull_request_template.md
+```
