@@ -8,7 +8,7 @@ import QuestionnairesPage from './pages/QuestionnairesPage'
 import DonationsPage from './pages/DonationsPage'
 import KanbanPage from './pages/KanbanPage'
 import FormBuilderPage from './pages/FormBuilderPage'
-import AdminAccountsPage from './pages/AdminAccountsPage'
+import FormsViewerPage from './pages/FormsViewerPage'
 
 export default function App() {
   return (
@@ -22,7 +22,7 @@ export default function App() {
         <Route path="/donations" element={<DonationsPage />} />
         <Route path="/admin/kanban" element={<KanbanPage />} />
         <Route path="/admin/forms/builder" element={<FormBuilderPage />} />
-        <Route path="/admin/accounts" element={<AdminAccountsPage />} />
+        <Route path="/admin/forms/viewer" element={<FormsViewerPage />} />
       </Route>
     </Routes>
   )
