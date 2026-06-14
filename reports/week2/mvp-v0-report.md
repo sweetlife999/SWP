@@ -59,7 +59,7 @@ Deployed on a VPS (Ubuntu 22.04, nginx, Let's Encrypt TLS). Deployment is automa
 
 ## Public video demonstration
 
-*TODO* — screen recording < 2 minutes to be added before the submission deadline.
+https://drive.google.com/file/d/1vD7WQghi3PnJ-NTt0Liz_f-RKZRqJ3pN/view?usp=sharing
 
 ---
 
