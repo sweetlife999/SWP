@@ -51,6 +51,8 @@ Prototype coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 sco
 ![Donations page](images/DonationsPage.bmp)
 *Donations — static info page with QR code placeholder*
 
+![Forms Viewer Page](images/FormsViewer-v0.bmp)
+*Forms viewer - page under admin panel allowing SU members to view answers on questionnaires*
 ---
 
 ## 3. MVP v0
@@ -73,6 +75,9 @@ Prototype coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 sco
   - [PR #3 — MVP v0 frontend](https://github.com/sweetlife999/SWP/pull/3)
   - [PR #4 — Add week 2 screenshots](https://github.com/sweetlife999/SWP/pull/4)
   - [PR #5 — Fix markdown files and add autodeploy](https://github.com/sweetlife999/SWP/pull/5)
+  - [PR #6 - cleanupSirniki(changing admin panel)](https://github.com/sweetlife999/SWP/pull/6)
+  - [PR #7 - complete week 2 report: meeting docs, updated stories, analysis, translated mvp-v0-report](https://github.com/sweetlife999/SWP/pull/7)
+  - [PR #8 - finalising README.md](https://github.com/sweetlife999/SWP/pull/8)
 
 ---
 
