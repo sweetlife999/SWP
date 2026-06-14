@@ -78,11 +78,15 @@ Prototype coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 sco
   - [PR #6 - cleanupSirniki(changing admin panel)](https://github.com/sweetlife999/SWP/pull/6)
   - [PR #7 - complete week 2 report: meeting docs, updated stories, analysis, translated mvp-v0-report](https://github.com/sweetlife999/SWP/pull/7)
   - [PR #8 - finalising README.md](https://github.com/sweetlife999/SWP/pull/8)
+  - [PR #9 - add screenshot of branch ruleset](https://github.com/sweetlife999/SWP/pull/9)
+  - [PR #10 - add links to interview and screenshot of viewed-pr](https://github.com/sweetlife999/SWP/pull/10)
 
 ### Example reviewed PR
 
 ![Reviewed PR](images/reviewed-pr.png)
 
+  
+- Branch protection rules: [`/reports/week2/images/branch-rules.bmp`]✅
 ---
 
 ## 5. Lychee Link Checking
