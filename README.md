@@ -8,7 +8,7 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 ## MVP v0
 
-[reports/week2/mvp-v0-report.md](reports/week2/mvp-v0-report.md) *(pending deployment)*
+[reports/week2/mvp-v0-report.md](reports/week2/mvp-v0-report.md) — deployed at [https://su.fblrkus.ru](https://su.fblrkus.ru)
 
 ## Local setup
 
