@@ -1,109 +1,118 @@
 # MVP v0 Report — Student Union Portal
 
-**Status:** реализован статический frontend (SPA). Backend и БД — вне скоупа MVP v0.
+**Status:** Static frontend SPA implemented. Backend and database are out of scope for MVP v0.
 
 ---
 
-## Описание
+## Description
 
-MVP v0 — это кликабельный React-фронтенд, точно воспроизводящий HTML-прототип. Он демонстрирует полный UX портала без подключения к серверу: данные статические, навигация работает через React Router.
+MVP v0 is a navigable React frontend that reproduces the full UX of the portal without a server connection. All data is static; navigation is handled by React Router. The purpose is to validate the interface structure and demonstrate that the technical foundation (build pipeline, deployment, routing) is working.
 
-### Что реализовано
+### Screens implemented
 
-| Экран | Путь | Покрываемые US |
-|-------|------|---------------|
-| Главная (Home) | `/` | US-08 (dept info), US-01 (events preview) |
+| Screen | Route | User stories covered |
+|--------|-------|----------------------|
+| Home | `/` | US-08 (dept info), US-01 (events preview) |
 | Events | `/events` | US-01 (browse events) |
 | Event Detail | `/events/:id` | US-01 |
 | Members & History | `/members` | US-05 (member directory) |
 | Questionnaires | `/questionnaires` | US-12 (fill questionnaire) |
 | Donations | `/donations` | — |
-| SU:Core Kanban | `/admin/kanban` | US-11 (admin task tracking) |
+| SU:Core Kanban | `/admin/kanban` | US-10 (internal task tracking) |
 | Forms Builder | `/admin/forms/builder` | US-13 (create questionnaire) |
 | Admin Accounts | `/admin/accounts` | — |
 
-### Что замоковано / статично
+### Mocked / static elements
 
-- Все данные (ивенты, участники, опросы) — статические константы в компонентах
-- Авторизация отсутствует; пользователь фиксирован как «Иван Петров, B22-DS-02»
-- Формы не отправляют данные — кнопки интерактивны визуально, но без API-вызовов
-- Пагинация («Загрузить ещё») не подгружает реальные данные
+- All data (events, members, surveys) are static constants inside components
+- No authentication; the user is hardcoded as "Ivan Petrov, B22-DS-02"
+- Forms do not submit data — buttons are visually interactive but make no API calls
+- "Load more" pagination does not fetch real data
 
 ---
 
-## Технический стек
+## Tech stack
 
 ```
 frontend/
   src/
     components/   AppShell, Sidebar, Header, Icon
-    pages/        9 страниц (по одной на экран прототипа)
-    styles.css    единая design system (токены + page-specific CSS)
+    pages/        9 pages (one per prototype screen)
+    styles.css    unified design system (tokens + page-specific CSS)
   public/
-    icons.svg     SVG-спрайт (Lucide)
+    icons.svg     SVG sprite (Lucide icons)
 ```
 
 - **Vite 5** + **React 18** + **TypeScript**
-- **React Router v6** (HashRouter — работает без сервера)
-- Зависимости: только `react`, `react-dom`, `react-router-dom`
+- **React Router v6** (HashRouter — works without a server)
+- Dependencies: `react`, `react-dom`, `react-router-dom` only
 
 ---
 
 ## Deployment URL
 
-MVP v0 запускается локально. Публичного деплоя нет — для сдачи используется локальный запуск или сборка `dist/`.
+**Live:** [https://su.fblrkus.ru](https://su.fblrkus.ru)
+
+Deployed on a VPS (Ubuntu 22.04, nginx, Let's Encrypt TLS). Deployment is automated via GitHub Actions on push to `main` (see `.github/workflows/deploy.yml`): `npm run build` → rsync to `/var/www/swp/` → nginx reload.
 
 ---
 
 ## Public video demonstration
 
-_TODO_ — запись экрана < 2 минут будет добавлена перед дедлайном.
+*TODO* — screen recording < 2 minutes to be added before the submission deadline.
 
 ---
 
-## Связь с прототипом и MVP v1
+## Relationship to prototype and MVP v1
 
-MVP v0 реализует все экраны прототипа (HTML → React). MVP v1 добавит:
-- REST API (Spring Boot / Django) и PostgreSQL
-- JWT-авторизацию
-- Реальные CRUD-операции для ивентов, опросов, участников
+MVP v0 implements all prototype screens as React components (static data). MVP v1 will add:
 
-Истории MVP v1 (US-01, US-05, US-08, US-11, US-12, US-13) визуально присутствуют в MVP v0, но без серверной логики.
+- REST API (backend TBD) and PostgreSQL
+- Admin authentication (single hidden-endpoint account, no public login UI)
+- Real CRUD operations for events, surveys, and member directory
+
+All MVP v1 stories (US-01, US-05, US-08, US-11, US-12, US-13) are visually represented in MVP v0 without server-side logic.
 
 ---
 
-## Локальный запуск
+## Local setup
 
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5173
+npm run dev
+# → http://localhost:5173
 ```
 
 ```bash
-npm run build      # production-сборка → dist/
-npm run preview    # preview dist/ на http://localhost:4173
+npm run build
+# production build → dist/
+npm run preview
+# → http://localhost:4173
 ```
+
+See root [README.md](../../README.md) for the full local setup instructions.
 
 ---
 
-## Smoke-check сценарий
+## Smoke-check scenario
 
-### Шаги
+**Access:** [https://su.fblrkus.ru](https://su.fblrkus.ru) — no credentials required.
 
-1. `cd frontend && npm install && npm run dev`
-2. Открыть http://localhost:5173
-3. Убедиться, что отображается главная страница: hero-секция, 3 карточки департаментов, лента новостей, виджеты справа
-4. Кликнуть **Events** в сайдбаре → страница ивентов с карточками и фильтрами
-5. Кликнуть на featured-карточку ивента → страница EventDetail
-6. Кликнуть **Members & History** → список участников; переключить таб на «History» и «Roadmap 2026»
-7. Кликнуть **Questionnaires** → выбрать опрос слева, пройти шаги 1–4 кнопками Next/Back
-8. Кликнуть **SU:Core Board** (Admin) → kanban с карточками по колонкам
-9. Убедиться, что сайдбар подсвечивает активный пункт зелёным на каждой странице
-10. Уменьшить окно до < 1024 px → сайдбар прячется, появляется кнопка «☰», клик открывает drawer
+### Steps
 
-### Ожидаемый результат
+1. Open <https://su.fblrkus.ru> in a browser (or run `cd frontend && npm install && npm run dev` for local)
+2. Verify the home page loads: hero section, 3 department cards, news widget, right-side widgets
+3. Click **Events** in the sidebar → events list with filter tabs and event cards
+4. Click a featured event card → Event Detail page
+5. Click **Members & History** → member grid; switch tabs to History and Roadmap 2026
+6. Click **Questionnaires** → select a survey from the left panel; navigate steps 1–4 with Next / Back buttons
+7. Click **SU:Core Board** (under Admin) → kanban board with task cards in columns
+8. Verify the sidebar highlights the active item in green on every page
+9. Resize the window to < 1024 px → sidebar hides; click the ☰ button → drawer opens
 
-- Все 9 экранов доступны без ошибок в консоли
-- Визуальное совпадение с Figma-прототипом
-- Интерактивные элементы (tabs, segmented controls, questionnaire stepper, kanban) работают
+### Expected results
+
+- All 9 screens accessible with no console errors
+- Visual match with the Figma prototype
+- Interactive elements work: tabs, segmented controls, questionnaire step-by-step navigation, kanban columns

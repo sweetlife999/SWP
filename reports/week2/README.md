@@ -1,7 +1,7 @@
 # Assignment 2 — Week 2 Report
 
 **Project:** Student Union Portal
-**Short description:** A centralized web platform connecting Innopolis University students with the Student Union — featuring public events, SU member directory, questionnaires, and an internal task tracker for SU:Core.
+**Short description:** A centralised web platform connecting Innopolis University students with the Student Union — featuring public events, SU member directory, questionnaires, and an internal task tracker for SU:Core.
 
 **License:** [MIT](../../LICENSE)
 
@@ -11,7 +11,7 @@
 
 [reports/week2/user-stories.md](user-stories.md)
 
-Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, and the initial proposed MVP v1 scope.
+Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, and the initial proposed MVP v1 scope. Updated after the Week 2 customer meeting: US-04 (donation page scope), US-07 (perspective change), US-14 (in-site result viewing added).
 
 ---
 
@@ -29,43 +29,67 @@ Includes 14 active stories (US-01 – US-16, two removed), MoSCoW priorities, an
 | Questionnaires — Success state | ✅ |
 | Admin / Forms Builder (form list + editor) | ✅ |
 
-Покрытие прототипом: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 scope)
+Prototype coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 scope)
 
-### Screenshots
+### Prototype screenshots
 
-> To be added to `reports/week2/images/` after prototype screens are complete.
+![Main page](images/Mainpage-v0.bmp)
+*Main page — Home screen with sidebar navigation, hero section, department cards*
+
+![Events page](images/EventsPage-v0.bmp)
+*Events — upcoming events list with filters*
+
+![Members page](images/MembersPage-v0.bmp)
+*Members & History — member grid and history timeline*
+
+![Questionnaires](images/QuestionsPage-v0.bmp)
+*Questionnaires — survey list and active survey step*
+
+![Kanban board](images/Kanban-v0.bmp)
+*SU:Core Board — internal task tracker*
+
+![Donations page](images/DonationsPage.bmp)
+*Donations — static info page with QR code placeholder*
 
 ---
 
 ## 3. MVP v0
 
-**Status: реализован и задеплоен.** React + TypeScript + Vite SPA, 9 экранов, статические данные.
+**Status: deployed.** React + TypeScript + Vite SPA, 9 screens, static data.
 
-[mvp-v0-report.md](mvp-v0-report.md) — полный отчёт, smoke-check, tech stack
+[mvp-v0-report.md](mvp-v0-report.md) — full report, smoke-check scenario, tech stack
 
-- **Деплой:** https://su.fblrkus.ru
-- **Запуск локально:** `cd frontend && npm install && npm run dev` → http://localhost:5173
-- **Видео-демо:** _TODO_ (< 2 минут, будет добавлено перед дедлайном)
-
-### Screenshots
-
-> To be added to `reports/week2/images/` after recording.
+- **Deployment:** [https://su.fblrkus.ru](https://su.fblrkus.ru)
+- **Local run:** `cd frontend && npm install && npm run dev` → <http://localhost:5173>
+- **Video demo:** *TODO* (< 2 minutes, to be added before submission deadline)
 
 ---
 
 ## 4. PR/MR Workflow
 
-- PR-шаблон: [`.github/pull_request_template.md`](../../.github/pull_request_template.md) ✅
-- Reviewed PRs: _TODO_ (будут добавлены после мержа Week 2 PR)
+- PR template: [`.github/pull_request_template.md`](../../.github/pull_request_template.md) ✅
+- Reviewed PRs merged during Week 2:
+  - [PR #2 — Initial data and structure](https://github.com/sweetlife999/SWP/pull/2)
+  - [PR #3 — MVP v0 frontend](https://github.com/sweetlife999/SWP/pull/3)
+  - [PR #4 — Add week 2 screenshots](https://github.com/sweetlife999/SWP/pull/4)
+  - [PR #5 — Fix markdown files and add autodeploy](https://github.com/sweetlife999/SWP/pull/5)
 
 ---
 
 ## 5. Lychee Link Checking
 
 - CI workflow: [`.github/workflows/link-check.yml`](../../.github/workflows/link-check.yml) ✅
-- Запускается: при push/PR на `*.md`, еженедельно по понедельникам (07:00 UTC), и вручную
-- Исключены: `figma.com` (требует логина), `moodle.*` (внутренний), `localhost`, `127.*`
-- Последний успешный run: _TODO_ (ссылка появится после первого пуша в `main`)
+- Triggers: push/PR on `*.md` files, weekly on Mondays at 07:00 UTC, manual dispatch
+- Excluded links: `figma.com` (requires login), `moodle.*` (internal), `localhost`, `127.*`
+- Latest runs: [GitHub Actions — Link Check](https://github.com/sweetlife999/SWP/actions/workflows/link-check.yml)
+
+### Excluded links — manual verification
+
+| URL pattern | Reason for exclusion | Manual status |
+|-------------|---------------------|---------------|
+| `figma.com` | Requires Figma account to access | Verified accessible with account ✅ |
+| `moodle.*` | Internal university system | Not publicly verifiable |
+| `localhost`, `127.*` | Local dev only | N/A |
 
 ---
 
@@ -77,27 +101,32 @@ The following user stories are covered by the **initial proposed MVP v1 prototyp
 |-------|-------|
 | US-01 | View upcoming events |
 | US-05 | View SU member directory |
-| US-08 | View SU departments info |
+| US-08 | View SU departments and their info |
 | US-11 | Admin publishes and manages events and news |
 | US-12 | Student fills out an active questionnaire |
 | US-13 | Admin creates and manages questionnaires |
 
-The prototype explores and communicates the proposed MVP v1 user experience.
-MVP v0 is a runnable technical foundation — see [mvp-v0-report.md](mvp-v0-report.md) for which stories it partially implements.
+The Figma prototype explores and communicates the proposed MVP v1 user experience for all six stories above.
+
+MVP v0 is a runnable technical foundation implementing the same screens as static React components — see [mvp-v0-report.md](mvp-v0-report.md) for the full scope, smoke-check scenario, and story coverage.
 
 ---
 
 ## 7. Customer Meeting
 
-> **Status: meeting not yet held.** The Week 2 customer review session is scheduled to present user stories, MoSCoW priorities, initial MVP v1 scope, and prototype artifacts.
+**Meeting date:** 2026-06-12
+**Status:** Held. Approvals obtained.
 
-<!-- After the meeting, update with:
-- Transcript (if customer approved publication): [customer-meeting-transcript.md](customer-meeting-transcript.md)
-- OR notes (if recording/sharing refused): [customer-meeting-notes.md](customer-meeting-notes.md)
-- Meeting summary: [customer-meeting-summary.md](customer-meeting-summary.md)
--->
+- **Transcript** (sanitised English, publication approved by customer): [customer-meeting-transcript.md](customer-meeting-transcript.md)
+- **Supplementary notes** (handwritten notes taken during the session): [customer-meeting-notes.md](customer-meeting-notes.md)
+- **Summary** (decisions, approvals, action points): [customer-meeting-summary.md](customer-meeting-summary.md)
 
-Customer transcript publication status: _pending customer approval._
+Customer approvals received:
+
+- ✅ User stories approved (with modifications to US-04, US-07, US-14)
+- ✅ MoSCoW priorities approved
+- ✅ Initial proposed MVP v1 scope approved (US-01, 05, 08, 11, 12, 13)
+- ✅ Written consent to public MIT-licensed development model re-confirmed
 
 ---
 
@@ -105,20 +134,10 @@ Customer transcript publication status: _pending customer approval._
 
 [reports/week2/analysis.md](analysis.md)
 
-Covers learning points, validated assumptions, open questions, and planned responses for MVP v1.
+Covers learning points from user story writing, interface design, MVP v0 deployment, and customer validation. Validated assumptions and open questions updated after the Week 2 customer meeting.
 
 ---
 
 ## 9. LLM Usage Report
 
 [reports/week2/llm-report.md](llm-report.md)
-
----
-
-## Screenshots
-
-> `reports/week2/images/` — screenshots to be added:
-> - Protected default branch settings
-> - Example reviewed PR/MR
-> - Figma prototype screens
-> - Deployed MVP v0

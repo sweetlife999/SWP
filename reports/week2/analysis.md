@@ -10,17 +10,17 @@ Writing user stories from raw interview notes forced us to separate what the cus
 
 Applying MoSCoW forced the team to confront tradeoffs explicitly. Several stories that seemed important initially (anonymous surveys, donation system, Telegram sync) were downgraded to Could Have or Should Have once we mapped them against the customer's own stated MVP criteria: *"a website containing SU members, surveys, and news blocks with upcoming events."* The donation system in particular may be legally blocked by the absence of a registered legal entity — a constraint that only emerged from the interview.
 
-**Interface design** *(to be updated after prototype session)*
+**Interface design**
 
-Placeholder — to be completed after the Figma prototype is created and reviewed.
+Designing a full interactive Figma prototype before the customer meeting — rather than just a wireframe — significantly raised the quality of feedback received. The customer immediately gave concrete UI critique (navigation placement, colour scheme, donation page scope) that would have been impossible to elicit from static boxes. The main lesson: a working visual artefact compresses the feedback loop and surfaces implicit product requirements (e.g., "there should be no login button anywhere on the public site") that stakeholders cannot articulate in the abstract.
 
-**MVP v0 deployment** *(to be updated after deployment)*
+**MVP v0 deployment**
 
-Placeholder — to be completed after MVP v0 is deployed and smoke-checked.
+Deploying MVP v0 as a real public URL (React SPA on a VPS, HTTPS, CI/CD via GitHub Actions) — rather than just a localhost demo — forced us to solve production infrastructure problems early: nginx configuration, Let's Encrypt TLS, rsync-over-SSH deployment, and a Lychee link-checking pipeline. These would otherwise be deferred to the last week. Running `npm run build` in CI also revealed a latent TypeScript error before it could break a live demo.
 
-**Customer validation** *(to be updated after Week 2 customer meeting)*
+**Customer validation**
 
-Placeholder — to be completed after the customer review session.
+The Week 2 customer meeting validated the overall direction and revealed three concrete requirement gaps: (1) US-07 was framed from the wrong perspective — it is the SU, not the student, that owns the anonymity requirement; (2) US-14 was incomplete — in-site result viewing is more important than XLSX export; (3) US-04 had unrealistic assumptions about donation tracking. All three were updated immediately. The meeting also produced clear design direction: move navigation to the top bar, remove all auth UI from the public-facing pages, and simplify the main page to focus on SU identity rather than a news feed. The prototype quality exceeded customer expectations, which shortened the approval phase significantly.
 
 ---
 
@@ -28,35 +28,31 @@ Placeholder — to be completed after the customer review session.
 
 | Assumption | Source | Status |
 |---|---|---|
-| Students do not need login to browse the portal | Customer interview (Week 1) | Confirmed: only one admin user exists |
-| Room autobooking is out of scope | Customer interview (Week 1) | Confirmed: customer explicitly said "too much" |
-| Google Forms is the current survey tool and its limitations drive the questionnaire feature | Interview + product spec | Confirmed: customer described Google Forms as their current workaround |
-| Photos cannot be stored directly in the database | Customer interview (Week 1) | Confirmed: image optimizer (Thumbor) or external storage needed |
-| Survey questions and answers can include images | Customer interview (Week 1) | Confirmed: customer specified this explicitly |
-| White-and-green colour scheme is required | Customer interview (Week 1) | Confirmed: Innopolis-themed, not identical to my.university |
-| The SU has a Telegram channel that drives content publishing | Customer interview (Week 1) | Confirmed: admin creates posts in Telegram first, portal should mirror |
-| Donation system requires a legal entity / external payment redirect | Interview + technical Q&A doc | Unconfirmed — see "Needs clarification" |
-| SpringBoot is mandatory as backend | Product spec (initial) | Likely negotiable — customer's spec says "highly recommended / open for negotiations" |
+| Students do not need login to browse the portal | Customer interview (Week 1) | **Confirmed** — Week 2 meeting: customer explicitly said auth "disrupts the flow"; public site must have no login button |
+| Room autobooking is out of scope | Customer interview (Week 1) | **Confirmed** — Week 2 meeting: "Won't Have, confirmed, too much" |
+| Google Forms is the current survey tool and its limitations drive the questionnaire feature | Interview + product spec | **Confirmed** — consistent with Week 2 discussion |
+| Photos cannot be stored directly in the database | Customer interview (Week 1) | **Confirmed** — consistent with Week 2 discussion |
+| Survey questions and answers can include images | Customer interview (Week 1) | **Confirmed** — consistent with Week 2 prototype review |
+| White-and-green colour scheme is required | Customer interview (Week 1) | **Confirmed** — customer approved prototype aesthetic |
+| The SU has a Telegram channel that drives content publishing | Customer interview (Week 1) | **Confirmed** — Week 2 meeting: "we send the Telegram post and link to the site" |
+| Donation system is a static QR code page, no financial tracking | Week 2 customer meeting | **Confirmed** — customer explicitly clarified: no counters, no progress bars, just QR + description |
+| Admin account is a single hidden-endpoint credential, no public login UI | Week 2 customer meeting | **Confirmed** — customer said "hardcode or provision via console, no login button on public pages" |
 
 ---
 
 ## Needs clarification
 
-1. **Donation legality** — Does SU have a registered legal entity that allows receiving payments? Or is a T-Bank redirect link the only feasible option? This affects whether US-04 is truly a Should Have or effectively a Won't Have.
+1. **Admin account provisioning** — Week 2 confirmed a single admin account with no public login UI. However: how is this account created in production? Is a one-time seeded account in the database sufficient, or should there be a CLI command / environment-variable mechanism? To be resolved in Assignment 3.
 
-2. **Admin account provisioning** — How does the single admin account get created and rotated? Is a one-time seeded admin sufficient, or is there a need for at least basic credential management?
+2. **Photo storage infrastructure** — Who provides the server or S3-compatible storage? What are the expected data volumes? This determines whether Thumbor or a simpler image CDN is appropriate.
 
-3. **Photo storage infrastructure** — Who provides the server/S3-compatible storage? What are the expected data volumes (GB vs TB)? This determines whether Thumbor or a simpler image CDN is appropriate.
+3. **Telegram integration scope** — Is US-15 (Telegram → portal sync) directional only (Telegram webhook → portal), or does the admin also need to post to Telegram from the portal? The former is simpler. To be clarified before implementation.
 
-4. **Telegram integration scope** — Is the Telegram sync (US-15) directional (Telegram → portal only), or does the admin also need to post from the portal to Telegram? The former is simpler (webhook listener); the latter requires the portal to call the Telegram Bot API.
+4. **Survey anonymity enforcement level** — Week 2 confirmed the SU wants anonymous responses; the *degree* of enforcement (client-only vs server-side unlinkability) is still an open design question. Cookie/session de-duplication is a reasonable middle ground.
 
-5. **Stack confirmation** — The product spec lists SpringBoot as "highly recommended" but notes it is open to negotiation. The interview notes suggest FastAPI + React may be acceptable. This choice affects MVP v0 architecture and needs customer sign-off.
+5. **Events vs internal SU meetings** — Should the events module distinguish between public events and internal SU meetings? Affects who can see what on the events calendar. Not raised in Week 2.
 
-6. **Account lifecycle for SU members** — What happens when a student on the SU team graduates? Is there a process for de-activating admin credentials?
-
-7. **Survey anonymity enforcement** — How strictly must anonymous surveys be anonymous? Client-side only (no name field) is trivial; true server-side unlinkability is complex. The level of enforcement affects US-07 scope significantly.
-
-8. **Events vs internal SU meetings** — Should the events module distinguish between public events (open to all students) and internal SU meetings? This affects who can see what on the events calendar.
+6. **Account lifecycle for SU team** — What happens when an SU member graduates? No process for de-activating admin credentials was discussed. Likely out of scope for the course but worth noting.
 
 ---
 
@@ -64,8 +60,11 @@ Placeholder — to be completed after the customer review session.
 
 | Finding | Affected stories | Planned action |
 |---|---|---|
-| Donation legal ambiguity | US-04 | Confirm with customer in Week 2 meeting; may downgrade to Won't Have if no legal entity exists |
-| Telegram integration is directional (Telegram → portal) | US-11, US-15 | Narrow US-15 scope to webhook-based one-way sync; clarify with customer |
-| SpringBoot vs FastAPI still open | All backend stories | Finalise stack choice with customer in Week 2 meeting; document decision in mvp-v0-report.md |
-| Anonymous survey complexity | US-07 | Downgrade from Could Have to Won't Have if cookie/session-based de-duplication is insufficient and full enforcement is required |
-| MVP v1 scope is tight (6 stories) | US-01, 05, 08, 11, 12, 13 | Keep scope small and prototype only these 6 for the Week 2 customer review; add Should Have stories to Assignment 3 backlog |
+| US-07 reframed from SU's perspective | US-07 | **Done** — story rewritten in Week 2 |
+| Donation is a static QR page, no tracking | US-04 | **Done** — notes updated; implementation scope is now clear |
+| In-site result viewing required alongside export | US-14, US-13 | **Done** — US-14 title and notes updated |
+| Navigation moves to top bar | US-08, US-01 (UI) | Plan for MVP v1 iteration; prototype to be updated in Assignment 3 |
+| Admin = hidden endpoint, no public login | US-11, US-13 (admin) | Design for MVP v1 backend: single admin account seeded at deploy time |
+| Main page redesign: SU info instead of event feed | US-08 | Plan for MVP v1 iteration |
+| Kanban colour differentiation needed | US-10 | Plan for MVP v1 frontend |
+| Telegram integration directional (one-way) | US-15 | Narrow scope to webhook listener when implemented |
