@@ -85,8 +85,10 @@ Prototype coverage: US-01, US-05, US-08, US-11, US-12, US-13 (initial MVP v1 sco
 
 ![Reviewed PR](images/reviewed-pr.png)
 
-  
-- Branch protection rules: [`/reports/week2/images/branch-rules.bmp`]✅
+### Protected default branch settings
+
+![Branch protection rules](images/branch-rules.bmp)
+
 ---
 
 ## 5. Lychee Link Checking
