@@ -434,10 +434,6 @@ export default function KanbanPage() {
     setDragOver(null)
   }
 
-  const inProgressCount = CARDS.filter(c => cardCols[c.id] === 'doing').length
-  const doneCount = CARDS.filter(c => cardCols[c.id] === 'done').length
-  const blockerCount = CARDS.filter(c => cardCols[c.id] === 'doing' && c.blocker).length
-
   return (
     <>
       <div className="page-head">
@@ -457,38 +453,6 @@ export default function KanbanPage() {
           </button>
         </div>
       </div>
-
-      {/* Sprint summary strip */}
-      <section className="sprint-bar">
-        <div className="sprint-cell lead">
-          <span className="lbl">Sprint 14 · в работе</span>
-          <span className="v">«Подготовка к Open Day»</span>
-          <span className="deadline">3 → 17 июня · осталось 7 дней</span>
-          <div className="progress">
-            <div className="bar" style={{ width: `${Math.round(doneCount / CARDS.length * 100)}%` }} />
-          </div>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Всего задач</span>
-          <span className="v">{CARDS.length}</span>
-          <span className="sub">+3 за неделю</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">In progress</span>
-          <span className="v">{inProgressCount}</span>
-          <span className="sub">{blockerCount} блокер{blockerCount === 1 ? '' : 'а'}</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Закрыто</span>
-          <span className="v">{doneCount}</span>
-          <span className="sub" style={{ color: 'var(--accent-700)' }}>+38% к прошлому спринту</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Velocity</span>
-          <span className="v">7.2</span>
-          <span className="sub">задач/неделя (avg)</span>
-        </div>
-      </section>
 
       {/* Toolbar */}
       <section className="kb-toolbar">

@@ -1,43 +1,31 @@
+import { NavLink } from 'react-router-dom'
 import { Icon } from './Icon'
 
 interface HeaderProps {
   onMenuClick: () => void
-  crumbs?: { label: string; href?: string }[]
 }
 
-export default function Header({ onMenuClick, crumbs }: HeaderProps) {
+export default function Header({ onMenuClick }: HeaderProps) {
   return (
     <header className="header">
       <button className="icon-btn menu-btn" aria-label="Menu" onClick={onMenuClick}>
         <Icon id="i-menu" />
       </button>
-      <div className="header-crumbs">
-        <span>SU Portal</span>
-        {crumbs?.map((c, i) => (
-          <>
-            <span key={`sep-${i}`} className="sep">/</span>
-            {c.href ? (
-              <a key={`lnk-${i}`} href={c.href} className="cur" style={{ textDecoration: 'underline' }}>
-                {c.label}
-              </a>
-            ) : (
-              <span key={`cur-${i}`} className="cur">{c.label}</span>
-            )}
-          </>
-        ))}
+      <div className="header-brand">
+        <div className="logo-sm">SU</div>
+        <span className="header-brand-name">Студсовет IU</span>
       </div>
-      <div className="header-actions">
-        <label className="search">
-          <Icon id="i-search" style={{ width: 14, height: 14, color: 'var(--muted)' }} />
-          <input placeholder="Поиск по порталу…" />
-          <span className="kbd">⌘K</span>
-        </label>
-        <button className="icon-btn" aria-label="Notifications">
-          <Icon id="i-bell" />
-          <span className="dot"></span>
-        </button>
-        <div className="avatar sm">ИП</div>
-      </div>
+      <nav className="header-nav">
+        <NavLink className="nav-link" to="/" end>Главная</NavLink>
+        <NavLink className="nav-link" to="/events">Events</NavLink>
+        <NavLink className="nav-link" to="/members">Members</NavLink>
+        <NavLink className="nav-link" to="/questionnaires">Questionnaires</NavLink>
+        <NavLink className="nav-link" to="/donations">Donations</NavLink>
+        <span className="nav-sep" />
+        <NavLink className="nav-link" to="/admin/kanban">SU:Core</NavLink>
+        <NavLink className="nav-link" to="/admin/forms/builder">Forms</NavLink>
+        <NavLink className="nav-link" to="/admin/forms/viewer">Ответы</NavLink>
+      </nav>
     </header>
   )
 }

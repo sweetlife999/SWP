@@ -18,7 +18,6 @@ export default function EventDetailPage() {
           <div className="quick-meta">
             <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">20–21 ИЮН</span></div>
             <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">519 Sport Tower</span></div>
-            <div className="qm"><span className="qm-label">ОЧКИ</span><span className="qm-value">+120 IP</span></div>
           </div>
         </div>
       </section>
@@ -89,23 +88,23 @@ export default function EventDetailPage() {
             </div>
             <div className="map-card"></div>
             <div className="row gap-2 mt-4">
-              <button className="btn secondary"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</button>
-              <button className="btn ghost"><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
+              <a className="btn secondary" href="https://yandex.ru/maps/?text=Иннополис+Университет+519+Sport+Tower" target="_blank" rel="noopener noreferrer"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</a>
+              <button className="btn ghost" onClick={() => navigator.clipboard.writeText('Университетская 1, Иннополис, Sport Tower 519')}><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
             </div>
           </article>
 
           <article className="content-block">
             <h2>Похожие мероприятия</h2>
             <div className="related-grid">
-              <a className="related-card" href="#">
+              <a className="related-card" href="#/events/1">
                 <div className="img"></div>
                 <div className="body"><div className="meta">12 ИЮЛ · SU:CORE</div><h4>Open meeting Q3: бюджет и ивенты</h4></div>
               </a>
-              <a className="related-card" href="#">
+              <a className="related-card" href="#/events/1">
                 <div className="img a"></div>
                 <div className="body"><div className="meta">14 ИЮН · SU:ACTIVE</div><h4>Open Mic: stand-up evening</h4></div>
               </a>
-              <a className="related-card" href="#">
+              <a className="related-card" href="#/events/1">
                 <div className="img b"></div>
                 <div className="body"><div className="meta">5 ИЮЛ · SU:ACTIVE</div><h4>Гребля и BBQ · закрытие Summer Days</h4></div>
               </a>
@@ -123,13 +122,6 @@ export default function EventDetailPage() {
               <div className="price-row">
                 <span className="price">Бесплатно</span>
                 <span className="price-label">для всех IU студентов</span>
-              </div>
-            </div>
-            <div className="points-block">
-              <Icon id="i-coin" style={{ width: 20, height: 20 }} />
-              <div>
-                <b>+120 Innopoints</b><br />
-                <span style={{ fontSize: 11, color: 'var(--accent-700)', opacity: 0.8 }}>+50 если довести проект до защиты</span>
               </div>
             </div>
             <div className="reg-status">

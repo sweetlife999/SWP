@@ -1,23 +1,102 @@
 import { useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
+const DEP_KEYS = ['', 'core', 'active', 'media']
+
+type Member = {
+  dep: 'core' | 'active' | 'media'
+  tag: string; name: string; role: string; meta: string
+  bio: string; recent: string[]
+}
+
+const MEMBERS: Member[] = [
+  { dep: 'core',   tag: 'SU:Core · LEAD',   name: 'Михаил Раянов',      role: 'CO-LEAD · B21-AI', meta: '3 года в SU · 14 проектов',
+    bio: 'Третий год в студсовете. Веду переговоры с деканатами, координирую бюджет Q1–Q3 и запустил SU Portal.',
+    recent: ['Запуск SU Portal v1 — июнь 2026', 'Согласование бюджета Q3 — ₽ 240 000', 'Hackathon Summer 24h — lead organizer'] },
+  { dep: 'core',   tag: 'SU:Core',           name: 'Дарья Андреева',     role: 'CO-LEAD · B22-SE', meta: '2 года в SU',
+    bio: 'Отвечаю за внутреннюю коммуникацию и документооборот SU:Core. Организую открытые собрания.',
+    recent: ['Open meeting Q2: итоги апреля', 'Координация Welcome Week 2026', 'Подготовка Roadmap 2026'] },
+  { dep: 'core',   tag: 'SU:Core',           name: 'Егор Воронов',       role: 'FINANCE · B23-DS', meta: '1 год в SU',
+    bio: 'Слежу за бюджетом студсовета: веду таблицы трат, готовлю финансовые отчёты.',
+    recent: ['Публикация финотчёта Q1 2026', 'Интеграция T-Bank для донат-системы', 'Аудит трат за 2025'] },
+  { dep: 'core',   tag: 'SU:Core',           name: 'Тимур Камалов',      role: 'PROCESS · M24-CS', meta: '2 года в SU',
+    bio: 'Занимаюсь внутренними процессами и инструментами SU. Поддерживаю Notion-базу и оптимизирую потоки.',
+    recent: ['Документирование процессов для Handbook SU', 'Настройка нотификаций Telegram-бота', 'Архивирование решений Q1–Q2'] },
+  { dep: 'active', tag: 'SU:Active · LEAD',  name: 'Алия Газизова',      role: 'CO-LEAD · B21-CS', meta: '3 года в SU · ивенты',
+    bio: 'Главная по ивентам в SU:Active. Три года организую мероприятия — от камерных лекций до 300-человечных хакатонов.',
+    recent: ['Hackathon Summer 24h — BBQ и закрытие', 'Summer Days 2026 — 7 событий', 'Open Mic: stand-up evening'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Кирилл Логинов',     role: 'SPORTS · B22-IS',  meta: '2 года в SU',
+    bio: 'Отвечаю за спортивный трек: турниры, командные активности и партнёрство с кампусным спорткомплексом.',
+    recent: ['Весенний турнир по настольному теннису', 'Организация Гребля и BBQ', 'Переговоры по аренде Sports Tower'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Илья Соколов',       role: 'CULTURE · B23-RO', meta: '1 год в SU',
+    bio: 'Веду культурное направление: тематические вечера, кино и творческие активности.',
+    recent: ['Movie under the sky · La La Land', 'Планирование Cinema Night Q3', 'Поиск площадки для open air'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Майя Якушева',       role: 'CO-LEAD · B22-DS', meta: '2 года в SU',
+    bio: 'Координирую команду SU:Active и слежу за тем, чтобы все ивенты шли по плану.',
+    recent: ['Summer Days 2026 — координация', 'Онбординг новых участников', 'Ретроспектива ивентов за полугодие'] },
+  { dep: 'media',  tag: 'SU:Media · LEAD',   name: 'Анна Лебедева',      role: 'CO-LEAD · B21-DS', meta: '2 года в SU · фото',
+    bio: 'Возглавляю SU:Media и снимаю все крупные события кампуса. Фотожурналистика и работа с архивом.',
+    recent: ['Репортаж: Innopolis Open 2026 (320 участников)', 'Photo walk · Volga shore', 'Лекция «Как снимать кампусный лонгрид»'] },
+  { dep: 'media',  tag: 'SU:Media',          name: 'Полина Котова',       role: 'DESIGN · B22-CS',  meta: '1 год в SU',
+    bio: 'Делаю весь визуал студсовета: афиши, баннеры, иллюстрации для IU Connect и фирменные материалы.',
+    recent: ['Редизайн плакатной системы SU', 'Серия афиш Summer Days 2026', 'Верстка Handbook SU 2026'] },
+  { dep: 'media',  tag: 'SU:Media',          name: 'Ольга Никитина',     role: 'EDITOR · B23-IS',  meta: '1 год в SU',
+    bio: 'Пишу тексты для портала и IU Connect: новости, лонгриды, анонсы ивентов и интервью.',
+    recent: ['Серия «Как мы делали хакатон»', 'Интервью с победителями Innopolis Open', 'Редактирование Roadmap 2026'] },
+  { dep: 'media',  tag: 'SU:Media',          name: 'Сергей Васильев',    role: 'VIDEO · B22-RO',   meta: '2 года в SU',
+    bio: 'Снимаю и монтирую видео с ивентов. Веду YouTube-архив и стримы открытых собраний.',
+    recent: ['Видеоотчёт: Innopolis Open 2026', 'Стрим Open meeting Q2', 'Монтаж highlight Hackathon 24h'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Никита Орлов',       role: 'LOGISTICS · B22-AI', meta: '1 год в SU',
+    bio: 'Занимаюсь логистикой мероприятий: аренда оборудования, закупка расходников, координация доставки.',
+    recent: ['Hackathon 24h: закупка оборудования', 'BBQ логистика для Summer Days', 'Инвентаризация склада SU'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Светлана Журавлёва', role: 'EVENTS · B23-DS',  meta: '1 год в SU',
+    bio: 'Помогаю организовывать ивенты: работаю с регистрациями, отвечаю гостям.',
+    recent: ['Регистрация на Hackathon Summer 24h', 'Поддержка Open Mic evening', 'Планирование Welcome Week Q3'] },
+  { dep: 'active', tag: 'SU:Active',         name: 'Артём Беляков',      role: 'ADVENTURE · B21-CS', meta: '3 года в SU',
+    bio: 'Отвечаю за приключенческий трек: выезды, экскурсии и активности на природе.',
+    recent: ['Гребля на Волге + BBQ — организация', 'Планирование горного трека Q3', 'Летние ночные прогулки'] },
+]
+
+const PHOTO_BG: Record<Member['dep'], string> = {
+  core:   'linear-gradient(135deg, #d1efd8, #88c595)',
+  active: 'linear-gradient(135deg, #c1d6f8, #6b89b3)',
+  media:  'linear-gradient(135deg, #f6c1da, #d65fa3)',
+}
+
+function initials(name: string) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2)
+}
+
 export default function MembersPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const depParam = searchParams.get('dep') ?? ''
+  const initialSeg = DEP_KEYS.indexOf(depParam) >= 0 ? DEP_KEYS.indexOf(depParam) : 0
+
   const [tab, setTab] = useState<TabKey>('members')
-  const [memberSeg, setMemberSeg] = useState(0)
+  const [memberSeg, setMemberSeg] = useState(initialSeg)
   const [editing, setEditing] = useState(false)
+  const [selected, setSelected] = useState<Member | null>(null)
+
+  function handleSeg(i: number) {
+    setMemberSeg(i)
+    if (DEP_KEYS[i]) setSearchParams({ dep: DEP_KEYS[i] })
+    else setSearchParams({})
+  }
+
+  const visibleMembers = memberSeg === 0 ? MEMBERS : MEMBERS.filter(p => p.dep === DEP_KEYS[memberSeg])
 
   return (
     <>
-
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Команда и история</span>
           <h1>Members · History · Roadmap</h1>
         </div>
         <div className="row gap-2">
-          <button className="btn secondary"><Icon id="i-mail" style={{ width: 14, height: 14 }} />Связаться с SU</button>
+          <a className="btn secondary" href="mailto:su@innopolis.university"><Icon id="i-mail" style={{ width: 14, height: 14 }} />Связаться с SU</a>
         </div>
       </div>
 
@@ -37,7 +116,7 @@ export default function MembersPage() {
           <div className="members-filters-bar">
             <div className="seg">
               {['Все · 28', 'SU:Core · 8', 'SU:Active · 14', 'SU:Media · 6'].map((l, i) => (
-                <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => setMemberSeg(i)}>{l}</button>
+                <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => handleSeg(i)}>{l}</button>
               ))}
             </div>
             <div className="input-group" style={{ width: 280, marginLeft: 'auto' }}>
@@ -48,24 +127,8 @@ export default function MembersPage() {
           </div>
 
           <div className="members-grid">
-            {[
-              { dep: 'core', tag: 'SU:Core · LEAD', name: 'Михаил Раянов', role: 'CO-LEAD · B21-AI', meta: '3 года в SU · 14 проектов' },
-              { dep: 'core', tag: 'SU:Core', name: 'Дарья Андреева', role: 'CO-LEAD · B22-SE', meta: '2 года в SU' },
-              { dep: 'core', tag: 'SU:Core', name: 'Егор Воронов', role: 'FINANCE · B23-DS', meta: '1 год в SU' },
-              { dep: 'core', tag: 'SU:Core', name: 'Тимур Камалов', role: 'PROCESS · M24-CS', meta: '2 года в SU' },
-              { dep: 'active', tag: 'SU:Active · LEAD', name: 'Алия Газизова', role: 'CO-LEAD · B21-CS', meta: '3 года в SU · ивенты' },
-              { dep: 'active', tag: 'SU:Active', name: 'Кирилл Логинов', role: 'SPORTS · B22-IS', meta: '2 года в SU' },
-              { dep: 'active', tag: 'SU:Active', name: 'Илья Соколов', role: 'CULTURE · B23-RO', meta: '1 год в SU' },
-              { dep: 'active', tag: 'SU:Active', name: 'Майя Якушева', role: 'CO-LEAD · B22-DS', meta: '2 года в SU' },
-              { dep: 'media', tag: 'SU:Media · LEAD', name: 'Анна Лебедева', role: 'CO-LEAD · B21-DS', meta: '2 года в SU · фото' },
-              { dep: 'media', tag: 'SU:Media', name: 'Полина Котова', role: 'DESIGN · B22-CS', meta: '1 год в SU' },
-              { dep: 'media', tag: 'SU:Media', name: 'Ольга Никитина', role: 'EDITOR · B23-IS', meta: '1 год в SU' },
-              { dep: 'media', tag: 'SU:Media', name: 'Сергей Васильев', role: 'VIDEO · B22-RO', meta: '2 года в SU' },
-              { dep: 'active', tag: 'SU:Active', name: 'Никита Орлов', role: 'LOGISTICS · B22-AI', meta: '1 год в SU' },
-              { dep: 'active', tag: 'SU:Active', name: 'Светлана Журавлёва', role: 'EVENTS · B23-DS', meta: '1 год в SU' },
-              { dep: 'active', tag: 'SU:Active', name: 'Артём Беляков', role: 'ADVENTURE · B21-CS', meta: '3 года в SU' },
-            ].map((p, i) => (
-              <article key={i} className={`person dep-${p.dep}`}>
+            {visibleMembers.map((p, i) => (
+              <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
                 <div className="photo">
                   <span className="dep-tag">{p.tag}</span>
                   <div className="silhouette"></div>
@@ -179,6 +242,30 @@ export default function MembersPage() {
             <div className={`row gap-2 read-actions${editing ? '' : ''}`}>
               <button className="btn secondary"><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
               <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Member modal */}
+      {selected && (
+        <div className="modal-overlay" onClick={() => setSelected(null)}>
+          <div className="member-modal" onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setSelected(null)}>
+              <Icon id="i-x" style={{ width: 14, height: 14 }} />
+            </button>
+            <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>
+              <span className="dep-tag">{selected.tag}</span>
+              <div className="silhouette-lg"></div>
+            </div>
+            <div className="member-modal-body">
+              <div className="mm-name" style={{ marginTop: 16 }}>{selected.name}</div>
+              <div className="mm-role">{selected.role}</div>
+              <p className="mm-bio">{selected.bio}</p>
+              <div className="mm-recent-label">Чем занимается</div>
+              <ul className="mm-recent-list">
+                {selected.recent.map((r, i) => <li key={i}>{r}</li>)}
+              </ul>
             </div>
           </div>
         </div>
