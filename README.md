@@ -2,42 +2,57 @@
 
 A centralized web platform connecting Innopolis University students with the Student Union. Students can browse upcoming events, discover SU members and departments, and participate in questionnaires. SU:Core members manage content and coordinate internal tasks through a built-in admin interface.
 
+**Live:** [https://su.fblrkus.ru](https://su.fblrkus.ru)
+
 ## Assignment 2 report
 
 [reports/week2/README.md](reports/week2/README.md)
 
-## MVP v0
-
-[reports/week2/mvp-v0-report.md](reports/week2/mvp-v0-report.md) — deployed at [https://su.fblrkus.ru](https://su.fblrkus.ru)
-
 ## Local setup
 
-### Requirements
+### With Docker (recommended)
 
-- Node.js ≥ 18 (tested on v24)
-- npm ≥ 9
+Requires Docker.
 
-### Frontend
+```bash
+docker build -t swp-frontend ./frontend
+docker run -p 3000:80 swp-frontend
+# → http://localhost:3000
+```
+
+### Without Docker
+
+Requires Node.js ≥ 18.
 
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # → http://localhost:5173
 ```
-
-Для production-сборки:
 
 ```bash
-npm run build      # dist/ — статика, открывается через любой HTTP-сервер
-npm run preview    # локальный preview сборки на http://localhost:4173
+npm run build      # production build → frontend/dist/
+npm run preview    # → http://localhost:4173
 ```
 
-### Структура
+## Deployment
+
+The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every push to `main` that touches `frontend/` or `compose.yml`, GitHub Actions:
+
+1. Builds a Docker image and pushes it to `ghcr.io/sweetlife999/swp-frontend:latest`
+2. SSHes to the server and runs `docker compose pull && docker compose up -d`
+
+The server runs the container on `127.0.0.1:3000`; nginx proxies HTTPS traffic to it.
+
+## Structure
 
 ```
-frontend/          — React + TypeScript + Vite
-reports/week2/     — отчёты Assignment 2
+frontend/          — React + TypeScript + Vite (source)
+compose.yml        — Docker Compose for the frontend service
+reports/week2/     — Assignment 2 report
 .github/
-  workflows/       — CI: link-check (Lychee)
+  workflows/
+    deploy.yml     — CI/CD: build Docker image, push to GHCR, deploy to VPS
+    link-check.yml — Lychee link checker
   pull_request_template.md
 ```
