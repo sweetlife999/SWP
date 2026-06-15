@@ -1,0 +1,6 @@
+services:
+  frontend:
+    image: ghcr.io/sweetlife999/swp-frontend:latest
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:80"
