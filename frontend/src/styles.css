@@ -1994,7 +1994,7 @@ h4, .h4 {
         }
 
         .kb-col {
-          background: var(--surface-2);
+          background: var(--surface);
           border: 1px solid var(--border);
           border-radius: var(--r-lg);
           display: flex;
@@ -2052,7 +2052,7 @@ h4, .h4 {
         .col-add-empty svg { width: 14px; height: 14px; }
 
         .kbc {
-          background: var(--surface);
+          background: var(--bg);
           border: 1px solid var(--border);
           border-radius: 10px; padding: 12px;
           cursor: grab;
