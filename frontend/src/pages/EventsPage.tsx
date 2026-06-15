@@ -126,7 +126,7 @@ export default function EventsPage() {
 
       <div className="filters-bar">
         <div className="seg">
-          {['Текущие · 7', 'Прошедшие · 24', 'Мои регистрации · 3'].map((label, i) => (
+          {['Текущие · 7', 'Прошедшие · 24'].map((label, i) => (
             <button key={i} className={seg1 === i ? 'active' : ''} onClick={() => setSeg1(i)}>{label}</button>
           ))}
         </div>
@@ -158,13 +158,6 @@ export default function EventsPage() {
             )}
           </div>
         </>
-      )}
-
-      {seg1 === 2 && (
-        <div style={{ padding: '48px 0', textAlign: 'center' }}>
-          <Icon id="i-calendar" style={{ width: 40, height: 40, color: 'var(--border-2)', margin: '0 auto 16px' }} />
-          <p style={{ fontSize: 15, color: 'var(--muted)' }}>Войдите, чтобы увидеть свои регистрации</p>
-        </div>
       )}
 
       <div className="row" style={{ justifyContent: 'center', marginTop: 32 }}>
