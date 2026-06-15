@@ -315,7 +315,7 @@ function CardDetailPanel({ card, onClose }: CardDetailPanelProps) {
             <Icon id="i-x" style={{ width: 14, height: 14 }} />Закрыть
           </button>
           <button className="btn primary" style={{ flex: 1 }}>
-            <Icon id="i-check" style={{ width: 14, height: 14 }} />Отметить готово
+            <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
           </button>
         </div>
       </div>
