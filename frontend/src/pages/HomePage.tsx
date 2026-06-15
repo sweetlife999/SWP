@@ -52,7 +52,7 @@ export default function HomePage() {
 
   return (
     <>
-      <section className="su-intro">
+      <section className="intro" aria-label="О студсовете">
         <span className="eyebrow">О студсовете</span>
         <h1>Студенческий совет<br />Университета Иннополис</h1>
         <p className="lead">
@@ -61,83 +61,105 @@ export default function HomePage() {
         </p>
       </section>
 
-      <div className="page-head" style={{ marginTop: 40 }}>
-        <div className="title">
-          <span className="eyebrow">Команда</span>
-          <h2>Три департамента, одно сообщество</h2>
-        </div>
-        <Link className="btn ghost" to="/members">
-          Все участники <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
-        </Link>
-      </div>
-
-      <div className="deps">
-        <div className="dep-card dep-core" onClick={() => setOpenDep('core')}>
-          <div className="dep-name">SU:Core</div>
-          <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
-          <p className="text-muted" style={{ fontSize: 13 }}>Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
-          <div className="stats">
-            <span><b>8</b> участников</span>
-            <span><b>3</b> активных проекта</span>
-            <span><b>2</b> co-leads</span>
+      <section aria-label="Команда">
+        <div className="section-rule">
+          <div className="sr-left">
+            <span className="eyebrow">Команда</span>
+            <h2>Три департамента, одно сообщество</h2>
           </div>
-          <div className="avatars">
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#a3e0ad,#32b247)' }}>МР</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }}>ДА</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }}>ЕВ</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8dba8,#3da152)' }}>ТК</div>
-            <div className="more">+4</div>
-          </div>
-          <div className="open-row">
-            <span>Подробнее о департаменте</span>
-            <span className="arrow"><Icon id="i-arrow-r" /></span>
-          </div>
+          <Link className="more" to="/members">
+            Все участники
+            <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
+          </Link>
         </div>
 
-        <div className="dep-card dep-active" onClick={() => setOpenDep('active')}>
-          <div className="dep-name">SU:Active</div>
-          <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
-          <p className="text-muted" style={{ fontSize: 13 }}>Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
-          <div className="stats">
-            <span><b>14</b> участников</span>
-            <span><b>7</b> ивентов в плане</span>
-            <span><b>3</b> co-leads</span>
+        <div className="deps">
+          <div className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
+            <span className="dep-name">SU:Core</span>
+            <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
+            <p className="desc">Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
+            <div className="meta">
+              <span><b>8</b> участников</span>
+              <span className="dot" />
+              <span><b>3</b> активных проекта</span>
+              <span className="dot" />
+              <span><b>2</b> co-leads</span>
+            </div>
+            <div className="avatars">
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a3e0ad,#32b247)' }}>МР</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }}>ДА</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }}>ЕВ</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8dba8,#3da152)' }}>ТК</div>
+              <div className="more">+4</div>
+            </div>
+            <div className="open-row">
+              <span>Подробнее о департаменте</span>
+              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+            </div>
           </div>
-          <div className="avatars">
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }}>АГ</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }}>КЛ</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }}>ИС</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#9eb6db,#2c5ba8)' }}>МЯ</div>
-            <div className="more">+10</div>
-          </div>
-          <div className="open-row">
-            <span>Подробнее о департаменте</span>
-            <span className="arrow"><Icon id="i-arrow-r" /></span>
-          </div>
-        </div>
 
-        <div className="dep-card dep-media" onClick={() => setOpenDep('media')}>
-          <div className="dep-name">SU:Media</div>
-          <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
-          <p className="text-muted" style={{ fontSize: 13 }}>Снимает ивенты, ведёт ленту в IU Connect, делает плакаты, пишет лонгриды для портала.</p>
-          <div className="stats">
-            <span><b>6</b> участников</span>
-            <span><b>34</b> публикации</span>
-            <span><b>1</b> co-lead</span>
+          <div className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
+            <span className="dep-name">SU:Active</span>
+            <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
+            <p className="desc">Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
+            <div className="meta">
+              <span><b>14</b> участников</span>
+              <span className="dot" />
+              <span><b>7</b> ивентов в плане</span>
+              <span className="dot" />
+              <span><b>3</b> co-leads</span>
+            </div>
+            <div className="avatars">
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }}>АГ</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }}>КЛ</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }}>ИС</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#9eb6db,#2c5ba8)' }}>МЯ</div>
+              <div className="more">+10</div>
+            </div>
+            <div className="open-row">
+              <span>Подробнее о департаменте</span>
+              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+            </div>
           </div>
-          <div className="avatars">
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#e0a8c8,#c93f8b)' }}>АЛ</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#e6b9d3,#d65fa3)' }}>ПК</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#dbb3d8,#b85eb0)' }}>ОН</div>
-            <div className="avatar" style={{ background: 'linear-gradient(135deg,#e8c5db,#dc7eb3)' }}>СВ</div>
-            <div className="more">+2</div>
-          </div>
-          <div className="open-row">
-            <span>Подробнее о департаменте</span>
-            <span className="arrow"><Icon id="i-arrow-r" /></span>
+
+          <div className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
+            <span className="dep-name">SU:Media</span>
+            <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
+            <p className="desc">Снимает ивенты, ведёт ленту в IU Connect, делает плакаты, пишет лонгриды для портала.</p>
+            <div className="meta">
+              <span><b>6</b> участников</span>
+              <span className="dot" />
+              <span><b>34</b> публикации</span>
+              <span className="dot" />
+              <span><b>1</b> co-lead</span>
+            </div>
+            <div className="avatars">
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e0a8c8,#c93f8b)' }}>АЛ</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e6b9d3,#d65fa3)' }}>ПК</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#dbb3d8,#b85eb0)' }}>ОН</div>
+              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e8c5db,#dc7eb3)' }}>СВ</div>
+              <div className="more">+2</div>
+            </div>
+            <div className="open-row">
+              <span>Подробнее о департаменте</span>
+              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+            </div>
           </div>
         </div>
-      </div>
+      </section>
+
+      <footer className="footer-links">
+        <div className="l-group">
+          <Link to="/events">Ближайшие ивенты</Link>
+          <Link to="/questionnaires">Активные опросы</Link>
+          <Link to="/donations">Открытые сборы</Link>
+          <Link to="/members">Состав команды</Link>
+        </div>
+        <div className="l-group">
+          <span className="mono">SU · 2019 — 2026</span>
+          <a href="mailto:su@innopolis.university" className="mono">su@innopolis.university</a>
+        </div>
+      </footer>
 
       {info && (
         <div className="modal-overlay" onClick={() => setOpenDep(null)}>
