@@ -1,16 +1,54 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
 
+const QUESTS = [
+  {
+    id: '024',
+    tag: 'SU:Active', tagCls: 'blue',
+    title: 'Программа Summer Days 2026 — какие активности добавить',
+    desc: '8 вопросов · ваш ответ повлияет на финальную программу с 20 июня по 5 июля.',
+    time: '2 МИН', timeEnding: false, left: 'осталось 4 дня',
+    flowTitle: 'Программа Summer Days 2026',
+    eyebrow: 'SU:Active · опрос #024',
+  },
+  {
+    id: '023',
+    tag: 'SU:Core', tagCls: 'green',
+    title: 'Голосование по бюджету Q3',
+    desc: '5 вопросов · распределение ₽ 380,000 по направлениям студсовета на третий квартал.',
+    time: '3 МИН', timeEnding: false, left: 'осталось 9 дней',
+    flowTitle: 'Голосование по бюджету Q3',
+    eyebrow: 'SU:Core · опрос #023',
+  },
+  {
+    id: '022',
+    tag: 'SU:Media', tagCls: 'purple',
+    title: 'Мерч студсовета — финальный выбор',
+    desc: '4 вопроса · какой мерч хотите видеть в осенней коллекции.',
+    time: '1 МИН', timeEnding: true, left: 'осталось 16 часов',
+    flowTitle: 'Мерч студсовета — финальный выбор',
+    eyebrow: 'SU:Media · опрос #022',
+  },
+]
+
 export default function QuestionnairesPage() {
+  const [activeId, setActiveId] = useState('024')
   const [step, setStep] = useState(0)
   const [scaleVal, setScaleVal] = useState(7)
   const totalSteps = 4
 
+  const active = QUESTS.find(q => q.id === activeId)!
   const progress = ((step + 1) / totalSteps) * 100
+
+  function selectQ(id: string) {
+    if (id === activeId) return
+    setActiveId(id)
+    setStep(0)
+    setScaleVal(7)
+  }
 
   return (
     <>
-
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Опросы студсовета</span>
@@ -21,57 +59,33 @@ export default function QuestionnairesPage() {
 
       <div className="q-layout">
 
-        {/* Left: list of questionnaires */}
         <section>
           <div className="row sb mb-4">
-            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>3</span></h3>
+            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{QUESTS.length}</span></h3>
             <button className="btn ghost sm">Архив</button>
           </div>
           <div className="q-list">
-
-            <div className="q-list-card active">
-              <div className="meta">
-                <span className="tag blue" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>SU:Active</span>
-                <span>Опрос #024</span>
+            {QUESTS.map(q => (
+              <div
+                key={q.id}
+                className={`q-list-card${q.id === activeId ? ' active' : ''}`}
+                style={{ cursor: 'pointer' }}
+                onClick={() => selectQ(q.id)}
+              >
+                <div className="meta">
+                  <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
+                  <span>Опрос #{q.id}</span>
+                </div>
+                <h4>{q.title}</h4>
+                <p className="desc">{q.desc}</p>
+                <div className="foot">
+                  <span className={`pill-time${q.timeEnding ? ' ending' : ''}`}>{q.time}</span>
+                  <span>×</span>
+                  <span>{q.left}</span>
+                  {q.id === activeId && <span style={{ marginLeft: 'auto', color: 'var(--accent-700)' }}>▶ Сейчас открыт</span>}
+                </div>
               </div>
-              <h4>Программа Summer Days 2026 — какие активности добавить</h4>
-              <p className="desc">8 вопросов · ваш ответ повлияет на финальную программу с 20 июня по 5 июля.</p>
-              <div className="foot">
-                <span className="pill-time">2 МИН</span>
-                <span>×</span>
-                <span>осталось 4 дня</span>
-                <span style={{ marginLeft: 'auto', color: 'var(--accent-700)' }}>▶ Сейчас открыт</span>
-              </div>
-            </div>
-
-            <div className="q-list-card">
-              <div className="meta">
-                <span className="tag green" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>SU:Core</span>
-                <span>Опрос #023</span>
-              </div>
-              <h4>Голосование по бюджету Q3</h4>
-              <p className="desc">5 вопросов · распределение ₽ 380,000 по направлениям студсовета на третий квартал.</p>
-              <div className="foot">
-                <span className="pill-time">3 МИН</span>
-                <span>×</span>
-                <span>осталось 9 дней</span>
-              </div>
-            </div>
-
-            <div className="q-list-card">
-              <div className="meta">
-                <span className="tag purple" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>SU:Media</span>
-                <span>Опрос #022</span>
-              </div>
-              <h4>Мерч студсовета — финальный выбор</h4>
-              <p className="desc">4 вопроса · какой мерч хотите видеть в осенней коллекции.</p>
-              <div className="foot">
-                <span className="pill-time ending">1 МИН</span>
-                <span>×</span>
-                <span>осталось 16 часов</span>
-              </div>
-            </div>
-
+            ))}
           </div>
 
           <div className="row sb mt-6" style={{ padding: '14px 16px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', fontSize: 12, color: 'var(--muted)' }}>
@@ -83,17 +97,16 @@ export default function QuestionnairesPage() {
           </div>
         </section>
 
-        {/* Right: active questionnaire flow */}
         <section className="q-flow">
 
           <header className="q-flow-head">
             <div className="topbar">
               <div>
-                <span className="eyebrow" style={{ color: 'var(--accent-700)' }}>SU:Active · опрос #024</span>
-                <h2 style={{ marginTop: 6 }}>Программа Summer Days 2026</h2>
+                <span className="eyebrow" style={{ color: 'var(--accent-700)' }}>{active.eyebrow}</span>
+                <h2 style={{ marginTop: 6 }}>{active.flowTitle}</h2>
               </div>
               <div className="row gap-2">
-                <span className="tag outline"><Icon id="i-clock" style={{ width: 11, height: 11 }} />2 мин</span>
+                <span className="tag outline"><Icon id="i-clock" style={{ width: 11, height: 11 }} />{active.time}</span>
                 <span className="tag green"><span className="dot"></span>Открыт</span>
               </div>
             </div>
@@ -110,7 +123,6 @@ export default function QuestionnairesPage() {
 
           <div className="q-body">
 
-            {/* Step 1: single choice */}
             {step === 0 && (
               <div className="q-step">
                 <div className="num">Вопрос 01 · одиночный выбор</div>
@@ -132,12 +144,11 @@ export default function QuestionnairesPage() {
               </div>
             )}
 
-            {/* Step 2: multi-choice */}
             {step === 1 && (
               <div className="q-step">
                 <div className="num">Вопрос 02 · множественный выбор</div>
                 <h3>Какие активности обязательно должны быть в программе?</h3>
-                <p className="hint">Выберите до 4 вариантов. Учитываем при планировании конкретных дней.</p>
+                <p className="hint">Выберите до 4 вариантов.</p>
                 <div className="col gap-3">
                   {[
                     { text: 'Гребля на Волге', checked: true },
@@ -158,56 +169,38 @@ export default function QuestionnairesPage() {
               </div>
             )}
 
-            {/* Step 3: scale */}
             {step === 2 && (
               <div className="q-step">
                 <div className="num">Вопрос 03 · шкала 1–10</div>
                 <h3>Насколько вам важно, чтобы события были вечерние (после 18:00)?</h3>
-                <p className="hint">Помогает спланировать слоты, чтобы не пересекаться с лекциями и работой.</p>
+                <p className="hint">Помогает спланировать слоты.</p>
                 <div className="scale-row">
                   <div className="scale-cell label-cell">Не важно</div>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
-                    <div
-                      key={n}
-                      className={`scale-cell${scaleVal === n ? ' active' : ''}`}
-                      onClick={() => setScaleVal(n)}
-                    >{n}</div>
+                  {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                    <div key={n} className={`scale-cell${scaleVal === n ? ' active' : ''}`} onClick={() => setScaleVal(n)}>{n}</div>
                   ))}
                   <div className="scale-cell label-cell" style={{ justifyContent: 'flex-end', textAlign: 'right' }}>Критично</div>
                 </div>
                 <div className="row sb mt-6" style={{ padding: 16, background: 'var(--surface-2)', borderRadius: 'var(--r-md)', fontSize: 13, color: 'var(--muted)' }}>
-                  <span>Ваш ответ: <b style={{ color: 'var(--fg)' }}>{scaleVal} / 10</b> — скорее важно</span>
-                  <span className="text-mono" style={{ fontSize: 11, letterSpacing: '0.04em' }}>МЕДИАНА ПО ОПРОСУ: 8</span>
+                  <span>Ваш ответ: <b style={{ color: 'var(--fg)' }}>{scaleVal} / 10</b></span>
+                  <span className="text-mono" style={{ fontSize: 11, letterSpacing: '0.04em' }}>МЕДИАНА: 8</span>
                 </div>
               </div>
             )}
 
-            {/* Step 4: open text */}
             {step === 3 && (
               <div className="q-step">
                 <div className="num">Вопрос 04 · текстовый ответ</div>
-                <h3>Что вы добавили бы или поменяли в формате Summer Days?</h3>
-                <p className="hint">Опционально. SU:Active читает все ответы вручную.</p>
-                <textarea className="textarea" placeholder="Напишите свободно. Если есть конкретная идея, опишите место и формат — это поможет нам быстрее реализовать." style={{ minHeight: 160, fontSize: 15 }}></textarea>
-                <div className="row sb mt-4" style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'var(--font-mono)', letterSpacing: '0.04em' }}>
-                  <span>0 / 1500 символов</span>
-                  <label className="checkbox" style={{ fontSize: 12, fontFamily: 'var(--font-sans)' }}>
-                    <input type="checkbox" />
-                    <span className="box"><Icon id="i-check" style={{ width: 12, height: 12, color: '#fff' }} /></span>
-                    Готов(а) обсудить идею голосом
-                  </label>
-                </div>
+                <h3>Что вы добавили бы или поменяли?</h3>
+                <p className="hint">Опционально. SU читает все ответы вручную.</p>
+                <textarea className="textarea" placeholder="Напишите свободно…" style={{ minHeight: 160, fontSize: 15 }}></textarea>
               </div>
             )}
 
           </div>
 
           <div className="q-footer">
-            <button
-              className="btn ghost"
-              onClick={() => setStep(s => Math.max(0, s - 1))}
-              disabled={step === 0}
-            >
+            <button className="btn ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
             </button>
             <div className="row gap-2">
@@ -221,7 +214,6 @@ export default function QuestionnairesPage() {
           </div>
 
         </section>
-
       </div>
     </>
   )

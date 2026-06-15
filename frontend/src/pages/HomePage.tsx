@@ -148,19 +148,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <footer className="footer-links">
-        <div className="l-group">
-          <Link to="/events">Ближайшие ивенты</Link>
-          <Link to="/questionnaires">Активные опросы</Link>
-          <Link to="/donations">Открытые сборы</Link>
-          <Link to="/members">Состав команды</Link>
-        </div>
-        <div className="l-group">
-          <span className="mono">SU · 2019 — 2026</span>
-          <a href="mailto:su@innopolis.university" className="mono">su@innopolis.university</a>
-        </div>
-      </footer>
-
       {info && (
         <div className="modal-overlay" onClick={() => setOpenDep(null)}>
           <div className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>

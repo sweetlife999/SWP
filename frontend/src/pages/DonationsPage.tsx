@@ -19,10 +19,12 @@ export default function DonationsPage() {
             <h2 style={{ marginBottom: 16 }}>На что идут средства</h2>
             <ul className="donate-list">
               <li>Печатные материалы — плакаты, брошюры, баннеры для мероприятий</li>
-              <li>Telegram-бот студсовета</li>
+              <li>Telegram-бот студсовета и инфраструктура SU Portal</li>
               <li>Видеооборудование для съёмки ивентов</li>
-              <li>Инвентарь и расходники для мероприятий</li>
+              <li>Инвентарь и расходники для мероприятий (гирлянды, реквизит, звук)</li>
               <li>Мерч студсовета</li>
+              <li>Призы для победителей хакатонов и турниров</li>
+              <li>Аренда оборудования для концертов и кино-вечеров</li>
             </ul>
             <p className="donate-note">
               Деньги поступают напрямую в студсовет. Крупные траты публикуем в нашем Telegram-канале.
@@ -30,19 +32,17 @@ export default function DonationsPage() {
           </div>
 
           <div className="card card-body">
-            <div className="row gap-3 mb-4">
-              <Icon id="i-shield" style={{ width: 16, height: 16, color: 'var(--accent)' }} />
-              <h3 style={{ fontSize: 15 }}>Прозрачность</h3>
-            </div>
+            <h2 style={{ marginBottom: 16, fontSize: 16 }}>Что купили в 2026</h2>
             <div className="col" style={{ gap: 12 }}>
               {[
-                { label: 'Собрано в этом году', value: '₽ 84 200' },
-                { label: 'Потрачено', value: '₽ 61 500' },
-                { label: 'Донаторов', value: '138 чел.' },
+                { label: 'Проектор и экран для Movie Night', value: '₽ 18 400' },
+                { label: 'Гребные лодки · аренда на сезон', value: '₽ 12 000' },
+                { label: 'Полиграфия Welcome Week + мерч', value: '₽ 9 300' },
+                { label: 'Призовой фонд Innopolis Open 2026', value: '₽ 21 800' },
               ].map(item => (
-                <div key={item.label} className="row sb" style={{ fontSize: 14, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
+                <div key={item.label} className="row sb" style={{ fontSize: 13, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
                   <span className="text-muted">{item.label}</span>
-                  <span style={{ fontWeight: 600 }}>{item.value}</span>
+                  <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{item.value}</span>
                 </div>
               ))}
             </div>
