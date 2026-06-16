@@ -66,9 +66,6 @@ const PHOTO_BG: Record<Member['dep'], string> = {
   media:  'linear-gradient(135deg, #f6c1da, #d65fa3)',
 }
 
-function initials(name: string) {
-  return name.split(' ').map(n => n[0]).join('').slice(0, 2)
-}
 
 export default function MembersPage() {
   const [searchParams, setSearchParams] = useSearchParams()
