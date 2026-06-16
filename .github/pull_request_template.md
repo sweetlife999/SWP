@@ -1,31 +1,60 @@
-## Что сделано
+## Linked Issue
 
-<!-- Кратко опиши изменения (1–3 пункта) -->
+Closes #<!-- issue number -->
+
+---
+
+## What was done
+
+<!-- 1–3 bullet points summarising the change -->
 
 -
 
-## Тип изменений
+## Type of change
 
-- [ ] Новая функциональность
-- [ ] Исправление бага
-- [ ] Рефакторинг / улучшение кода
-- [ ] Документация / отчёты
-- [ ] Конфигурация / CI
+- [ ] New feature (user-visible)
+- [ ] Bug fix
+- [ ] Refactor / code improvement
+- [ ] Documentation / reports
+- [ ] CI / configuration
+- [ ] Infrastructure / deployment
 
-## Связанные задачи / US
+## MVP version
 
-<!-- Укажи номера user story или задач, например: US-05, US-11 -->
+- [ ] MVP v1
+- [ ] MVP v2
+- [ ] Not scoped to an MVP version
 
-Closes #
+---
 
-## Чеклист
+## Acceptance criteria verification
 
-- [ ] Код прошёл ревью самостоятельно (self-review)
-- [ ] Новые зависимости задокументированы
-- [ ] Все ссылки в `.md`-файлах рабочие (link check прошёл)
-- [ ] Нет чувствительных данных (токены, пароли, ключи)
-- [ ] Изменения задокументированы в `reports/`, если нужно
+<!-- For each AC in the linked issue, state how it was verified -->
 
-## Скриншоты / демо
+| # | Acceptance Criterion | Verified? | Evidence |
+|---|----------------------|-----------|----------|
+| AC1 | | ☐ | |
+| AC2 | | ☐ | |
+| AC3 | | ☐ | |
 
-<!-- Если меняется UI — добавь скриншот или ссылку на Figma -->
+---
+
+## Checklist
+
+- [ ] Self-reviewed the diff before requesting review
+- [ ] All CI checks pass (lint, type-check, link-check)
+- [ ] `CHANGELOG.md` updated (if user-visible change)
+- [ ] No secrets, credentials, or personal data committed
+- [ ] Screenshots or demo link added below (if UI change)
+- [ ] Assignee and reviewer set on this PR
+- [ ] Issue Work Status updated to `Review`
+
+## Screenshots / demo
+
+<!-- Add a screenshot or link if the change affects the UI -->
+
+---
+
+## Reviewer notes
+
+<!-- Anything the reviewer should pay special attention to -->
