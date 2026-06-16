@@ -34,22 +34,6 @@ export default function DonationsPage() {
             </p>
           </div>
 
-          <div className="card card-body">
-            <h2 style={{ marginBottom: 16, fontSize: 16 }}>Что купили в 2026</h2>
-            <div className="col" style={{ gap: 12 }}>
-              {[
-                { label: 'Проектор и экран для Movie Night', value: '₽ 18 400' },
-                { label: 'Гребные лодки · аренда на сезон', value: '₽ 12 000' },
-                { label: 'Полиграфия Welcome Week + мерч', value: '₽ 9 300' },
-                { label: 'Призовой фонд Innopolis Open 2026', value: '₽ 21 800' },
-              ].map(item => (
-                <div key={item.label} className="row sb" style={{ fontSize: 13, paddingBottom: 10, borderBottom: '1px solid var(--border)' }}>
-                  <span className="text-muted">{item.label}</span>
-                  <span style={{ fontWeight: 600, fontFamily: 'var(--font-mono)', fontSize: 12 }}>{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
 
         <div className="donate-cta-simple">
