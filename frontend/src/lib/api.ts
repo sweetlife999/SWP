@@ -65,11 +65,13 @@ export interface ContentBlock { html: string; updatedAt?: string; updatedBy?: st
 
 export const api = {
   events: {
-    list: () => req<Event[]>('/events'),
-    get:  (id: number | string) => req<Event>(`/events/${id}`),
+    list:   () => req<Event[]>('/events'),
+    get:    (id: number | string) => req<Event>(`/events/${id}`),
+    create: (e: Omit<Event, 'id'>) => req<Event>('/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
   },
   members: {
-    list: () => req<Member[]>('/members'),
+    list:   () => req<Member[]>('/members'),
+    create: (m: Omit<Member, 'id'>) => req<Member>('/members', { method: 'POST', headers: authHeaders(), body: JSON.stringify(m) }),
   },
   surveys: {
     list: () => req<Survey[]>('/surveys'),

@@ -35,15 +35,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <NavLink className="nav-link" to="/admin/forms/builder">Forms</NavLink>
         <NavLink className="nav-link" to="/admin/forms/viewer">Ответы</NavLink>
       </nav>
-      {isAdmin ? (
+      {isAdmin && (
         <button className="btn ghost" style={{ fontSize: 12, gap: 6, marginLeft: 8 }} onClick={handleLogout}>
           <span style={{ background: 'var(--accent)', color: '#fff', borderRadius: 4, padding: '1px 6px', fontSize: 11, fontWeight: 700 }}>ADMIN</span>
           Выйти
         </button>
-      ) : (
-        <NavLink className="btn ghost" style={{ fontSize: 12, marginLeft: 8 }} to="/admin/login">
-          Войти
-        </NavLink>
       )}
     </header>
   )

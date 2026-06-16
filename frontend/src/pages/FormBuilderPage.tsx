@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
 
-type QType = 'scale' | 'multi' | 'single' | 'text' | 'short' | 'stars'
+type QType = 'scale' | 'multi' | 'single' | 'text' | 'short' | 'stars' | 'section'
+
+interface LogicRule { optionIndex: number; jumpTo: number | 'end' }
 
 interface Question {
   id: number
@@ -10,6 +12,7 @@ interface Question {
   hint: string
   options: string[]
   required: boolean
+  logic?: LogicRule[]
 }
 
 const TYPE_LABEL: Record<QType, string> = {
@@ -19,10 +22,11 @@ const TYPE_LABEL: Record<QType, string> = {
   text: 'Длинный текст',
   short: 'Короткий ответ',
   stars: 'Звёзды 1–5',
+  section: 'Секция / разделитель',
 }
 const TYPE_ICON: Record<QType, string> = {
   scale: 'i-scale', multi: 'i-square', single: 'i-circle',
-  text: 'i-list', short: 'i-text', stars: 'i-star',
+  text: 'i-list', short: 'i-text', stars: 'i-star', section: 'i-grid',
 }
 
 const INITIAL: Question[] = [
@@ -34,25 +38,45 @@ const INITIAL: Question[] = [
 
 let nextId = 10
 
-function QuestionCard({ q, num, onDelete, onChange }: {
-  q: Question
-  num: number
-  onDelete: () => void
-  onChange: (q: Question) => void
+function QuestionCard({ q, num, total, onDelete, onChange }: {
+  q: Question; num: number; total: number
+  onDelete: () => void; onChange: (q: Question) => void
 }) {
-  function addOption() {
-    onChange({ ...q, options: [...q.options, ''] })
-  }
-  function setOption(i: number, val: string) {
-    const opts = [...q.options]
-    opts[i] = val
-    onChange({ ...q, options: opts })
-  }
-  function removeOption(i: number) {
-    onChange({ ...q, options: q.options.filter((_, idx) => idx !== i) })
+  const [showLogic, setShowLogic] = useState(false)
+
+  function addOption() { onChange({ ...q, options: [...q.options, ''] }) }
+  function setOption(i: number, val: string) { const o = [...q.options]; o[i] = val; onChange({ ...q, options: o }) }
+  function removeOption(i: number) { onChange({ ...q, options: q.options.filter((_, idx) => idx !== i) }) }
+
+  function setLogicRule(optIdx: number, jumpTo: number | 'end' | '') {
+    const existing = (q.logic ?? []).filter(r => r.optionIndex !== optIdx)
+    const next: LogicRule[] = jumpTo === '' ? existing : [...existing, { optionIndex: optIdx, jumpTo: jumpTo as number | 'end' }]
+    onChange({ ...q, logic: next.length ? next : undefined })
   }
 
-  const hasoptions = q.type === 'single' || q.type === 'multi'
+  function getJumpTo(optIdx: number): number | 'end' | '' {
+    return q.logic?.find(r => r.optionIndex === optIdx)?.jumpTo ?? ''
+  }
+
+  const hasOptions = q.type === 'single' || q.type === 'multi'
+  const canHaveLogic = q.type === 'single'
+
+  if (q.type === 'section') {
+    return (
+      <article className="question" style={{ background: 'var(--surface-2)', borderStyle: 'dashed' }}>
+        <header className="q-head">
+          <span className="grip"><Icon id="i-grip" style={{ width: 14, height: 14 }} /></span>
+          <span className="type-tag"><Icon id={TYPE_ICON[q.type]} style={{ width: 11, height: 11 }} />{TYPE_LABEL[q.type]}</span>
+          <span className="text-mono text-muted" style={{ fontSize: 11 }}>{String(num).padStart(2, '0')}</span>
+          <div className="q-actions"><button className="icon-btn" onClick={onDelete}><Icon id="i-trash" /></button></div>
+        </header>
+        <div className="q-body">
+          <input className="q-title-input" value={q.title} placeholder="Заголовок секции…" onChange={e => onChange({ ...q, title: e.target.value })} />
+          <input className="q-hint-input" value={q.hint} placeholder="Подзаголовок / описание (опционально)…" onChange={e => onChange({ ...q, hint: e.target.value })} />
+        </div>
+      </article>
+    )
+  }
 
   return (
     <article className="question">
@@ -64,23 +88,23 @@ function QuestionCard({ q, num, onDelete, onChange }: {
         </span>
         <span className="text-mono text-muted" style={{ fontSize: 11 }}>{String(num).padStart(2, '0')}</span>
         <div className="q-actions">
+          {canHaveLogic && (
+            <button
+              className="icon-btn"
+              title="Условные переходы"
+              style={q.logic?.length ? { color: 'var(--accent)' } : {}}
+              onClick={() => setShowLogic(v => !v)}
+            >
+              <Icon id="i-share" style={{ width: 14, height: 14 }} />
+            </button>
+          )}
           <button className="icon-btn" onClick={onDelete}><Icon id="i-trash" /></button>
         </div>
       </header>
       <div className="q-body">
-        <input
-          className="q-title-input"
-          value={q.title}
-          placeholder="Текст вопроса…"
-          onChange={e => onChange({ ...q, title: e.target.value })}
-        />
+        <input className="q-title-input" value={q.title} placeholder="Текст вопроса…" onChange={e => onChange({ ...q, title: e.target.value })} />
         {q.type !== 'scale' && q.type !== 'stars' && (
-          <input
-            className="q-hint-input"
-            value={q.hint}
-            placeholder="Подсказка для респондента (опционально)…"
-            onChange={e => onChange({ ...q, hint: e.target.value })}
-          />
+          <input className="q-hint-input" value={q.hint} placeholder="Подсказка для респондента (опционально)…" onChange={e => onChange({ ...q, hint: e.target.value })} />
         )}
 
         {q.type === 'scale' && (
@@ -94,24 +118,19 @@ function QuestionCard({ q, num, onDelete, onChange }: {
             <div style={{ flexShrink: 0, color: 'var(--muted)', fontSize: 11, fontFamily: 'var(--font-mono)', minWidth: 60, display: 'grid', placeItems: 'start center', letterSpacing: '0.04em' }}>ОЧЕНЬ</div>
           </div>
         )}
-
         {q.type === 'stars' && (
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            {[1,2,3,4,5].map(n => (
-              <span key={n} style={{ fontSize: 28, color: 'var(--border-2)' }}>★</span>
-            ))}
+            {[1,2,3,4,5].map(n => <span key={n} style={{ fontSize: 28, color: 'var(--border-2)' }}>★</span>)}
           </div>
         )}
-
-        {(q.type === 'short') && (
+        {q.type === 'short' && (
           <input className="input" placeholder="Короткий ответ респондента…" disabled style={{ marginTop: 8, background: 'var(--surface-2)', color: 'var(--muted)', fontStyle: 'italic' }} />
         )}
-
         {q.type === 'text' && (
           <textarea className="textarea" placeholder="Длинный ответ респондента…" disabled style={{ marginTop: 8, background: 'var(--surface-2)', minHeight: 80, color: 'var(--muted)', fontStyle: 'italic' }} />
         )}
 
-        {hasoptions && (
+        {hasOptions && (
           <div style={{ marginTop: 8 }}>
             {q.options.map((opt, i) => (
               <div key={i} className={`opt-row${q.type === 'multi' ? ' checkbox' : ''}`}>
@@ -125,6 +144,30 @@ function QuestionCard({ q, num, onDelete, onChange }: {
             </button>
           </div>
         )}
+
+        {canHaveLogic && showLogic && q.options.length > 0 && (
+          <div style={{ marginTop: 12, borderTop: '1px solid var(--border)', paddingTop: 12 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', marginBottom: 8, letterSpacing: '0.05em' }}>УСЛОВНЫЕ ПЕРЕХОДЫ</div>
+            {q.options.map((opt, i) => (
+              <div key={i} className="row gap-2" style={{ marginBottom: 6, alignItems: 'center' }}>
+                <span style={{ fontSize: 12, color: 'var(--muted)', minWidth: 16, fontFamily: 'var(--font-mono)' }}>{i + 1}</span>
+                <span style={{ fontSize: 13, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{opt || `Вариант ${i + 1}`}</span>
+                <span style={{ fontSize: 12, color: 'var(--muted)' }}>→</span>
+                <select
+                  style={{ fontSize: 12, border: '1px solid var(--border)', borderRadius: 6, padding: '4px 8px', background: 'var(--surface)', color: 'var(--text)', minWidth: 140 }}
+                  value={getJumpTo(i)}
+                  onChange={e => setLogicRule(i, e.target.value === '' ? '' : e.target.value === 'end' ? 'end' : Number(e.target.value))}
+                >
+                  <option value="">Следующий вопрос</option>
+                  {Array.from({ length: total }, (_, j) => j + 1).filter(j => j !== num).map(j => (
+                    <option key={j} value={j}>Вопрос {j}</option>
+                  ))}
+                  <option value="end">Завершить опрос</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <footer className="q-footer">
         <label className="switch required-toggle">
@@ -132,6 +175,11 @@ function QuestionCard({ q, num, onDelete, onChange }: {
           <span className="track"></span>
           <span>Обязательный</span>
         </label>
+        {q.logic?.length ? (
+          <span style={{ fontSize: 11, color: 'var(--accent)', fontFamily: 'var(--font-mono)', marginLeft: 12 }}>
+            {q.logic.length} условие{q.logic.length > 1 ? 'й' : ''}
+          </span>
+        ) : null}
       </footer>
     </article>
   )
@@ -142,6 +190,8 @@ export default function FormBuilderPage() {
   const [questions, setQuestions] = useState<Question[]>(INITIAL)
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [toast, setToast] = useState('')
+  const [formTitle, setFormTitle] = useState('Фидбек Welcome Week 2026')
+  const [formDesc, setFormDesc] = useState('Помогите оценить программу Welcome Week и понять, что улучшить к следующему набору. Опрос анонимный, около 2 минут.')
 
   function showToast(msg: string) {
     setToast(msg)
@@ -162,13 +212,10 @@ export default function FormBuilderPage() {
     setQuestions(qs => [...qs, { id: nextId++, type, title: '', hint: '', options: defaultOptions, required: false }])
   }
 
-  function deleteQuestion(id: number) {
-    setQuestions(qs => qs.filter(q => q.id !== id))
-  }
+  function deleteQuestion(id: number) { setQuestions(qs => qs.filter(q => q.id !== id)) }
+  function updateQuestion(updated: Question) { setQuestions(qs => qs.map(q => q.id === updated.id ? updated : q)) }
 
-  function updateQuestion(updated: Question) {
-    setQuestions(qs => qs.map(q => q.id === updated.id ? updated : q))
-  }
+  const nonSectionCount = questions.filter(q => q.type !== 'section').length
 
   return (
     <>
@@ -196,7 +243,7 @@ export default function FormBuilderPage() {
       </div>
 
       <div className="builder-toolbar">
-        <span className="stat-pill"><Icon id="i-clipboard" style={{ width: 12, height: 12 }} />{questions.length} вопросов</span>
+        <span className="stat-pill"><Icon id="i-clipboard" style={{ width: 12, height: 12 }} />{nonSectionCount} вопросов</span>
         <span className="stat-pill"><Icon id="i-clock" style={{ width: 12, height: 12 }} />~ 2 мин</span>
         <span className="stat-pill"><Icon id="i-users" style={{ width: 12, height: 12 }} />видит: All students</span>
       </div>
@@ -213,10 +260,18 @@ export default function FormBuilderPage() {
             ))}
           </div>
           <div className="pal-divider"></div>
+          <h4>Структура</h4>
+          <div className="pal-list">
+            <button className="pal-item" onClick={() => addQuestion('section')}>
+              <Icon id="i-grid" className="ic" />Секция / разделитель
+            </button>
+          </div>
+          <div className="pal-divider"></div>
           <h4>Логика</h4>
           <div className="pal-list">
-            <button className="pal-item" onClick={() => showToast('Условная логика — в разработке')}><Icon id="i-share" className="ic" />Условный переход</button>
-            <button className="pal-item" onClick={() => showToast('Секции — в разработке')}><Icon id="i-grid" className="ic" />Секция / разделитель</button>
+            <button className="pal-item" style={{ color: 'var(--muted)', fontSize: 12 }}>
+              <Icon id="i-share" className="ic" />Нажмите <Icon id="i-share" style={{ width: 11, height: 11 }} /> у вопроса типа «Один из вариантов»
+            </button>
           </div>
         </aside>
 
@@ -224,10 +279,20 @@ export default function FormBuilderPage() {
           <header className="form-head">
             <div className="badge-row">
               <span className="tag green" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>SU:Core</span>
-              <span>ОПРОС #025 · ЧЕРНОВИК</span>
+              <span>ОПРОС #025 · {status === 'published' ? 'ОПУБЛИКОВАН' : 'ЧЕРНОВИК'}</span>
             </div>
-            <input className="form-title" defaultValue="Фидбек Welcome Week 2026" />
-            <textarea className="form-desc" defaultValue="Помогите оценить программу Welcome Week и понять, что улучшить к следующему набору. Опрос анонимный, около 2 минут." />
+            <input
+              className="form-title"
+              value={formTitle}
+              onChange={e => setFormTitle(e.target.value)}
+              placeholder="Название опроса…"
+            />
+            <textarea
+              className="form-desc"
+              value={formDesc}
+              onChange={e => setFormDesc(e.target.value)}
+              placeholder="Описание опроса…"
+            />
           </header>
 
           <div className="questions-list">
@@ -236,6 +301,7 @@ export default function FormBuilderPage() {
                 key={q.id}
                 q={q}
                 num={i + 1}
+                total={questions.length}
                 onDelete={() => deleteQuestion(q.id)}
                 onChange={updateQuestion}
               />
@@ -248,6 +314,7 @@ export default function FormBuilderPage() {
             <button onClick={() => addQuestion('multi')}>+ Несколько</button>
             <button onClick={() => addQuestion('scale')}>+ Шкала</button>
             <button onClick={() => addQuestion('text')}>+ Текст</button>
+            <button onClick={() => addQuestion('section')}>+ Секция</button>
           </div>
         </section>
 

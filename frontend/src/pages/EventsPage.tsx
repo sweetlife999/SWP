@@ -2,6 +2,12 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event } from '../lib/api'
+import { useAdmin } from '../lib/AdminContext'
+
+const BLANK_EVENT: Omit<Event, 'id'> = {
+  title: '', desc: '', date: '', dd: '', mm: '', cover: '',
+  tag: 'SU:Core', tagCls: 'green', time: '', foot: '', past: false,
+}
 
 function EventCard({ ev }: { ev: Event }) {
   return (
@@ -28,7 +34,10 @@ function EventCard({ ev }: { ev: Event }) {
   )
 }
 
+const MONTH_ABBR = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК']
+
 export default function EventsPage() {
+  const { isAdmin } = useAdmin()
   const [events, setEvents] = useState<Event[]>([])
   const [seg1, setSeg1] = useState(0)
   const [search, setSearch] = useState('')
@@ -36,10 +45,29 @@ export default function EventsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [limit, setLimit] = useState(4)
+  const [addingEvent, setAddingEvent] = useState(false)
+  const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
 
   useEffect(() => {
     api.events.list().then(setEvents).catch(() => {})
   }, [])
+
+  async function handleAddEvent() {
+    const d = new Date(newEvent.date)
+    const ev = {
+      ...newEvent,
+      dd: newEvent.date ? String(d.getDate()).padStart(2, '0') : '',
+      mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
+    }
+    try {
+      const created = await api.events.create(ev)
+      setEvents(prev => [...prev, created])
+    } catch {
+      setEvents(prev => [...prev, { ...ev, id: Date.now() }])
+    }
+    setNewEvent(BLANK_EVENT)
+    setAddingEvent(false)
+  }
 
   function applyFilter(list: Event[]) {
     return list.filter(ev => {
@@ -66,6 +94,11 @@ export default function EventsPage() {
           <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Ближайшие и прошедшие мероприятия от студсовета.</p>
         </div>
         <div className="row gap-2">
+          {isAdmin && (
+            <button className="btn primary" onClick={() => setAddingEvent(true)}>
+              <Icon id="i-plus" style={{ width: 14, height: 14 }} />Добавить ивент
+            </button>
+          )}
           <div className="input-group" style={{ width: 220 }}>
             <Icon id="i-search" className="ic" />
             <input
@@ -147,6 +180,67 @@ export default function EventsPage() {
       {hasMore && (
         <div className="row" style={{ justifyContent: 'center', marginTop: 32 }}>
           <button className="btn secondary" onClick={() => setLimit(l => l + 4)}>Загрузить ещё <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+        </div>
+      )}
+
+      {addingEvent && (
+        <div className="modal-overlay" onClick={() => setAddingEvent(false)}>
+          <div className="member-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
+            <button className="modal-close" onClick={() => setAddingEvent(false)}>
+              <Icon id="i-x" style={{ width: 14, height: 14 }} />
+            </button>
+            <div className="member-modal-body" style={{ paddingTop: 24 }}>
+              <h3 style={{ marginBottom: 20 }}>Новое мероприятие</h3>
+              <div className="col gap-3">
+                <div className="field">
+                  <label>Название</label>
+                  <input className="input" placeholder="Hackathon Summer 24h" value={newEvent.title} onChange={e => setNewEvent(v => ({ ...v, title: e.target.value }))} />
+                </div>
+                <div className="field">
+                  <label>Описание</label>
+                  <textarea className="textarea" rows={2} placeholder="Краткое описание…" value={newEvent.desc} onChange={e => setNewEvent(v => ({ ...v, desc: e.target.value }))} />
+                </div>
+                <div className="row gap-3">
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Дата</label>
+                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent(v => ({ ...v, date: e.target.value }))} />
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Время (опц.)</label>
+                    <input className="input" placeholder="19:00" value={newEvent.time ?? ''} onChange={e => setNewEvent(v => ({ ...v, time: e.target.value }))} />
+                  </div>
+                </div>
+                <div className="row gap-3">
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Департамент</label>
+                    <select className="input" value={newEvent.tag} onChange={e => {
+                      const map: Record<string, string> = { 'SU:Core': 'green', 'SU:Active': 'blue', 'SU:Media': 'purple' }
+                      setNewEvent(v => ({ ...v, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' }))
+                    }}>
+                      <option>SU:Core</option>
+                      <option>SU:Active</option>
+                      <option>SU:Media</option>
+                    </select>
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Статус</label>
+                    <select className="input" value={newEvent.past ? 'past' : 'current'} onChange={e => setNewEvent(v => ({ ...v, past: e.target.value === 'past' }))}>
+                      <option value="current">Текущее</option>
+                      <option value="past">Прошедшее</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="field">
+                  <label>Доп. инфо (участники, места)</label>
+                  <input className="input" placeholder="32 участника" value={newEvent.foot} onChange={e => setNewEvent(v => ({ ...v, foot: e.target.value }))} />
+                </div>
+                <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
+                  <button className="btn ghost" onClick={() => setAddingEvent(false)}>Отмена</button>
+                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.date} onClick={handleAddEvent}>Добавить</button>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </>

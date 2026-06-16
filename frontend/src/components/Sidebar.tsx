@@ -80,19 +80,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 <Icon id="i-x" style={{ width: 14, height: 14 }} />
               </button>
             </>
-          ) : (
-            <>
-              <div className="avatar">?</div>
-              <div style={{ minWidth: 0, flex: 1 }}>
-                <div className="name">Гость</div>
-                <div className="role">
-                  <NavLink to="/admin/login" onClick={onClose} style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 12 }}>
-                    Войти как админ
-                  </NavLink>
-                </div>
-              </div>
-            </>
-          )}
+          ) : null}
         </div>
       </aside>
       <div className={`scrim${open ? ' open' : ''}`} onClick={onClose} />
