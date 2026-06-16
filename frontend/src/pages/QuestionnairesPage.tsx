@@ -35,6 +35,9 @@ export default function QuestionnairesPage() {
   const [activeId, setActiveId] = useState('024')
   const [step, setStep] = useState(0)
   const [scaleVal, setScaleVal] = useState(7)
+  const [textAnswer, setTextAnswer] = useState('')
+  const [archived, setArchived] = useState(false)
+  const [submitted, setSubmitted] = useState(false)
   const totalSteps = 4
 
   const active = QUESTS.find(q => q.id === activeId)!
@@ -45,6 +48,8 @@ export default function QuestionnairesPage() {
     setActiveId(id)
     setStep(0)
     setScaleVal(7)
+    setTextAnswer('')
+    setSubmitted(false)
   }
 
   return (
@@ -62,7 +67,7 @@ export default function QuestionnairesPage() {
         <section>
           <div className="row sb mb-4">
             <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{QUESTS.length}</span></h3>
-            <button className="btn ghost sm">Архив</button>
+            <button className="btn ghost sm" onClick={() => setArchived(v => !v)}>{archived ? 'Скрыть архив' : 'Архив'}</button>
           </div>
           <div className="q-list">
             {QUESTS.map(q => (
@@ -193,7 +198,7 @@ export default function QuestionnairesPage() {
                 <div className="num">Вопрос 04 · текстовый ответ</div>
                 <h3>Что вы добавили бы или поменяли?</h3>
                 <p className="hint">Опционально. SU читает все ответы вручную.</p>
-                <textarea className="textarea" placeholder="Напишите свободно…" style={{ minHeight: 160, fontSize: 15 }}></textarea>
+                <textarea className="textarea" placeholder="Напишите свободно…" style={{ minHeight: 160, fontSize: 15 }} value={textAnswer} onChange={e => setTextAnswer(e.target.value)} />
               </div>
             )}
 
@@ -204,11 +209,13 @@ export default function QuestionnairesPage() {
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
             </button>
             <div className="row gap-2">
-              <button className="btn secondary">Сохранить и выйти</button>
+              <button className="btn secondary" onClick={() => { setStep(0); setTextAnswer('') }}>Сохранить и выйти</button>
               {step < totalSteps - 1 ? (
-                <button className="btn primary" onClick={() => setStep(s => s + 1)}>Next →</button>
+                <button className="btn primary" onClick={() => setStep(s => s + 1)}>Далее →</button>
+              ) : submitted ? (
+                <button className="btn secondary" disabled><Icon id="i-check" style={{ width: 14, height: 14 }} />Ответ отправлен</button>
               ) : (
-                <button className="btn primary"><Icon id="i-check" style={{ width: 14, height: 14 }} />Отправить ответ</button>
+                <button className="btn primary" onClick={() => setSubmitted(true)}><Icon id="i-check" style={{ width: 14, height: 14 }} />Отправить ответ</button>
               )}
             </div>
           </div>

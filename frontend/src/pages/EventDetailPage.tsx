@@ -1,9 +1,38 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 
 export default function EventDetailPage() {
+  const [registered, setRegistered] = useState(false)
+  const [toast, setToast] = useState('')
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  function handleRegister() {
+    setRegistered(r => !r)
+    showToast(!registered ? 'Вы зарегистрированы на Hackathon Summer 24h!' : 'Регистрация отменена')
+  }
+
+  function handleCalendar() {
+    const ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nSUMMARY:Hackathon Summer 24h\r\nDTSTART:20260620T100000\r\nDTEND:20260621T180000\r\nLOCATION:Sport Tower 519, Иннополис\r\nDESCRIPTION:24 часа открытого хакатона. SU:Core.\r\nEND:VEVENT\r\nEND:VCALENDAR'
+    const blob = new Blob([ics], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'hackathon-summer-24h.ics'; a.click()
+    URL.revokeObjectURL(url)
+    showToast('Файл .ics скачан')
+  }
+
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
 
       <section className="event-banner">
         <div className="banner-inner">
@@ -96,18 +125,18 @@ export default function EventDetailPage() {
           <article className="content-block">
             <h2>Похожие мероприятия</h2>
             <div className="related-grid">
-              <a className="related-card" href="#/events/1">
+              <Link className="related-card" to="/events/1">
                 <div className="img"></div>
                 <div className="body"><div className="meta">12 ИЮЛ · SU:CORE</div><h4>Open meeting Q3: бюджет и ивенты</h4></div>
-              </a>
-              <a className="related-card" href="#/events/1">
+              </Link>
+              <Link className="related-card" to="/events/1">
                 <div className="img a"></div>
                 <div className="body"><div className="meta">14 ИЮН · SU:ACTIVE</div><h4>Open Mic: stand-up evening</h4></div>
-              </a>
-              <a className="related-card" href="#/events/1">
+              </Link>
+              <Link className="related-card" to="/events/1">
                 <div className="img b"></div>
                 <div className="body"><div className="meta">5 ИЮЛ · SU:ACTIVE</div><h4>Гребля и BBQ · закрытие Summer Days</h4></div>
-              </a>
+              </Link>
             </div>
           </article>
         </div>
@@ -129,8 +158,10 @@ export default function EventDetailPage() {
               <div className="progress" style={{ flex: 1 }}><div className="bar" style={{ width: '72%' }}></div></div>
             </div>
             <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест · регистрация до 19 июня 18:00</span>
-            <button className="btn primary lg">Зарегистрироваться <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></button>
-            <button className="btn secondary">Сохранить в календарь</button>
+            <button className={`btn lg${registered ? ' secondary' : ' primary'}`} onClick={handleRegister}>
+              {registered ? <>✓ Вы зарегистрированы</> : <>Зарегистрироваться <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></>}
+            </button>
+            <button className="btn secondary" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
               <div className="row sb"><span className="lbl">Категория</span><span className="val">Hackathon</span></div>
               <div className="row sb"><span className="lbl">Департамент</span><span className="val">SU:Core</span></div>

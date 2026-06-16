@@ -73,8 +73,13 @@ export default function EventsPage() {
     })
   }
 
-  const current = applyFilter(EVENTS.filter(ev => !ev.past))
-  const past = applyFilter(EVENTS.filter(ev => !!ev.past))
+  const [limit, setLimit] = useState(4)
+
+  const allCurrent = applyFilter(EVENTS.filter(ev => !ev.past))
+  const allPast = applyFilter(EVENTS.filter(ev => !!ev.past))
+  const current = allCurrent.slice(0, limit)
+  const past = allPast.slice(0, limit)
+  const hasMore = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit
   const hasDateFilter = !!(dateFrom || dateTo)
 
   return (
@@ -127,7 +132,7 @@ export default function EventsPage() {
       <div className="filters-bar">
         <div className="seg">
           {['Текущие · 7', 'Прошедшие · 24'].map((label, i) => (
-            <button key={i} className={seg1 === i ? 'active' : ''} onClick={() => setSeg1(i)}>{label}</button>
+            <button key={i} className={seg1 === i ? 'active' : ''} onClick={() => { setSeg1(i); setLimit(4) }}>{label}</button>
           ))}
         </div>
       </div>
@@ -160,9 +165,11 @@ export default function EventsPage() {
         </>
       )}
 
-      <div className="row" style={{ justifyContent: 'center', marginTop: 32 }}>
-        <button className="btn secondary">Загрузить ещё <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
-      </div>
+      {hasMore && (
+        <div className="row" style={{ justifyContent: 'center', marginTop: 32 }}>
+          <button className="btn secondary" onClick={() => setLimit(l => l + 4)}>Загрузить ещё <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+        </div>
+      )}
     </>
   )
 }

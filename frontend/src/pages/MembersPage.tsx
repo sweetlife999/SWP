@@ -79,6 +79,14 @@ export default function MembersPage() {
   const [memberSeg, setMemberSeg] = useState(initialSeg)
   const [editing, setEditing] = useState(false)
   const [selected, setSelected] = useState<Member | null>(null)
+  const [search, setSearch] = useState('')
+  const [showAll, setShowAll] = useState(false)
+  const [toast, setToast] = useState('')
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
 
   function handleSeg(i: number) {
     setMemberSeg(i)
@@ -86,10 +94,17 @@ export default function MembersPage() {
     else setSearchParams({})
   }
 
-  const visibleMembers = memberSeg === 0 ? MEMBERS : MEMBERS.filter(p => p.dep === DEP_KEYS[memberSeg])
+  const filteredMembers = (memberSeg === 0 ? MEMBERS : MEMBERS.filter(p => p.dep === DEP_KEYS[memberSeg]))
+    .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.role.toLowerCase().includes(search.toLowerCase()))
+  const visibleMembers = showAll ? filteredMembers : filteredMembers.slice(0, 8)
 
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Команда и история</span>
@@ -121,9 +136,9 @@ export default function MembersPage() {
             </div>
             <div className="input-group" style={{ width: 280, marginLeft: 'auto' }}>
               <Icon id="i-search" className="ic" />
-              <input placeholder="Найти по имени, направлению…" />
+              <input placeholder="Найти по имени, направлению…" value={search} onChange={e => { setSearch(e.target.value); setShowAll(true) }} />
             </div>
-            <button className="btn secondary"><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
+            <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
 
           <div className="members-grid">
@@ -142,9 +157,11 @@ export default function MembersPage() {
             ))}
           </div>
 
-          <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
-            <button className="btn secondary">Показать всех 28 участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
-          </div>
+          {!showAll && filteredMembers.length > 8 && (
+            <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
+              <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+            </div>
+          )}
         </div>
       )}
 
@@ -240,7 +257,7 @@ export default function MembersPage() {
           <div className="row sb mt-4">
             <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
             <div className={`row gap-2 read-actions${editing ? '' : ''}`}>
-              <button className="btn secondary"><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
+              <button className="btn secondary" onClick={() => showToast('История правок: последнее изменение — Михаил Раянов, 4 июня 2026')}><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
               <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>
             </div>
           </div>

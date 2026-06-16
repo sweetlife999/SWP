@@ -140,6 +140,22 @@ function QuestionCard({ q, num, onDelete, onChange }: {
 export default function FormBuilderPage() {
   const [preview, setPreview] = useState(false)
   const [questions, setQuestions] = useState<Question[]>(INITIAL)
+  const [status, setStatus] = useState<'draft' | 'published'>('draft')
+  const [toast, setToast] = useState('')
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  function exportCsv() {
+    const rows = questions.map((q, i) => [`${i + 1}`, q.type, q.title, q.hint, q.options.join(' | ')])
+    const csv = [['#', 'Type', 'Title', 'Hint', 'Options'], ...rows].map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'form-questions.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
 
   function addQuestion(type: QType) {
     const defaultOptions = (type === 'single' || type === 'multi') ? ['Вариант 1', 'Вариант 2'] : []
@@ -156,10 +172,15 @@ export default function FormBuilderPage() {
 
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
       <div className="page-head">
         <div className="title">
           <div className="row gap-2 mb-2">
-            <span className="tag green"><span className="dot"></span>Черновик</span>
+            <span className={`tag ${status === 'published' ? 'blue' : 'green'}`}><span className="dot"></span>{status === 'published' ? 'Опубликован' : 'Черновик'}</span>
             <span className="tag outline"><Icon id="i-clock" style={{ width: 11, height: 11 }} />автосохранение 12 сек назад</span>
           </div>
           <h1>Конструктор опроса</h1>
@@ -169,8 +190,8 @@ export default function FormBuilderPage() {
             <Icon id="i-eye" style={{ width: 14, height: 14 }} />
             {preview ? 'Редактировать' : 'Preview'}
           </button>
-          <button className="btn secondary">Сохранить как черновик</button>
-          <button className="btn primary"><Icon id="i-rocket" style={{ width: 14, height: 14 }} />Опубликовать</button>
+          <button className="btn secondary" onClick={() => showToast('Черновик сохранён')}>Сохранить как черновик</button>
+          <button className="btn primary" onClick={() => { setStatus('published'); showToast('Опрос опубликован!') }}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />Опубликовать</button>
         </div>
       </div>
 
@@ -194,8 +215,8 @@ export default function FormBuilderPage() {
           <div className="pal-divider"></div>
           <h4>Логика</h4>
           <div className="pal-list">
-            <button className="pal-item"><Icon id="i-share" className="ic" />Условный переход</button>
-            <button className="pal-item"><Icon id="i-grid" className="ic" />Секция / разделитель</button>
+            <button className="pal-item" onClick={() => showToast('Условная логика — в разработке')}><Icon id="i-share" className="ic" />Условный переход</button>
+            <button className="pal-item" onClick={() => showToast('Секции — в разработке')}><Icon id="i-grid" className="ic" />Секция / разделитель</button>
           </div>
         </aside>
 
@@ -256,7 +277,7 @@ export default function FormBuilderPage() {
           <div className="export-card">
             <h4><Icon id="i-download" style={{ width: 16, height: 16 }} />Экспорт результатов</h4>
             <p>Скачать ответы в .xlsx, .csv или скопировать ссылку на дашборд после публикации.</p>
-            <button className="btn">Экспорт в .xlsx</button>
+            <button className="btn" onClick={exportCsv}>Экспорт в .csv</button>
           </div>
         </aside>
       </div>

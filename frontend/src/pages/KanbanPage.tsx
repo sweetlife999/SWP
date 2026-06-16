@@ -222,9 +222,9 @@ const FACES = [
 
 // ── Card Detail Panel ───────────────────────────────────────────────────────
 
-interface CardDetailPanelProps { card: CardData; onClose: () => void }
+interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void }
 
-function CardDetailPanel({ card, onClose }: CardDetailPanelProps) {
+function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
   const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
   return (
     <>
@@ -314,7 +314,7 @@ function CardDetailPanel({ card, onClose }: CardDetailPanelProps) {
           <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
             <Icon id="i-x" style={{ width: 14, height: 14 }} />Закрыть
           </button>
-          <button className="btn primary" style={{ flex: 1 }}>
+          <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
             <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
           </button>
         </div>
@@ -410,20 +410,54 @@ function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: 
 export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
   const [search, setSearch] = useState('')
+  const [extraCards, setExtraCards] = useState<CardData[]>([])
   const [cardCols, setCardCols] = useState<Record<string, ColKey>>(
     () => Object.fromEntries(CARDS.map(c => [c.id, c.col]))
   )
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<ColKey | null>(null)
   const [selected, setSelected] = useState<CardData | null>(null)
+  const [chipP01, setChipP01] = useState(true)
+  const [chipOpenDay, setChipOpenDay] = useState(false)
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
+
+  const allCards = [...CARDS, ...extraCards]
 
   function colCards(col: ColKey) {
     const q = search.trim().toLowerCase()
-    return CARDS.filter(c => {
-      if (cardCols[c.id] !== col) return false
+    return allCards.filter(c => {
+      if ((cardCols[c.id] ?? c.col) !== col) return false
+      if (chipP01 && c.priority === 'p-low') return false
+      if (chipOpenDay && !c.tags.some(t => t.label === 'Open Day')) return false
       if (!q) return true
       return c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q) || false
     })
+  }
+
+  function exportCsv() {
+    const headers = ['ID', 'Column', 'Priority', 'Title', 'Assignees']
+    const rows = allCards.map(c => [c.id, cardCols[c.id] ?? c.col, c.pLabel, c.title, c.assignees.map(a => a.initials).join('; ')])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'kanban-sprint14.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function openNewTask(col: ColKey) {
+    setNewTask({ open: true, col, title: '' })
+  }
+
+  function submitNewTask() {
+    if (!newTask.title.trim()) return
+    const id = `kb-x${Date.now()}`
+    const card: CardData = {
+      id, col: newTask.col, tags: [], title: newTask.title.trim(),
+      priority: 'p-low', pLabel: 'P3', assignees: []
+    }
+    setExtraCards(prev => [...prev, card])
+    setCardCols(prev => ({ ...prev, [id]: newTask.col }))
+    setNewTask({ open: false, col: 'backlog', title: '' })
   }
 
   function handleDrop(e: React.DragEvent, col: ColKey) {
@@ -445,10 +479,10 @@ export default function KanbanPage() {
           </p>
         </div>
         <div className="row gap-2">
-          <button className="btn secondary">
+          <button className="btn secondary" onClick={exportCsv}>
             <Icon id="i-download" style={{ width: 14, height: 14 }} />Экспорт CSV
           </button>
-          <button className="btn primary">
+          <button className="btn primary" onClick={() => openNewTask('backlog')}>
             <Icon id="i-plus" style={{ width: 14, height: 14 }} />Новая задача
           </button>
         </div>
@@ -482,11 +516,11 @@ export default function KanbanPage() {
           <div className="more">+3</div>
         </div>
         <span className="divider" />
-        <button className="filter-chip active">
-          <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1<span className="x">×</span>
+        <button className={`filter-chip${chipP01 ? ' active' : ''}`} onClick={() => setChipP01(v => !v)}>
+          <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1{chipP01 && <span className="x">×</span>}
         </button>
-        <button className="filter-chip">
-          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day
+        <button className={`filter-chip${chipOpenDay ? ' active' : ''}`} onClick={() => setChipOpenDay(v => !v)}>
+          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day{chipOpenDay && <span className="x">×</span>}
         </button>
         <div style={{ marginLeft: 'auto' }} className="row gap-2">
           <div className="seg">
@@ -524,7 +558,7 @@ export default function KanbanPage() {
                   >
                     {cards.length}
                   </span>
-                  <button className="add"><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
+                  <button className="add" onClick={() => !col.eyeBtn && openNewTask(col.key)}><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
                 </header>
 
                 <div
@@ -557,7 +591,7 @@ export default function KanbanPage() {
                 </div>
 
                 {col.key !== 'done' && (
-                  <button className="col-add-empty"><Icon id="i-plus" />Добавить задачу</button>
+                  <button className="col-add-empty" onClick={() => openNewTask(col.key)}><Icon id="i-plus" />Добавить задачу</button>
                 )}
               </section>
             )
@@ -569,8 +603,40 @@ export default function KanbanPage() {
         Внутренний backlog · виден только команде SU:Core · <span className="text-mono">перетащи карточку ↔ чтобы изменить статус · нажми чтобы открыть детали</span>
       </footer>
 
+      {/* New task modal */}
+      {newTask.open && (
+        <div className="modal-overlay" onClick={() => setNewTask(t => ({ ...t, open: false }))}>
+          <div className="dep-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+            <button className="modal-close" onClick={() => setNewTask(t => ({ ...t, open: false }))}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+            <div className="dep-modal-header"><h2>Новая задача</h2></div>
+            <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="field">
+                <label>Название</label>
+                <input className="input" autoFocus placeholder="Название задачи…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
+              </div>
+              <div className="field">
+                <label>Колонка</label>
+                <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                  {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
+              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setNewTask(t => ({ ...t, open: false }))}>Отмена</button>
+              <button className="btn primary" style={{ flex: 1 }} onClick={submitNewTask} disabled={!newTask.title.trim()}>Создать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Task detail panel */}
-      {selected && <CardDetailPanel card={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <CardDetailPanel
+          card={selected}
+          onClose={() => setSelected(null)}
+          onMarkDone={() => setCardCols(prev => ({ ...prev, [selected.id]: 'done' }))}
+        />
+      )}
     </>
   )
 }
