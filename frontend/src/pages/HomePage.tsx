@@ -32,7 +32,7 @@ const DEP_INFO = {
   media: {
     name: 'SU:Media',
     tagline: 'Контент, дизайн, голос студсовета',
-    desc: 'SU:Media — публичный фронт студсовета. Снимает фото и видео с мероприятий, ведёт ленту в IU Connect, делает плакаты и печатные материалы, пишет лонгриды и репортажи о жизни кампуса.',
+    desc: 'SU:Media — публичный фронт студсовета. Снимает фото и видео с мероприятий, ведёт соцсети, делает плакаты и печатные материалы, пишет лонгриды и репортажи о жизни кампуса.',
     recent: [
       'Репортаж с Innopolis Open 2026 — 320 участников',
       'Photo walk · Volga shore — июнь 2026',
@@ -125,7 +125,7 @@ export default function HomePage() {
           <div className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
             <span className="dep-name">SU:Media</span>
             <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
-            <p className="desc">Снимает ивенты, ведёт ленту в IU Connect, делает плакаты, пишет лонгриды для портала.</p>
+            <p className="desc">Снимает ивенты, ведёт соцсети, делает плакаты, пишет лонгриды для портала.</p>
             <div className="meta">
               <span><b>6</b> участников</span>
               <span className="dot" />

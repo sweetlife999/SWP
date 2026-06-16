@@ -3,17 +3,11 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 
 export default function EventDetailPage() {
-  const [registered, setRegistered] = useState(false)
   const [toast, setToast] = useState('')
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
-  }
-
-  function handleRegister() {
-    setRegistered(r => !r)
-    showToast(!registered ? 'Вы зарегистрированы на Hackathon Summer 24h!' : 'Регистрация отменена')
   }
 
   function handleCalendar() {
@@ -39,7 +33,7 @@ export default function EventDetailPage() {
           <div>
             <div className="badges">
               <span className="b">SU:Core · TOP</span>
-              <span className="b live">live · регистрация открыта</span>
+              <span className="b live">live</span>
             </div>
             <h1>Hackathon Summer 24h</h1>
             <p className="sub">24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.</p>
@@ -157,11 +151,8 @@ export default function EventDetailPage() {
               <span className="num">32 / 44</span>
               <div className="progress" style={{ flex: 1 }}><div className="bar" style={{ width: '72%' }}></div></div>
             </div>
-            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест · регистрация до 19 июня 18:00</span>
-            <button className={`btn lg${registered ? ' secondary' : ' primary'}`} onClick={handleRegister}>
-              {registered ? <>✓ Вы зарегистрированы</> : <>Зарегистрироваться <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></>}
-            </button>
-            <button className="btn secondary" onClick={handleCalendar}>Сохранить в календарь</button>
+            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест</span>
+            <button className="btn primary lg" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
               <div className="row sb"><span className="lbl">Категория</span><span className="val">Hackathon</span></div>
               <div className="row sb"><span className="lbl">Департамент</span><span className="val">SU:Core</span></div>

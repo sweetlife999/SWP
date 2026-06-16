@@ -7,7 +7,7 @@ type QStep =
   | { type: 'scale';  title: string; hint: string; low: string; high: string; median?: number }
   | { type: 'text';   title: string; hint: string }
 
-const QUESTS = [
+const SURVEYS = [
   {
     id: '024', tag: 'SU:Active', tagCls: 'blue',
     title: 'Программа Summer Days 2026 — какие активности добавить',
@@ -69,7 +69,7 @@ export default function QuestionnairesPage() {
   const [submitted, setSubmitted] = useState(false)
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
-  const active = QUESTS.find(q => q.id === activeId)!
+  const active = SURVEYS.find(q => q.id === activeId)!
   const totalSteps = active.steps.length
   const progress = ((step + 1) / totalSteps) * 100
   const currentStep = active.steps[step]
@@ -117,11 +117,11 @@ export default function QuestionnairesPage() {
 
         <section>
           <div className="row sb mb-4">
-            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{QUESTS.length}</span></h3>
+            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{SURVEYS.length}</span></h3>
             <button className="btn ghost sm" onClick={() => setArchived(v => !v)}>{archived ? 'Скрыть архив' : 'Архив'}</button>
           </div>
           <div className="q-list">
-            {QUESTS.map(q => (
+            {SURVEYS.map(q => (
               <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
                 <div className="meta">
                   <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
