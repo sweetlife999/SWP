@@ -58,6 +58,4 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Link-check CI workflow (`link-check.yml`)
 - Design system: CSS variables, layout, typography, colour tokens
 
-[Unreleased]: https://github.com/sweetlife999/SWP/compare/v0.2.0...HEAD
-[0.2.0]: https://github.com/sweetlife999/SWP/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/sweetlife999/SWP/releases/tag/v0.1.0
+<!-- version compare links added after git tags are created -->

@@ -4,7 +4,7 @@
 
 **Dates:** 2026-05-26 – 2026-06-01
 **Goal:** Set up repository, CI/CD, design system, and deploy a static shell of the portal.
-**Milestone:** [Sprint 1](../../milestones) *(link when created)*
+**Milestone:** Sprint 1 *(milestone TBD)*
 
 - Repository structure, branch protection, PR/issue workflow
 - Docker + GitHub Actions deploy pipeline
@@ -17,7 +17,7 @@
 
 **Dates:** 2026-06-02 – 2026-06-08
 **Goal:** Deliver the public-facing informational pages — Events, Members, Departments, Donations — with realistic content.
-**Milestone:** [Sprint 2](../../milestones) *(link when created)*
+**Milestone:** Sprint 2 *(milestone TBD)*
 
 - Events page (US-01)
 - Member directory (US-05)
@@ -31,7 +31,7 @@
 
 **Dates:** 2026-06-09 – 2026-06-21
 **Goal:** Ship a usable MVP v1: students can browse events, members, and departments; fill out active questionnaires; and the admin can publish events and manage surveys through the portal.
-**Milestone:** [Sprint 3 — MVP v1](../../milestones) *(link when created)*
+**Milestone:** [Sprint 3 — MVP v1](https://github.com/sweetlife999/SWP/milestone/1)
 
 - Admin inline editing for all content pages (US-11)
 - Questionnaire viewer for students (US-12)

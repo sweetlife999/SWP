@@ -13,8 +13,8 @@
 | Historical user stories (Assignment 2) | [`reports/week2/user-stories.md`](../week2/user-stories.md) |
 | Current user stories index | [`docs/user-stories.md`](../../docs/user-stories.md) |
 | Sprint report | [`reports/week3/sprint-report.md`](sprint-report.md) |
-| Product Backlog board | [SU SWP Project](https://github.com/users/sweetlife999/projects/2/views/1) |
-| Sprint Backlog board | [SU SWP Project](https://github.com/users/sweetlife999/projects/2/views/1) |
+| Product Backlog board | [SU SWP Project](https://github.com/users/sweetlife999/projects/2) |
+| Sprint Backlog board | [SU SWP Project](https://github.com/users/sweetlife999/projects/2) |
 | Sprint 3 milestone | [Sprint 3 — MVP v1](https://github.com/sweetlife999/SWP/milestone/1) |
 | MVP v1 filtered view | [Issues labelled mvp-v1](https://github.com/sweetlife999/SWP/issues?q=label%3Amvp-v1) |
 | SemVer release (MVP v1) | <!-- GitHub release link — create after merge --> |
@@ -74,4 +74,4 @@
 
 - Reflection: [`reports/week3/reflection.md`](reflection.md)
 - Retrospective: [`reports/week3/retrospective.md`](retrospective.md)
-- LLM report: [`reports/week3/llm-report.md`](llm-report.md)
+- LLM report: добавляется отдельно перед сдачей
