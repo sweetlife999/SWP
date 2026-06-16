@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { api } from '../lib/api'
+import { useAdmin } from '../lib/AdminContext'
 
 const DEP_INFO = {
   core: {
@@ -46,20 +48,64 @@ const DEP_INFO = {
 
 type DepKey = keyof typeof DEP_INFO
 
+const DEFAULT_INTRO = `<span class="eyebrow">О студсовете</span>
+<h1>Студенческий совет<br>Университета Иннополис</h1>
+<p class="lead">Представляем интересы студентов, организуем кампусную жизнь и помогаем университету становиться лучше — с 2019 года. Три департамента, одна команда.</p>`
+
 export default function HomePage() {
+  const { isAdmin } = useAdmin()
   const [openDep, setOpenDep] = useState<DepKey | null>(null)
+  const [editingIntro, setEditingIntro] = useState(false)
+  const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
+  const [toast, setToast] = useState('')
+  const introRef = useRef<HTMLElement>(null)
   const info = openDep ? DEP_INFO[openDep] : null
+
+  useEffect(() => {
+    api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
+  }, [])
+
+  function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
+
+  async function handleIntroSave() {
+    const html = introRef.current?.innerHTML ?? introHtml
+    try {
+      await api.content.update('home-intro', html)
+      setIntroHtml(html)
+      showToast('Сохранено')
+    } catch {
+      showToast('Ошибка сохранения')
+    }
+    setEditingIntro(false)
+  }
 
   return (
     <>
-      <section className="intro" aria-label="О студсовете">
-        <span className="eyebrow">О студсовете</span>
-        <h1>Студенческий совет<br />Университета Иннополис</h1>
-        <p className="lead">
-          Представляем интересы студентов, организуем кампусную жизнь и помогаем
-          университету становиться лучше — с 2019 года. Три департамента, одна команда.
-        </p>
-      </section>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>{toast}</div>
+      )}
+      <div style={{ position: 'relative' }}>
+        <section
+          ref={introRef}
+          className="intro"
+          aria-label="О студсовете"
+          contentEditable={editingIntro}
+          suppressContentEditableWarning
+          dangerouslySetInnerHTML={{ __html: introHtml }}
+          style={editingIntro ? { outline: '2px solid var(--accent)', borderRadius: 8, padding: 16 } : {}}
+        />
+        {isAdmin && !editingIntro && (
+          <button className="btn ghost" style={{ position: 'absolute', top: 0, right: 0, fontSize: 12 }} onClick={() => setEditingIntro(true)}>
+            <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать
+          </button>
+        )}
+        {editingIntro && (
+          <div className="row gap-2" style={{ marginTop: 8 }}>
+            <button className="btn ghost" onClick={() => setEditingIntro(false)}>Отмена</button>
+            <button className="btn primary" onClick={handleIntroSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить</button>
+          </div>
+        )}
+      </div>
 
       <section aria-label="Команда">
         <div className="section-rule">

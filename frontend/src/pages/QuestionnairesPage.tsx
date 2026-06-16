@@ -1,78 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-
-type QStep =
-  | { type: 'single'; title: string; hint: string; options: string[] }
-  | { type: 'multi';  title: string; hint: string; options: string[] }
-  | { type: 'scale';  title: string; hint: string; low: string; high: string; median?: number }
-  | { type: 'text';   title: string; hint: string }
-
-const SURVEYS = [
-  {
-    id: '024', tag: 'SU:Active', tagCls: 'blue',
-    title: 'Программа Summer Days 2026 — какие активности добавить',
-    desc: '4 вопроса · ваш ответ повлияет на финальную программу с 20 июня по 5 июля.',
-    time: '2 МИН', timeEnding: false, left: 'осталось 4 дня',
-    flowTitle: 'Программа Summer Days 2026',
-    eyebrow: 'SU:Active · опрос #024',
-    steps: [
-      { type: 'single' as const, title: 'Какой формат открытия Summer Days вам ближе?', hint: 'Выберите один вариант. SU:Active соберёт финальную программу первого дня.',
-        options: ['Концерт студенческих групп на campus square', 'Open BBQ у Волги с играми и активностями', 'Кино под открытым небом + after-party', 'Спортивная олимпиада между корпусами'] },
-      { type: 'multi' as const, title: 'Какие активности обязательно должны быть в программе?', hint: 'Выберите до 4 вариантов.',
-        options: ['Гребля на Волге', 'Кино под открытым небом', 'Турнир по настольным играм', 'Stand-up evening', 'Фотопрогулка на закате', 'Йога на свежем воздухе'] },
-      { type: 'scale' as const, title: 'Насколько вам важно, чтобы события были вечерние (после 18:00)?', hint: 'Помогает спланировать слоты.', low: 'Не важно', high: 'Критично', median: 8 },
-      { type: 'text' as const, title: 'Что вы добавили бы или поменяли?', hint: 'Опционально. SU читает все ответы вручную.' },
-    ] as QStep[],
-  },
-  {
-    id: '023', tag: 'SU:Core', tagCls: 'green',
-    title: 'Голосование по бюджету Q3',
-    desc: '5 вопросов · распределение ₽ 380,000 по направлениям студсовета на третий квартал.',
-    time: '3 МИН', timeEnding: false, left: 'осталось 9 дней',
-    flowTitle: 'Голосование по бюджету Q3',
-    eyebrow: 'SU:Core · опрос #023',
-    steps: [
-      { type: 'single' as const, title: 'Какое направление студсовета вы считаете приоритетным?', hint: 'Выберите один вариант.',
-        options: ['SU:Core — стратегия и университет', 'SU:Active — ивенты и спорт', 'SU:Media — контент и дизайн', 'Распределить поровну между всеми'] },
-      { type: 'multi' as const, title: 'На какие категории трат вложить больше всего?', hint: 'Можно выбрать несколько.',
-        options: ['Ивенты и мероприятия', 'Спорт и инвентарь', 'Медиаоборудование', 'IT и инфраструктура', 'Печать и полиграфия', 'Мерч студсовета'] },
-      { type: 'scale' as const, title: 'Насколько вы довольны текущим распределением бюджета?', hint: '1 — совсем не доволен, 10 — полностью устраивает.', low: 'Не доволен', high: 'Полностью доволен', median: 7 },
-      { type: 'single' as const, title: 'Какую статью расходов вы бы урезали при нехватке средств?', hint: 'Выберите наименее приоритетную для вас.',
-        options: ['Печать и полиграфия', 'Аренда оборудования', 'Мерч студсовета', 'Ничего — все статьи важны'] },
-      { type: 'text' as const, title: 'Комментарий и предложения по бюджету', hint: 'Опционально. Все комментарии передаются в SU:Core.' },
-    ] as QStep[],
-  },
-  {
-    id: '022', tag: 'SU:Media', tagCls: 'purple',
-    title: 'Мерч студсовета — финальный выбор',
-    desc: '4 вопроса · какой мерч хотите видеть в осенней коллекции.',
-    time: '1 МИН', timeEnding: true, left: 'осталось 16 часов',
-    flowTitle: 'Мерч студсовета — финальный выбор',
-    eyebrow: 'SU:Media · опрос #022',
-    steps: [
-      { type: 'single' as const, title: 'Какой мерч вы хотите видеть в осенней коллекции?', hint: 'Выберите один вариант.',
-        options: ['Футболка с логотипом SU', 'Худи оверсайз', 'Кепка с вышивкой', 'Сумка-шоппер'] },
-      { type: 'multi' as const, title: 'Какие цвета предпочитаете?', hint: 'Можно выбрать несколько.',
-        options: ['Белый', 'Чёрный', 'Серый меланж', 'Тёмно-зелёный', 'Синий IU'] },
-      { type: 'scale' as const, title: 'Оцените качество мерча прошлого года', hint: '1 — разочарован, 10 — очень доволен.', low: 'Разочарован', high: 'Очень доволен', median: 7 },
-      { type: 'text' as const, title: 'Пожелания по дизайну или надписям', hint: 'Опционально. Дизайнер SU:Media читает все ответы.' },
-    ] as QStep[],
-  },
-]
+import { api, type Survey, type QStep } from '../lib/api'
 
 const KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 export default function QuestionnairesPage() {
-  const [activeId, setActiveId] = useState('024')
+  const [surveys, setSurveys] = useState<Survey[]>([])
+  const [activeId, setActiveId] = useState<string | null>(null)
   const [step, setStep] = useState(0)
   const [archived, setArchived] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
-  const active = SURVEYS.find(q => q.id === activeId)!
+  useEffect(() => {
+    api.surveys.list().then(data => {
+      setSurveys(data)
+      if (data.length > 0) setActiveId(data[0].id)
+    }).catch(() => {})
+  }, [])
+
+  const active = surveys.find(q => q.id === activeId) ?? null
+  if (!active) {
+    return (
+      <div className="page-head">
+        <div className="title">
+          <span className="eyebrow">Студсовет</span>
+          <h1>Questionnaires</h1>
+          <p className="text-muted" style={{ marginTop: 16 }}>{surveys.length === 0 ? 'Загрузка…' : 'Нет активных опросов'}</p>
+        </div>
+      </div>
+    )
+  }
+
   const totalSteps = active.steps.length
   const progress = ((step + 1) / totalSteps) * 100
-  const currentStep = active.steps[step]
+  const currentStep = active.steps[step] as QStep
 
   function selectQ(id: string) {
     if (id === activeId) return
@@ -117,11 +79,11 @@ export default function QuestionnairesPage() {
 
         <section>
           <div className="row sb mb-4">
-            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{SURVEYS.length}</span></h3>
+            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
             <button className="btn ghost sm" onClick={() => setArchived(v => !v)}>{archived ? 'Скрыть архив' : 'Архив'}</button>
           </div>
           <div className="q-list">
-            {SURVEYS.map(q => (
+            {surveys.map(q => (
               <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
                 <div className="meta">
                   <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
@@ -180,7 +142,7 @@ export default function QuestionnairesPage() {
 
               {currentStep.type === 'single' && (
                 <div className="col gap-3">
-                  {currentStep.options.map((opt, i) => {
+                  {(currentStep.options ?? []).map((opt, i) => {
                     const sel = getSelected(step)
                     const isSelected = sel.includes(i)
                     return (
@@ -195,7 +157,7 @@ export default function QuestionnairesPage() {
 
               {currentStep.type === 'multi' && (
                 <div className="col gap-3">
-                  {currentStep.options.map((opt, i) => {
+                  {(currentStep.options ?? []).map((opt, i) => {
                     const sel = getSelected(step)
                     const isChecked = sel.includes(i)
                     return (

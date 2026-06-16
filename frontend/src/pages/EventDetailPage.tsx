@@ -1,9 +1,33 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { api } from '../lib/api'
+import { useAdmin } from '../lib/AdminContext'
 
 export default function EventDetailPage() {
+  const { id } = useParams()
+  const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descHtml, setDescHtml] = useState('')
+  const descRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!id) return
+    api.content.get(`event-desc-${id}`).then(d => setDescHtml(d.html)).catch(() => {})
+  }, [id])
+
+  async function handleDescSave() {
+    const html = descRef.current?.innerHTML ?? descHtml
+    try {
+      await api.content.update(`event-desc-${id}`, html)
+      setDescHtml(html)
+      showToast('Сохранено')
+    } catch {
+      showToast('Ошибка сохранения')
+    }
+    setEditingDesc(false)
+  }
 
   function showToast(msg: string) {
     setToast(msg)
@@ -48,10 +72,37 @@ export default function EventDetailPage() {
       <div className="detail-grid">
         <div>
           <article className="content-block">
-            <h2>О мероприятии</h2>
-            <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
-            <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
-            <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
+            <div className="row sb" style={{ marginBottom: 12 }}>
+              <h2 style={{ marginBottom: 0 }}>О мероприятии</h2>
+              {isAdmin && !editingDesc && (
+                <button className="btn ghost" style={{ fontSize: 12 }} onClick={() => setEditingDesc(true)}>
+                  <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать
+                </button>
+              )}
+              {editingDesc && (
+                <div className="row gap-2">
+                  <button className="btn ghost" onClick={() => setEditingDesc(false)}>Отмена</button>
+                  <button className="btn primary" style={{ fontSize: 12 }} onClick={handleDescSave}>
+                    <Icon id="i-check" style={{ width: 12, height: 12 }} /> Сохранить
+                  </button>
+                </div>
+              )}
+            </div>
+            <article
+              ref={descRef}
+              contentEditable={editingDesc}
+              suppressContentEditableWarning
+              style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
+              dangerouslySetInnerHTML={descHtml ? { __html: descHtml } : undefined}
+            >
+              {!descHtml && (
+                <>
+                  <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
+                  <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
+                  <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
+                </>
+              )}
+            </article>
           </article>
 
           <article className="content-block">

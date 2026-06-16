@@ -1,64 +1,14 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { api, type Member as ApiMember } from '../lib/api'
+import { useAdmin } from '../lib/AdminContext'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
 const DEP_KEYS = ['', 'core', 'active', 'media']
 
-type Member = {
-  dep: 'core' | 'active' | 'media'
-  tag: string; name: string; role: string; meta: string
-  bio: string; recent: string[]
-}
-
-const MEMBERS: Member[] = [
-  { dep: 'core',   tag: 'SU:Core · LEAD',   name: 'Михаил Раянов',      role: 'CO-LEAD · B21-AI', meta: '3 года в SU · 14 проектов',
-    bio: 'Третий год в студсовете. Веду переговоры с деканатами, координирую бюджет Q1–Q3 и запустил SU Portal.',
-    recent: ['Запуск SU Portal v1 — июнь 2026', 'Согласование бюджета Q3 — ₽ 240 000', 'Hackathon Summer 24h — lead organizer'] },
-  { dep: 'core',   tag: 'SU:Core',           name: 'Дарья Андреева',     role: 'CO-LEAD · B22-SE', meta: '2 года в SU',
-    bio: 'Отвечаю за внутреннюю коммуникацию и документооборот SU:Core. Организую открытые собрания.',
-    recent: ['Open meeting Q2: итоги апреля', 'Координация Welcome Week 2026', 'Подготовка Roadmap 2026'] },
-  { dep: 'core',   tag: 'SU:Core',           name: 'Егор Воронов',       role: 'FINANCE · B23-DS', meta: '1 год в SU',
-    bio: 'Слежу за бюджетом студсовета: веду таблицы трат, готовлю финансовые отчёты.',
-    recent: ['Публикация финотчёта Q1 2026', 'Интеграция T-Bank для донат-системы', 'Аудит трат за 2025'] },
-  { dep: 'core',   tag: 'SU:Core',           name: 'Тимур Камалов',      role: 'PROCESS · M24-CS', meta: '2 года в SU',
-    bio: 'Занимаюсь внутренними процессами и инструментами SU. Поддерживаю Notion-базу и оптимизирую потоки.',
-    recent: ['Документирование процессов для Handbook SU', 'Настройка нотификаций Telegram-бота', 'Архивирование решений Q1–Q2'] },
-  { dep: 'active', tag: 'SU:Active · LEAD',  name: 'Алия Газизова',      role: 'CO-LEAD · B21-CS', meta: '3 года в SU · ивенты',
-    bio: 'Главная по ивентам в SU:Active. Три года организую мероприятия — от камерных лекций до 300-человечных хакатонов.',
-    recent: ['Hackathon Summer 24h — BBQ и закрытие', 'Summer Days 2026 — 7 событий', 'Open Mic: stand-up evening'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Кирилл Логинов',     role: 'SPORTS · B22-IS',  meta: '2 года в SU',
-    bio: 'Отвечаю за спортивный трек: турниры, командные активности и партнёрство с кампусным спорткомплексом.',
-    recent: ['Весенний турнир по настольному теннису', 'Организация Гребля и BBQ', 'Переговоры по аренде Sports Tower'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Илья Соколов',       role: 'CULTURE · B23-RO', meta: '1 год в SU',
-    bio: 'Веду культурное направление: тематические вечера, кино и творческие активности.',
-    recent: ['Movie under the sky · La La Land', 'Планирование Cinema Night Q3', 'Поиск площадки для open air'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Майя Якушева',       role: 'CO-LEAD · B22-DS', meta: '2 года в SU',
-    bio: 'Координирую команду SU:Active и слежу за тем, чтобы все ивенты шли по плану.',
-    recent: ['Summer Days 2026 — координация', 'Онбординг новых участников', 'Ретроспектива ивентов за полугодие'] },
-  { dep: 'media',  tag: 'SU:Media · LEAD',   name: 'Анна Лебедева',      role: 'CO-LEAD · B21-DS', meta: '2 года в SU · фото',
-    bio: 'Возглавляю SU:Media и снимаю все крупные события кампуса. Фотожурналистика и работа с архивом.',
-    recent: ['Репортаж: Innopolis Open 2026 (320 участников)', 'Photo walk · Volga shore', 'Лекция «Как снимать кампусный лонгрид»'] },
-  { dep: 'media',  tag: 'SU:Media',          name: 'Полина Котова',       role: 'DESIGN · B22-CS',  meta: '1 год в SU',
-    bio: 'Делаю весь визуал студсовета: афиши, баннеры, иллюстрации и фирменные материалы.',
-    recent: ['Редизайн плакатной системы SU', 'Серия афиш Summer Days 2026', 'Верстка Handbook SU 2026'] },
-  { dep: 'media',  tag: 'SU:Media',          name: 'Ольга Никитина',     role: 'EDITOR · B23-IS',  meta: '1 год в SU',
-    bio: 'Пишу тексты для портала: новости, лонгриды, анонсы ивентов и интервью.',
-    recent: ['Серия «Как мы делали хакатон»', 'Интервью с победителями Innopolis Open', 'Редактирование Roadmap 2026'] },
-  { dep: 'media',  tag: 'SU:Media',          name: 'Сергей Васильев',    role: 'VIDEO · B22-RO',   meta: '2 года в SU',
-    bio: 'Снимаю и монтирую видео с ивентов. Веду YouTube-архив и стримы открытых собраний.',
-    recent: ['Видеоотчёт: Innopolis Open 2026', 'Стрим Open meeting Q2', 'Монтаж highlight Hackathon 24h'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Никита Орлов',       role: 'LOGISTICS · B22-AI', meta: '1 год в SU',
-    bio: 'Занимаюсь логистикой мероприятий: аренда оборудования, закупка расходников, координация доставки.',
-    recent: ['Hackathon 24h: закупка оборудования', 'BBQ логистика для Summer Days', 'Инвентаризация склада SU'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Светлана Журавлёва', role: 'EVENTS · B23-DS',  meta: '1 год в SU',
-    bio: 'Помогаю организовывать ивенты: встречаю гостей, помогаю с координацией.',
-    recent: ['Координация волонтёров на Hackathon Summer 24h', 'Поддержка Open Mic evening', 'Планирование Welcome Week Q3'] },
-  { dep: 'active', tag: 'SU:Active',         name: 'Артём Беляков',      role: 'ADVENTURE · B21-CS', meta: '3 года в SU',
-    bio: 'Отвечаю за приключенческий трек: выезды, экскурсии и активности на природе.',
-    recent: ['Гребля на Волге + BBQ — организация', 'Планирование горного трека Q3', 'Летние ночные прогулки'] },
-]
+type Member = ApiMember
 
 const PHOTO_BG: Record<Member['dep'], string> = {
   core:   'linear-gradient(135deg, #d1efd8, #88c595)',
@@ -68,6 +18,7 @@ const PHOTO_BG: Record<Member['dep'], string> = {
 
 
 export default function MembersPage() {
+  const { isAdmin } = useAdmin()
   const [searchParams, setSearchParams] = useSearchParams()
   const depParam = searchParams.get('dep') ?? ''
   const initialSeg = DEP_KEYS.indexOf(depParam) >= 0 ? DEP_KEYS.indexOf(depParam) : 0
@@ -79,6 +30,12 @@ export default function MembersPage() {
   const [search, setSearch] = useState('')
   const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
+  const [members, setMembers] = useState<Member[]>([])
+  const roadmapRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    api.members.list().then(setMembers).catch(() => {})
+  }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -91,7 +48,18 @@ export default function MembersPage() {
     else setSearchParams({})
   }
 
-  const filteredMembers = (memberSeg === 0 ? MEMBERS : MEMBERS.filter(p => p.dep === DEP_KEYS[memberSeg]))
+  async function handleRoadmapSave() {
+    const html = roadmapRef.current?.innerHTML ?? ''
+    try {
+      await api.content.update('roadmap', html)
+      showToast('Roadmap сохранён')
+    } catch {
+      showToast('Ошибка сохранения')
+    }
+    setEditing(false)
+  }
+
+  const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
     .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.role.toLowerCase().includes(search.toLowerCase()))
   const visibleMembers = showAll ? filteredMembers : filteredMembers.slice(0, 8)
 
@@ -127,7 +95,7 @@ export default function MembersPage() {
         <div>
           <div className="members-filters-bar">
             <div className="seg">
-              {['Все · 28', 'SU:Core · 8', 'SU:Active · 14', 'SU:Media · 6'].map((l, i) => (
+              {['Все', 'SU:Core', 'SU:Active', 'SU:Media'].map((l, i) => (
                 <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => handleSeg(i)}>{l}</button>
               ))}
             </div>
@@ -226,7 +194,7 @@ export default function MembersPage() {
               <div className="meta"><span className="text-mono">EDIT MODE</span> · автосохранение каждые 30 сек</div>
             </div>
 
-            <div className="rm-edit" contentEditable={editing} suppressContentEditableWarning>
+            <div ref={roadmapRef} className="rm-edit" contentEditable={editing} suppressContentEditableWarning>
               <p style={{ fontSize: 17, color: 'var(--muted)', marginBottom: 24 }}>Цели студсовета на 2026 учебный год по четырём квартальным блокам. Поменять может только админ через «Редактировать».</p>
               {[
                 { q: 'Q1 · ЯНВ–МАР', h: 'Запуск SU Portal v1', p: 'Единая точка входа для студсовета: новости, ивенты, опросы, донаты, внутренние модули команды. Заменить разрозненные Google-документы и табличные опросы.', items: ['5 публичных модулей и 3 внутренних', 'Перевод опросов с Google Forms на собственный конструктор', 'Адаптив для мобильных устройств'] },
@@ -247,7 +215,7 @@ export default function MembersPage() {
 
             <div className="rm-foot">
               <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
-              <button className="btn primary" onClick={() => setEditing(false)}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
+              <button className="btn primary" onClick={handleRoadmapSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
             </div>
           </section>
 
@@ -255,7 +223,7 @@ export default function MembersPage() {
             <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
             <div className={`row gap-2 read-actions${editing ? '' : ''}`}>
               <button className="btn secondary" onClick={() => showToast('История правок: последнее изменение — Михаил Раянов, 4 июня 2026')}><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
-              <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>
+              {isAdmin && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
             </div>
           </div>
         </div>

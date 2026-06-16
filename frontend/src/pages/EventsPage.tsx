@@ -1,29 +1,11 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { api, type Event } from '../lib/api'
 
-type Ev = {
-  id: number; date: string; dd: string; mm: string; cover: string
-  featured?: boolean; status?: 'live' | 'passed'; statusText?: string
-  tag: string; tagCls: string; time?: string; title: string; desc: string
-  foot: string; footLabel?: string; avatars?: boolean; past?: boolean
-}
-
-const EVENTS: Ev[] = [
-  { id: 1, date: '2026-06-20', dd: '20', mm: 'ИЮН', cover: '', featured: true, status: 'live', statusText: 'live', tag: 'SU:Core', tagCls: 'green', time: '10:00–10:00 (24 ч)', title: 'Hackathon Summer 24h — open hack под открытым небом', desc: '24 часа, любая тема, любое количество людей в команде. Финал и презентация — в воскресенье вечером.', foot: '32 участника', avatars: true },
-  { id: 2, date: '2026-06-14', dd: '14', mm: 'ИЮН', cover: 'a', tag: 'SU:Active', tagCls: 'blue', time: '19:00', title: 'Open Mic: stand-up evening', desc: 'Студенческий вечер открытого микрофона, 12 выступлений по 5 минут.', foot: '48 участников' },
-  { id: 3, date: '2026-06-25', dd: '25', mm: 'ИЮН', cover: 'c', tag: 'SU:Media', tagCls: 'purple', time: '17:30 · Волга', title: 'Photo walk · Volga shore', desc: 'Фотопрогулка на закате с разбором кадров от Анны Лебедевой. Уровень — любой.', foot: '14 / 20 мест' },
-  { id: 4, date: '2026-07-02', dd: '02', mm: 'ИЮЛ', cover: 'b', tag: 'SU:Active', tagCls: 'blue', time: '21:30 · campus square', title: 'Movie under the sky · La La Land', desc: 'Большой проектор, экран на 12 метров, пледы и попкорн. Бесплатно.', foot: '67 участников' },
-  { id: 5, date: '2026-07-05', dd: '05', mm: 'ИЮЛ', cover: 'd', tag: 'SU:Active', tagCls: 'blue', time: '12:00 · pier', title: 'Гребля и BBQ · закрытие Summer Days', desc: 'Гребные лодки на Волге, BBQ на берегу, награждение участников Summer Days.', foot: '28 участников' },
-  { id: 6, date: '2026-07-12', dd: '12', mm: 'ИЮЛ', cover: 'f', tag: 'SU:Core', tagCls: 'green', time: '15:00 · аудитория 408', title: 'Open meeting Q3: бюджет, ивенты, вопросы', desc: 'Открытая встреча студсовета: распределение бюджета на третий квартал, ответы на вопросы.', foot: '21 участник' },
-  { id: 7, date: '2026-05-28', dd: '28', mm: 'МАЙ', cover: 'e', status: 'passed', statusText: 'завершён', tag: 'SU:Core', tagCls: 'green', title: 'Innopolis Open 2026 — итоги', desc: 'Главное событие весны: 14 проектов, восемь команд, два дня. Призовой фонд от партнёров — ₽ 450,000.', foot: '14 проектов · 3 победителя', footLabel: 'Репортаж', past: true },
-  { id: 8, date: '2026-05-12', dd: '12', mm: 'МАЙ', cover: 'a', status: 'passed', statusText: 'завершён', tag: 'SU:Active', tagCls: 'blue', title: 'Весенний турнир по настольному теннису', desc: '28 участников, 6 призёров. Победитель — Дмитрий Карпов (B23-CS).', foot: '28 участников', footLabel: 'Фотографии', past: true },
-  { id: 9, date: '2026-04-20', dd: '20', mm: 'АПР', cover: 'c', status: 'passed', statusText: 'завершён', tag: 'SU:Media', tagCls: 'purple', title: 'Как снимать кампусный лонгрид: лекция от Sasha Reka', desc: 'Открытая лекция приглашённого фотожурналиста. Видеозапись доступна в архиве SU:Media.', foot: '56 участников', footLabel: 'Видео', past: true },
-]
-
-function EventCard({ ev }: { ev: Ev }) {
+function EventCard({ ev }: { ev: Event }) {
   return (
-    <Link className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to="/events/1">
+    <Link className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
       <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
         {ev.statusText && (
@@ -38,18 +20,7 @@ function EventCard({ ev }: { ev: Ev }) {
         <h3>{ev.title}</h3>
         <p className="desc">{ev.desc}</p>
         <div className="ec-foot">
-          {ev.avatars ? (
-            <div className="row gap-2">
-              <div className="avatars">
-                <div className="avatar sm" style={{ background: '#a3e0ad' }}>МР</div>
-                <div className="avatar sm" style={{ background: '#a8c0e0' }}>АГ</div>
-                <div className="avatar sm" style={{ background: '#e0a8c8' }}>АЛ</div>
-              </div>
-              <span>{ev.foot}</span>
-            </div>
-          ) : (
-            <span>{ev.foot}</span>
-          )}
+          <span>{ev.foot}</span>
           <span className="open">{ev.footLabel ?? 'Подробнее'} <Icon id="i-arrow-r" style={{ width: 12, height: 12 }} /></span>
         </div>
       </div>
@@ -58,13 +29,19 @@ function EventCard({ ev }: { ev: Ev }) {
 }
 
 export default function EventsPage() {
+  const [events, setEvents] = useState<Event[]>([])
   const [seg1, setSeg1] = useState(0)
   const [search, setSearch] = useState('')
   const [showCal, setShowCal] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [limit, setLimit] = useState(4)
 
-  function applyFilter(list: Ev[]) {
+  useEffect(() => {
+    api.events.list().then(setEvents).catch(() => {})
+  }, [])
+
+  function applyFilter(list: Event[]) {
     return list.filter(ev => {
       if (search && !ev.title.toLowerCase().includes(search.toLowerCase())) return false
       if (dateFrom && ev.date < dateFrom) return false
@@ -73,13 +50,11 @@ export default function EventsPage() {
     })
   }
 
-  const [limit, setLimit] = useState(4)
-
-  const allCurrent = applyFilter(EVENTS.filter(ev => !ev.past))
-  const allPast = applyFilter(EVENTS.filter(ev => !!ev.past))
-  const current = allCurrent.slice(0, limit)
-  const past = allPast.slice(0, limit)
-  const hasMore = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit
+  const allCurrent = applyFilter(events.filter(ev => !ev.past))
+  const allPast    = applyFilter(events.filter(ev => !!ev.past))
+  const current    = allCurrent.slice(0, limit)
+  const past       = allPast.slice(0, limit)
+  const hasMore    = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit
   const hasDateFilter = !!(dateFrom || dateTo)
 
   return (
@@ -131,7 +106,7 @@ export default function EventsPage() {
 
       <div className="filters-bar">
         <div className="seg">
-          {['Текущие · 7', 'Прошедшие · 24'].map((label, i) => (
+          {['Текущие', 'Прошедшие'].map((label, i) => (
             <button key={i} className={seg1 === i ? 'active' : ''} onClick={() => { setSeg1(i); setLimit(4) }}>{label}</button>
           ))}
         </div>
@@ -145,7 +120,9 @@ export default function EventsPage() {
           <div className="events-grid">
             {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
             {current.length === 0 && (
-              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>Мероприятия не найдены</p>
+              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
+              </p>
             )}
           </div>
         </>
@@ -159,7 +136,9 @@ export default function EventsPage() {
           <div className="events-grid">
             {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
             {past.length === 0 && (
-              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>Мероприятия не найдены</p>
+              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
+              </p>
             )}
           </div>
         </>

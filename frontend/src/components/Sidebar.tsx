@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { Icon } from './Icon'
+import { useAdmin } from '../lib/AdminContext'
 
 interface SidebarProps {
   open: boolean
@@ -7,6 +8,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ open, onClose }: SidebarProps) {
+  const { isAdmin, logout } = useAdmin()
+  const navigate = useNavigate()
+
+  function handleLogout() {
+    logout()
+    onClose()
+    navigate('/')
+  }
+
   return (
     <>
       <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Sidebar">
@@ -31,12 +41,10 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           <NavLink className="nav-item" to="/events" onClick={onClose}>
             <Icon id="i-calendar" className="ic" />
             Events
-            <span className="count">12</span>
           </NavLink>
           <NavLink className="nav-item" to="/questionnaires" onClick={onClose}>
             <Icon id="i-clipboard" className="ic" />
             Questionnaires
-            <span className="count">3</span>
           </NavLink>
           <NavLink className="nav-item" to="/donations" onClick={onClose}>
             <Icon id="i-heart" className="ic" />
@@ -61,11 +69,30 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
         </nav>
 
         <div className="sidebar-user">
-          <div className="avatar">ИП</div>
-          <div style={{ minWidth: 0 }}>
-            <div className="name">Иван Петров</div>
-            <div className="role">B22-DS-02 · Member</div>
-          </div>
+          {isAdmin ? (
+            <>
+              <div className="avatar" style={{ background: 'var(--accent)', color: '#fff' }}>А</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="name">Администратор</div>
+                <div className="role">SU:Core</div>
+              </div>
+              <button className="icon-btn" title="Выйти" onClick={handleLogout}>
+                <Icon id="i-x" style={{ width: 14, height: 14 }} />
+              </button>
+            </>
+          ) : (
+            <>
+              <div className="avatar">?</div>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="name">Гость</div>
+                <div className="role">
+                  <NavLink to="/admin/login" onClick={onClose} style={{ color: 'var(--accent)', textDecoration: 'none', fontSize: 12 }}>
+                    Войти как админ
+                  </NavLink>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </aside>
       <div className={`scrim${open ? ' open' : ''}`} onClick={onClose} />
