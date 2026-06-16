@@ -1,4 +1,7 @@
 import { Icon } from '../components/Icon'
+import QRCode from 'react-qr-code'
+
+const DONATE_URL = 'https://www.tbank.ru/cf/6NXLtpINXzY'
 
 export default function DonationsPage() {
   return (
@@ -54,14 +57,16 @@ export default function DonationsPage() {
             <Icon id="i-heart" style={{ width: 18, height: 18, color: 'var(--accent)' }} />
             <h3>Поддержать студсовет</h3>
           </div>
-          <div className="qr-placeholder">QR</div>
+          <div style={{ background: '#fff', padding: 12, borderRadius: 8, display: 'inline-block' }}>
+            <QRCode value={DONATE_URL} size={160} />
+          </div>
           <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', maxWidth: 220 }}>
             Отсканируйте QR-код или нажмите кнопку ниже
           </p>
           <a
             className="btn primary"
             style={{ width: '100%', justifyContent: 'center' }}
-            href="https://www.tbank.ru"
+            href={DONATE_URL}
             target="_blank"
             rel="noopener noreferrer"
           >
