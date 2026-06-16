@@ -1,55 +1,106 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
 
+type QStep =
+  | { type: 'single'; title: string; hint: string; options: string[] }
+  | { type: 'multi';  title: string; hint: string; options: string[] }
+  | { type: 'scale';  title: string; hint: string; low: string; high: string; median?: number }
+  | { type: 'text';   title: string; hint: string }
+
 const QUESTS = [
   {
-    id: '024',
-    tag: 'SU:Active', tagCls: 'blue',
+    id: '024', tag: 'SU:Active', tagCls: 'blue',
     title: 'Программа Summer Days 2026 — какие активности добавить',
-    desc: '8 вопросов · ваш ответ повлияет на финальную программу с 20 июня по 5 июля.',
+    desc: '4 вопроса · ваш ответ повлияет на финальную программу с 20 июня по 5 июля.',
     time: '2 МИН', timeEnding: false, left: 'осталось 4 дня',
     flowTitle: 'Программа Summer Days 2026',
     eyebrow: 'SU:Active · опрос #024',
+    steps: [
+      { type: 'single' as const, title: 'Какой формат открытия Summer Days вам ближе?', hint: 'Выберите один вариант. SU:Active соберёт финальную программу первого дня.',
+        options: ['Концерт студенческих групп на campus square', 'Open BBQ у Волги с играми и активностями', 'Кино под открытым небом + after-party', 'Спортивная олимпиада между корпусами'] },
+      { type: 'multi' as const, title: 'Какие активности обязательно должны быть в программе?', hint: 'Выберите до 4 вариантов.',
+        options: ['Гребля на Волге', 'Кино под открытым небом', 'Турнир по настольным играм', 'Stand-up evening', 'Фотопрогулка на закате', 'Йога на свежем воздухе'] },
+      { type: 'scale' as const, title: 'Насколько вам важно, чтобы события были вечерние (после 18:00)?', hint: 'Помогает спланировать слоты.', low: 'Не важно', high: 'Критично', median: 8 },
+      { type: 'text' as const, title: 'Что вы добавили бы или поменяли?', hint: 'Опционально. SU читает все ответы вручную.' },
+    ] as QStep[],
   },
   {
-    id: '023',
-    tag: 'SU:Core', tagCls: 'green',
+    id: '023', tag: 'SU:Core', tagCls: 'green',
     title: 'Голосование по бюджету Q3',
     desc: '5 вопросов · распределение ₽ 380,000 по направлениям студсовета на третий квартал.',
     time: '3 МИН', timeEnding: false, left: 'осталось 9 дней',
     flowTitle: 'Голосование по бюджету Q3',
     eyebrow: 'SU:Core · опрос #023',
+    steps: [
+      { type: 'single' as const, title: 'Какое направление студсовета вы считаете приоритетным?', hint: 'Выберите один вариант.',
+        options: ['SU:Core — стратегия и университет', 'SU:Active — ивенты и спорт', 'SU:Media — контент и дизайн', 'Распределить поровну между всеми'] },
+      { type: 'multi' as const, title: 'На какие категории трат вложить больше всего?', hint: 'Можно выбрать несколько.',
+        options: ['Ивенты и мероприятия', 'Спорт и инвентарь', 'Медиаоборудование', 'IT и инфраструктура', 'Печать и полиграфия', 'Мерч студсовета'] },
+      { type: 'scale' as const, title: 'Насколько вы довольны текущим распределением бюджета?', hint: '1 — совсем не доволен, 10 — полностью устраивает.', low: 'Не доволен', high: 'Полностью доволен', median: 7 },
+      { type: 'single' as const, title: 'Какую статью расходов вы бы урезали при нехватке средств?', hint: 'Выберите наименее приоритетную для вас.',
+        options: ['Печать и полиграфия', 'Аренда оборудования', 'Мерч студсовета', 'Ничего — все статьи важны'] },
+      { type: 'text' as const, title: 'Комментарий и предложения по бюджету', hint: 'Опционально. Все комментарии передаются в SU:Core.' },
+    ] as QStep[],
   },
   {
-    id: '022',
-    tag: 'SU:Media', tagCls: 'purple',
+    id: '022', tag: 'SU:Media', tagCls: 'purple',
     title: 'Мерч студсовета — финальный выбор',
     desc: '4 вопроса · какой мерч хотите видеть в осенней коллекции.',
     time: '1 МИН', timeEnding: true, left: 'осталось 16 часов',
     flowTitle: 'Мерч студсовета — финальный выбор',
     eyebrow: 'SU:Media · опрос #022',
+    steps: [
+      { type: 'single' as const, title: 'Какой мерч вы хотите видеть в осенней коллекции?', hint: 'Выберите один вариант.',
+        options: ['Футболка с логотипом SU', 'Худи оверсайз', 'Кепка с вышивкой', 'Сумка-шоппер'] },
+      { type: 'multi' as const, title: 'Какие цвета предпочитаете?', hint: 'Можно выбрать несколько.',
+        options: ['Белый', 'Чёрный', 'Серый меланж', 'Тёмно-зелёный', 'Синий IU'] },
+      { type: 'scale' as const, title: 'Оцените качество мерча прошлого года', hint: '1 — разочарован, 10 — очень доволен.', low: 'Разочарован', high: 'Очень доволен', median: 7 },
+      { type: 'text' as const, title: 'Пожелания по дизайну или надписям', hint: 'Опционально. Дизайнер SU:Media читает все ответы.' },
+    ] as QStep[],
   },
 ]
+
+const KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 export default function QuestionnairesPage() {
   const [activeId, setActiveId] = useState('024')
   const [step, setStep] = useState(0)
-  const [scaleVal, setScaleVal] = useState(7)
-  const [textAnswer, setTextAnswer] = useState('')
   const [archived, setArchived] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const totalSteps = 4
+  const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
   const active = QUESTS.find(q => q.id === activeId)!
+  const totalSteps = active.steps.length
   const progress = ((step + 1) / totalSteps) * 100
+  const currentStep = active.steps[step]
 
   function selectQ(id: string) {
     if (id === activeId) return
     setActiveId(id)
     setStep(0)
-    setScaleVal(7)
-    setTextAnswer('')
+    setAnswers({})
     setSubmitted(false)
+  }
+
+  function getSelected(i: number): number[] {
+    const v = answers[i]
+    return Array.isArray(v) ? v : []
+  }
+  function getScale(i: number): number {
+    const v = answers[i]
+    return typeof v === 'number' ? v : 7
+  }
+  function getText(i: number): string {
+    const v = answers[i]
+    return typeof v === 'string' ? v : ''
+  }
+
+  function toggleSingle(optIdx: number) {
+    setAnswers(a => ({ ...a, [step]: [optIdx] }))
+  }
+  function toggleMulti(optIdx: number) {
+    const cur = getSelected(step)
+    setAnswers(a => ({ ...a, [step]: cur.includes(optIdx) ? cur.filter(x => x !== optIdx) : [...cur, optIdx] }))
   }
 
   return (
@@ -71,12 +122,7 @@ export default function QuestionnairesPage() {
           </div>
           <div className="q-list">
             {QUESTS.map(q => (
-              <div
-                key={q.id}
-                className={`q-list-card${q.id === activeId ? ' active' : ''}`}
-                style={{ cursor: 'pointer' }}
-                onClick={() => selectQ(q.id)}
-              >
+              <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
                 <div className="meta">
                   <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
                   <span>Опрос #{q.id}</span>
@@ -127,81 +173,67 @@ export default function QuestionnairesPage() {
           </header>
 
           <div className="q-body">
+            <div className="q-step">
+              <div className="num">Вопрос {String(step + 1).padStart(2, '0')} · {currentStep.type === 'single' ? 'одиночный выбор' : currentStep.type === 'multi' ? 'множественный выбор' : currentStep.type === 'scale' ? 'шкала 1–10' : 'текстовый ответ'}</div>
+              <h3>{currentStep.title}</h3>
+              <p className="hint">{currentStep.hint}</p>
 
-            {step === 0 && (
-              <div className="q-step">
-                <div className="num">Вопрос 01 · одиночный выбор</div>
-                <h3>Какой формат открытия Summer Days вам ближе?</h3>
-                <p className="hint">Выберите один вариант. От ответов SU:Active соберёт финальную программу первого дня.</p>
+              {currentStep.type === 'single' && (
                 <div className="col gap-3">
-                  {[
-                    { key: 'A', text: 'Концерт студенческих групп на campus square' },
-                    { key: 'B', text: 'Open BBQ у Волги с играми и активностями', selected: true },
-                    { key: 'C', text: 'Кино под открытым небом + after-party' },
-                    { key: 'D', text: 'Спортивная олимпиада между корпусами' },
-                  ].map(opt => (
-                    <div key={opt.key} className={`opt-card${opt.selected ? ' selected' : ''}`}>
-                      <span className="opt-key">{opt.key}</span>
-                      <span className="opt-text">{opt.text}</span>
-                    </div>
-                  ))}
+                  {currentStep.options.map((opt, i) => {
+                    const sel = getSelected(step)
+                    const isSelected = sel.includes(i)
+                    return (
+                      <div key={i} className={`opt-card${isSelected ? ' selected' : ''}`} style={{ cursor: 'pointer' }} onClick={() => toggleSingle(i)}>
+                        <span className="opt-key">{KEYS[i]}</span>
+                        <span className="opt-text">{opt}</span>
+                      </div>
+                    )
+                  })}
                 </div>
-              </div>
-            )}
+              )}
 
-            {step === 1 && (
-              <div className="q-step">
-                <div className="num">Вопрос 02 · множественный выбор</div>
-                <h3>Какие активности обязательно должны быть в программе?</h3>
-                <p className="hint">Выберите до 4 вариантов.</p>
+              {currentStep.type === 'multi' && (
                 <div className="col gap-3">
-                  {[
-                    { text: 'Гребля на Волге', checked: true },
-                    { text: 'Кино под открытым небом', checked: true },
-                    { text: 'Турнир по настольным играм', checked: false },
-                    { text: 'Stand-up evening', checked: false },
-                    { text: 'Фотопрогулка на закате', checked: true },
-                    { text: 'Йога на свежем воздухе', checked: false },
-                  ].map((opt, i) => (
-                    <div key={i} className={`opt-card${opt.checked ? ' selected' : ''}`}>
-                      <span className="opt-key">
-                        {opt.checked && <Icon id="i-check" style={{ width: 12, height: 12, color: '#fff' }} />}
-                      </span>
-                      <span className="opt-text">{opt.text}</span>
+                  {currentStep.options.map((opt, i) => {
+                    const sel = getSelected(step)
+                    const isChecked = sel.includes(i)
+                    return (
+                      <div key={i} className={`opt-card${isChecked ? ' selected' : ''}`} style={{ cursor: 'pointer' }} onClick={() => toggleMulti(i)}>
+                        <span className="opt-key">
+                          {isChecked && <Icon id="i-check" style={{ width: 12, height: 12, color: '#fff' }} />}
+                        </span>
+                        <span className="opt-text">{opt}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+
+              {currentStep.type === 'scale' && (() => {
+                const val = getScale(step)
+                return (
+                  <>
+                    <div className="scale-row">
+                      <div className="scale-cell label-cell">{currentStep.low}</div>
+                      {[1,2,3,4,5,6,7,8,9,10].map(n => (
+                        <div key={n} className={`scale-cell${val === n ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => setAnswers(a => ({ ...a, [step]: n }))}>{n}</div>
+                      ))}
+                      <div className="scale-cell label-cell" style={{ justifyContent: 'flex-end', textAlign: 'right' }}>{currentStep.high}</div>
                     </div>
-                  ))}
-                </div>
-              </div>
-            )}
+                    <div className="row sb mt-6" style={{ padding: 16, background: 'var(--surface-2)', borderRadius: 'var(--r-md)', fontSize: 13, color: 'var(--muted)' }}>
+                      <span>Ваш ответ: <b style={{ color: 'var(--fg)' }}>{val} / 10</b></span>
+                      {currentStep.median && <span className="text-mono" style={{ fontSize: 11, letterSpacing: '0.04em' }}>МЕДИАНА: {currentStep.median}</span>}
+                    </div>
+                  </>
+                )
+              })()}
 
-            {step === 2 && (
-              <div className="q-step">
-                <div className="num">Вопрос 03 · шкала 1–10</div>
-                <h3>Насколько вам важно, чтобы события были вечерние (после 18:00)?</h3>
-                <p className="hint">Помогает спланировать слоты.</p>
-                <div className="scale-row">
-                  <div className="scale-cell label-cell">Не важно</div>
-                  {[1,2,3,4,5,6,7,8,9,10].map(n => (
-                    <div key={n} className={`scale-cell${scaleVal === n ? ' active' : ''}`} onClick={() => setScaleVal(n)}>{n}</div>
-                  ))}
-                  <div className="scale-cell label-cell" style={{ justifyContent: 'flex-end', textAlign: 'right' }}>Критично</div>
-                </div>
-                <div className="row sb mt-6" style={{ padding: 16, background: 'var(--surface-2)', borderRadius: 'var(--r-md)', fontSize: 13, color: 'var(--muted)' }}>
-                  <span>Ваш ответ: <b style={{ color: 'var(--fg)' }}>{scaleVal} / 10</b></span>
-                  <span className="text-mono" style={{ fontSize: 11, letterSpacing: '0.04em' }}>МЕДИАНА: 8</span>
-                </div>
-              </div>
-            )}
-
-            {step === 3 && (
-              <div className="q-step">
-                <div className="num">Вопрос 04 · текстовый ответ</div>
-                <h3>Что вы добавили бы или поменяли?</h3>
-                <p className="hint">Опционально. SU читает все ответы вручную.</p>
-                <textarea className="textarea" placeholder="Напишите свободно…" style={{ minHeight: 160, fontSize: 15 }} value={textAnswer} onChange={e => setTextAnswer(e.target.value)} />
-              </div>
-            )}
-
+              {currentStep.type === 'text' && (
+                <textarea className="textarea" placeholder="Напишите свободно…" style={{ minHeight: 160, fontSize: 15 }}
+                  value={getText(step)} onChange={e => setAnswers(a => ({ ...a, [step]: e.target.value }))} />
+              )}
+            </div>
           </div>
 
           <div className="q-footer">
@@ -209,7 +241,7 @@ export default function QuestionnairesPage() {
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
             </button>
             <div className="row gap-2">
-              <button className="btn secondary" onClick={() => { setStep(0); setTextAnswer('') }}>Сохранить и выйти</button>
+              <button className="btn secondary" onClick={() => { setStep(0); setAnswers({}) }}>Сохранить и выйти</button>
               {step < totalSteps - 1 ? (
                 <button className="btn primary" onClick={() => setStep(s => s + 1)}>Далее →</button>
               ) : submitted ? (
