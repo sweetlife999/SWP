@@ -1,5 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
+import { api } from '../lib/api'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -28,180 +29,6 @@ const PRIORITY_LABEL: Record<Priority, string> = {
   'p-low':  'Low',
 }
 
-const CARDS: CardData[] = [
-  // --- Backlog ---
-  { id: 'kb-1', col: 'backlog',
-    tags: [{ label: 'SU:Active', cls: 'tag blue' }, { label: 'research', cls: 'tag outline' }],
-    title: 'Опросить деканаты по слотам для Open Day 2026',
-    desc: 'Собрать у трёх деканатов окна для родительских встреч и лабораторных туров. Сравнить с расписанием экзаменов.',
-    meta: [{ icon: 'i-clock', text: '22 июня' }, { icon: 'i-text', text: '4' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }] },
-  { id: 'kb-2', col: 'backlog',
-    tags: [{ label: 'SU:Core', cls: 'tag purple' }, { label: 'policy', cls: 'tag outline' }],
-    title: 'Положение об общежитии — внести правки от ректората',
-    desc: 'Прислали 6 комментариев к §3 и §7. Пройтись построчно, обсудить на ближайшем созвоне.',
-    meta: [{ icon: 'i-clock', text: '28 июня' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' }] },
-  { id: 'kb-3', col: 'backlog',
-    tags: [{ label: 'SU:Media', cls: 'tag', style: { background: '#FCE7F3', color: '#9D174D' } }],
-    title: 'Закупить SD-карты 256GB для съёмочных дней лета',
-    desc: 'Запросить три варианта у Citilink и DNS, сравнить по скорости записи. Бюджет ~ ₽ 14k.',
-    meta: [{ icon: 'i-coin', text: '₽ 14 000' }],
-    priority: 'p-low', pLabel: 'P3',
-    assignees: [{ initials: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }] },
-  { id: 'kb-4', col: 'backlog',
-    tags: [{ label: 'SU:Active', cls: 'tag blue' }, { label: 'scheduling', cls: 'tag outline' }],
-    title: 'Бронь спортзала на турнир по бадминтону',
-    desc: 'Договориться с кампусной службой о слотах вт/чт 19:00–21:00 на июль.',
-    meta: [{ icon: 'i-clock', text: '4 июля' }, { icon: 'i-text', text: '2' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'КЛ', bg: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }] },
-  { id: 'kb-5', col: 'backlog',
-    tags: [{ label: 'infra', cls: 'tag outline' }],
-    title: 'Перейти с Notion на SU portal для протоколов',
-    desc: 'Сравнить экспорт MD. Решить, нужен ли версионник внутри портала.',
-    meta: [{ icon: 'i-text', text: '1' }],
-    priority: 'p-low', pLabel: 'P3',
-    assignees: [{ initials: 'ТК', bg: 'linear-gradient(135deg,#a8dba8,#3da152)' }] },
-
-  // --- Up next ---
-  { id: 'kb-6', col: 'next',
-    tags: [{ label: 'Open Day', cls: 'tag green' }, { label: 'SU:Media', cls: 'tag', style: { background: '#FCE7F3', color: '#9D174D' } }],
-    title: 'Снять промо-видео департамента SU:Active',
-    desc: '5 коротких интервью + b-roll с ивентов весны. Драфт сценария готов — нужно прогнать с co-lead.',
-    attachment: { icon: 'i-image', bold: 'script-v3.md', rest: ' · обновлено вчера' },
-    meta: [{ icon: 'i-clock', text: '14 июня', soon: true }, { icon: 'i-text', text: '7' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }, { initials: 'ИС', bg: 'linear-gradient(135deg,#c8d3e6,#7290c9)', offset: true }] },
-  { id: 'kb-7', col: 'next',
-    tags: [{ label: 'Open Day', cls: 'tag green' }, { label: 'printables', cls: 'tag outline' }],
-    title: 'Раздаточные брошюры — макет в типографию',
-    desc: '2000 шт., 4 разворота, мелованная 130 г/м². Цена и срок согласованы.',
-    meta: [{ icon: 'i-coin', text: '₽ 38 200' }, { icon: 'i-clock', text: '11 июня' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ДА', bg: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }] },
-  { id: 'kb-8', col: 'next',
-    tags: [{ label: 'SU:Core', cls: 'tag purple' }, { label: 'people', cls: 'tag outline' }],
-    title: 'Найти 12 студентов-волонтёров на день регистрации',
-    desc: '9:30–14:00, нужны бейджи и инструктаж за день до. Открыть пост в telegram-канале SU.',
-    meta: [{ icon: 'i-users', text: '4 / 12' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }] },
-  { id: 'kb-9', col: 'next',
-    tags: [{ label: 'SU:Active', cls: 'tag blue' }],
-    title: 'Лекторий «AI & ML in Industry» — собрать спикеров',
-    desc: '2 спикера готовы, нужно ещё 2. Запросить контакты у Школы IT.',
-    meta: [{ icon: 'i-clock', text: '30 июня' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'КЛ', bg: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }] },
-
-  // --- In progress ---
-  { id: 'kb-10', col: 'doing', blocker: true,
-    tags: [{ label: 'blocker', cls: 'tag red', dot: true }, { label: 'Open Day', cls: 'tag green' }],
-    title: 'Согласовать программу Open Day с проректором',
-    desc: 'Сидим у Алексея Михайловича второй день — ждём правок по таймингам.',
-    meta: [{ icon: 'i-clock', text: 'сегодня', urgent: true }, { icon: 'i-text', text: '12' }],
-    priority: 'p-high', pLabel: 'P0',
-    assignees: [{ initials: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' }] },
-  { id: 'kb-11', col: 'doing',
-    tags: [{ label: 'SU:Media', cls: 'tag', style: { background: '#FCE7F3', color: '#9D174D' } }, { label: 'design', cls: 'tag outline' }],
-    title: 'Сделать визуальный гайд для Open Day',
-    desc: 'Постер, баннеры для соц-сетей, шаблон сторис, обложка для канала. Готовность ≈ 70%.',
-    progressPct: 70, progressLabel: '7 / 10',
-    meta: [{ icon: 'i-clock', text: '13 июня', soon: true }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }] },
-  { id: 'kb-12', col: 'doing',
-    tags: [{ label: 'SU:Core', cls: 'tag purple' }, { label: 'finance', cls: 'tag outline' }],
-    title: 'Закрыть отчётность за май, оформить акты',
-    desc: '3 акта собраны, осталось от типографии и кейтеринга. Бухгалтерия ждёт до 12 июня.',
-    meta: [{ icon: 'i-clock', text: '12 июня', soon: true }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ДА', bg: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }] },
-  { id: 'kb-13', col: 'doing',
-    tags: [{ label: 'SU:Active', cls: 'tag blue' }, { label: 'Open Day', cls: 'tag green' }],
-    title: 'Согласовать кейтеринг на 250 человек',
-    desc: 'Два варианта: «Своя кофейня» и «InnoCafe» — отправили запросы, ждём прайс.',
-    meta: [{ icon: 'i-coin', text: '≈ ₽ 62k' }, { icon: 'i-clock', text: '15 июня' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ИС', bg: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }] },
-  { id: 'kb-14', col: 'doing', blocker: true,
-    tags: [{ label: 'blocker', cls: 'tag red', dot: true }, { label: 'portal', cls: 'tag outline' }],
-    title: 'Починить экспорт XLSX из Questionnaires',
-    desc: 'Не выгружает «Multiple choice» в одну колонку — режет на N столбцов. Завести issue в репо.',
-    meta: [{ icon: 'i-clock', text: 'завтра', urgent: true }, { icon: 'i-text', text: '4' }],
-    priority: 'p-high', pLabel: 'P0',
-    assignees: [{ initials: 'ТК', bg: 'linear-gradient(135deg,#a8dba8,#3da152)' }] },
-  { id: 'kb-15', col: 'doing',
-    tags: [{ label: 'Open Day', cls: 'tag green' }, { label: 'logistics', cls: 'tag outline' }],
-    title: 'Согласовать пропускной режим с охраной',
-    desc: 'Списки гостей — за 48 часов. Уточнить, нужен ли отдельный паспорт-контроль для родителей.',
-    meta: [{ icon: 'i-clock', text: '16 июня' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }] },
-
-  // --- Review ---
-  { id: 'kb-16', col: 'review',
-    tags: [{ label: 'SU:Core', cls: 'tag purple' }, { label: 'portal', cls: 'tag outline' }],
-    title: 'Проверить контент страницы Donations',
-    desc: 'Все суммы, цели, транзакции — сверить с экселем казначея. Опечатки в названиях статей.',
-    attachment: { icon: 'i-link', bold: 'donations.html', rest: ' · v2' },
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' }] },
-  { id: 'kb-17', col: 'review',
-    tags: [{ label: 'SU:Active', cls: 'tag blue' }, { label: 'event', cls: 'tag outline' }],
-    title: 'Финализировать список треков на хакатоне Inno Hack',
-    desc: '5 треков предложили, нужно выбрать 3. Согласовать с менторами и партнёром (СберТех).',
-    meta: [{ icon: 'i-text', text: '9' }, { icon: 'i-eye', text: '5' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'КЛ', bg: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }, { initials: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)', offset: true }] },
-  { id: 'kb-18', col: 'review',
-    tags: [{ label: 'SU:Media', cls: 'tag', style: { background: '#FCE7F3', color: '#9D174D' } }],
-    title: 'Корректура июньского newsletter',
-    desc: 'Редактор прислала второй раунд правок — отсмотреть и собрать финал.',
-    meta: [{ icon: 'i-text', text: '3' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'ИС', bg: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }] },
-
-  // --- Done ---
-  { id: 'kb-19', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }],
-    title: 'Запустить лендинг Open Day 2026',
-    meta: [{ icon: 'i-check', text: '6 июня' }],
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }] },
-  { id: 'kb-20', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }, { label: 'portal', cls: 'tag outline' }],
-    title: 'Опубликовать опрос «Качество кафедральной столовой»',
-    meta: [{ icon: 'i-users', text: '248 ответов' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'ДА', bg: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }] },
-  { id: 'kb-21', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }],
-    title: 'Закрыть цель «Канцелярия и принтер» — собрано 102%',
-    meta: [{ icon: 'i-coin', text: '₽ 41 200' }],
-    priority: 'p-low', pLabel: 'P2',
-    assignees: [{ initials: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' }] },
-  { id: 'kb-22', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }, { label: 'comms', cls: 'tag outline' }],
-    title: 'Майский пост-отчёт в telegram-канале',
-    meta: [{ icon: 'i-eye', text: '1.9k' }],
-    priority: 'p-low', pLabel: 'P3',
-    assignees: [{ initials: 'ИС', bg: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }] },
-  { id: 'kb-23', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }],
-    title: 'Положение о SU:Media — финальная редакция',
-    priority: 'p-mid', pLabel: 'P1',
-    assignees: [{ initials: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }] },
-  { id: 'kb-24', col: 'done',
-    tags: [{ label: 'shipped', cls: 'tag green', dot: true }],
-    title: 'Брендинг для турнира по настолке',
-    meta: [{ icon: 'i-check', text: '3 июня' }],
-    priority: 'p-low', pLabel: 'P3',
-    assignees: [{ initials: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }] },
-]
 
 // Column metadata with distinct colors (from legacy color scheme)
 const COLS: { key: ColKey; cls: string; label: string; color: string; eyeBtn?: boolean }[] = [
@@ -222,9 +49,9 @@ const FACES = [
 
 // ── Card Detail Panel ───────────────────────────────────────────────────────
 
-interface CardDetailPanelProps { card: CardData; onClose: () => void }
+interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void }
 
-function CardDetailPanel({ card, onClose }: CardDetailPanelProps) {
+function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
   const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
   return (
     <>
@@ -314,8 +141,8 @@ function CardDetailPanel({ card, onClose }: CardDetailPanelProps) {
           <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
             <Icon id="i-x" style={{ width: 14, height: 14 }} />Закрыть
           </button>
-          <button className="btn primary" style={{ flex: 1 }}>
-            <Icon id="i-check" style={{ width: 14, height: 14 }} />Отметить готово
+          <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
+            <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
           </button>
         </div>
       </div>
@@ -410,20 +237,60 @@ function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: 
 export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
   const [search, setSearch] = useState('')
-  const [cardCols, setCardCols] = useState<Record<string, ColKey>>(
-    () => Object.fromEntries(CARDS.map(c => [c.id, c.col]))
-  )
+  const [fetchedCards, setFetchedCards] = useState<CardData[]>([])
+  const [extraCards, setExtraCards] = useState<CardData[]>([])
+  const [cardCols, setCardCols] = useState<Record<string, ColKey>>({})
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<ColKey | null>(null)
   const [selected, setSelected] = useState<CardData | null>(null)
+  const [chipP01, setChipP01] = useState(true)
+  const [chipOpenDay, setChipOpenDay] = useState(false)
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
+
+  useEffect(() => {
+    api.admin.kanban.list().then(data => {
+      setFetchedCards(data as CardData[])
+      setCardCols(Object.fromEntries(data.map(c => [c.id, c.col as ColKey])))
+    }).catch(() => {})
+  }, [])
+
+  const allCards = [...fetchedCards, ...extraCards]
 
   function colCards(col: ColKey) {
     const q = search.trim().toLowerCase()
-    return CARDS.filter(c => {
-      if (cardCols[c.id] !== col) return false
+    return allCards.filter(c => {
+      if ((cardCols[c.id] ?? c.col) !== col) return false
+      if (chipP01 && c.priority === 'p-low') return false
+      if (chipOpenDay && !c.tags.some(t => t.label === 'Open Day')) return false
       if (!q) return true
       return c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q) || false
     })
+  }
+
+  function exportCsv() {
+    const headers = ['ID', 'Column', 'Priority', 'Title', 'Assignees']
+    const rows = allCards.map(c => [c.id, cardCols[c.id] ?? c.col, c.pLabel, c.title, c.assignees.map(a => a.initials).join('; ')])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a'); a.href = url; a.download = 'kanban-sprint14.csv'; a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  function openNewTask(col: ColKey) {
+    setNewTask({ open: true, col, title: '' })
+  }
+
+  function submitNewTask() {
+    if (!newTask.title.trim()) return
+    const id = `kb-x${Date.now()}`
+    const card: CardData = {
+      id, col: newTask.col, tags: [], title: newTask.title.trim(),
+      priority: 'p-low', pLabel: 'P3', assignees: []
+    }
+    setExtraCards(prev => [...prev, card])
+    setCardCols(prev => ({ ...prev, [id]: newTask.col }))
+    setNewTask({ open: false, col: 'backlog', title: '' })
   }
 
   function handleDrop(e: React.DragEvent, col: ColKey) {
@@ -433,10 +300,6 @@ export default function KanbanPage() {
     setDragging(null)
     setDragOver(null)
   }
-
-  const inProgressCount = CARDS.filter(c => cardCols[c.id] === 'doing').length
-  const doneCount = CARDS.filter(c => cardCols[c.id] === 'done').length
-  const blockerCount = CARDS.filter(c => cardCols[c.id] === 'doing' && c.blocker).length
 
   return (
     <>
@@ -449,46 +312,14 @@ export default function KanbanPage() {
           </p>
         </div>
         <div className="row gap-2">
-          <button className="btn secondary">
+          <button className="btn secondary" onClick={exportCsv}>
             <Icon id="i-download" style={{ width: 14, height: 14 }} />Экспорт CSV
           </button>
-          <button className="btn primary">
+          <button className="btn primary" onClick={() => openNewTask('backlog')}>
             <Icon id="i-plus" style={{ width: 14, height: 14 }} />Новая задача
           </button>
         </div>
       </div>
-
-      {/* Sprint summary strip */}
-      <section className="sprint-bar">
-        <div className="sprint-cell lead">
-          <span className="lbl">Sprint 14 · в работе</span>
-          <span className="v">«Подготовка к Open Day»</span>
-          <span className="deadline">3 → 17 июня · осталось 7 дней</span>
-          <div className="progress">
-            <div className="bar" style={{ width: `${Math.round(doneCount / CARDS.length * 100)}%` }} />
-          </div>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Всего задач</span>
-          <span className="v">{CARDS.length}</span>
-          <span className="sub">+3 за неделю</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">In progress</span>
-          <span className="v">{inProgressCount}</span>
-          <span className="sub">{blockerCount} блокер{blockerCount === 1 ? '' : 'а'}</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Закрыто</span>
-          <span className="v">{doneCount}</span>
-          <span className="sub" style={{ color: 'var(--accent-700)' }}>+38% к прошлому спринту</span>
-        </div>
-        <div className="sprint-cell">
-          <span className="lbl">Velocity</span>
-          <span className="v">7.2</span>
-          <span className="sub">задач/неделя (avg)</span>
-        </div>
-      </section>
 
       {/* Toolbar */}
       <section className="kb-toolbar">
@@ -518,11 +349,11 @@ export default function KanbanPage() {
           <div className="more">+3</div>
         </div>
         <span className="divider" />
-        <button className="filter-chip active">
-          <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1<span className="x">×</span>
+        <button className={`filter-chip${chipP01 ? ' active' : ''}`} onClick={() => setChipP01(v => !v)}>
+          <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1{chipP01 && <span className="x">×</span>}
         </button>
-        <button className="filter-chip">
-          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day
+        <button className={`filter-chip${chipOpenDay ? ' active' : ''}`} onClick={() => setChipOpenDay(v => !v)}>
+          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day{chipOpenDay && <span className="x">×</span>}
         </button>
         <div style={{ marginLeft: 'auto' }} className="row gap-2">
           <div className="seg">
@@ -560,7 +391,7 @@ export default function KanbanPage() {
                   >
                     {cards.length}
                   </span>
-                  <button className="add"><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
+                  <button className="add" onClick={() => !col.eyeBtn && openNewTask(col.key)}><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
                 </header>
 
                 <div
@@ -593,7 +424,7 @@ export default function KanbanPage() {
                 </div>
 
                 {col.key !== 'done' && (
-                  <button className="col-add-empty"><Icon id="i-plus" />Добавить задачу</button>
+                  <button className="col-add-empty" onClick={() => openNewTask(col.key)}><Icon id="i-plus" />Добавить задачу</button>
                 )}
               </section>
             )
@@ -605,8 +436,40 @@ export default function KanbanPage() {
         Внутренний backlog · виден только команде SU:Core · <span className="text-mono">перетащи карточку ↔ чтобы изменить статус · нажми чтобы открыть детали</span>
       </footer>
 
+      {/* New task modal */}
+      {newTask.open && (
+        <div className="modal-overlay" onClick={() => setNewTask(t => ({ ...t, open: false }))}>
+          <div className="dep-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
+            <button className="modal-close" onClick={() => setNewTask(t => ({ ...t, open: false }))}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+            <div className="dep-modal-header"><h2>Новая задача</h2></div>
+            <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div className="field">
+                <label>Название</label>
+                <input className="input" autoFocus placeholder="Название задачи…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
+              </div>
+              <div className="field">
+                <label>Колонка</label>
+                <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                  {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
+              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setNewTask(t => ({ ...t, open: false }))}>Отмена</button>
+              <button className="btn primary" style={{ flex: 1 }} onClick={submitNewTask} disabled={!newTask.title.trim()}>Создать</button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Task detail panel */}
-      {selected && <CardDetailPanel card={selected} onClose={() => setSelected(null)} />}
+      {selected && (
+        <CardDetailPanel
+          card={selected}
+          onClose={() => setSelected(null)}
+          onMarkDone={() => setCardCols(prev => ({ ...prev, [selected.id]: 'done' }))}
+        />
+      )}
     </>
   )
 }
