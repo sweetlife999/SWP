@@ -8,7 +8,6 @@ export default function EventDetailPage() {
   const { id } = useParams()
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
-  const [event, setEvent] = useState<Event | null>(null)
   const [editingDesc, setEditingDesc] = useState(false)
   const [descHtml, setDescHtml] = useState('')
   const descRef = useRef<HTMLElement>(null)
