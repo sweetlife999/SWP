@@ -82,6 +82,15 @@ class MemberCreate(BaseModel):
     recent: list[str] = []
 
 
+class MemberPatch(BaseModel):
+    dep: Optional[Department] = None
+    name: Optional[str] = None
+    role: Optional[str] = None
+    meta: Optional[str] = None
+    bio: Optional[str] = None
+    recent: Optional[list[str]] = None
+
+
 # ── Surveys ───────────────────────────────────────────────────────────────────
 
 class QStep(BaseModel):
