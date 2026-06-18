@@ -68,6 +68,8 @@ export const api = {
     list:   () => req<Event[]>('/events'),
     get:    (id: number | string) => req<Event>(`/events/${id}`),
     create: (e: Omit<Event, 'id'>) => req<Event>('/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+    update: (id: number | string, e: Partial<Event>) => req<Event>(`/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
+    delete: (id: number | string) => req<void>(`/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
   },
   members: {
     list:   () => req<Member[]>('/members'),
@@ -92,6 +94,11 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       }),
+    events: {
+      list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
+      update: (id: number | string, e: Partial<Event>) => req<Event>(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
+      delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
+    },
     kanban: {
       list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
       update: (id: string, col: ColKey) =>

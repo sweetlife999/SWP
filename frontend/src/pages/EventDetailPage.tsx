@@ -1,20 +1,48 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 
 export default function EventDetailPage() {
   const { id } = useParams()
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
+  const [event, setEvent] = useState<Event | null>(null)
   const [editingDesc, setEditingDesc] = useState(false)
   const [descHtml, setDescHtml] = useState('')
   const descRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     if (!id) return
-    api.content.get(`event-desc-${id}`).then(d => setDescHtml(d.html)).catch(() => {})
+    Promise.all([
+      api.events.get(id)
+        .then(setEvent)
+        .catch(() => {
+          const mockEvent: Event = {
+            id: Number(id),
+            title: 'Hackathon Summer 24h',
+            desc: '24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.',
+            date: '2026-06-20',
+            dd: '20',
+            mm: 'ИЮН',
+            cover: '',
+            tag: 'SU:Core',
+            tagCls: 'green',
+            time: '10:00',
+            foot: '32 участника',
+            past: false,
+            status: 'live',
+            statusText: 'live',
+          }
+          setEvent(mockEvent)
+        }),
+      api.content.get(`event-desc-${id}`)
+        .then(d => setDescHtml(d.html))
+        .catch(() => {
+          setDescHtml('<p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p><p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p><p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>')
+        }),
+    ])
   }, [id])
 
   async function handleDescSave() {
@@ -44,7 +72,7 @@ export default function EventDetailPage() {
     showToast('Файл .ics скачан')
   }
 
-  return (
+    return (
     <>
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
@@ -88,21 +116,26 @@ export default function EventDetailPage() {
                 </div>
               )}
             </div>
-            <article
-              ref={descRef}
-              contentEditable={editingDesc}
-              suppressContentEditableWarning
-              style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
-              dangerouslySetInnerHTML={descHtml ? { __html: descHtml } : undefined}
-            >
-              {!descHtml && (
-                <>
-                  <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
-                  <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
-                  <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
-                </>
-              )}
-            </article>
+            {descHtml ? (
+              <article
+                ref={descRef}
+                contentEditable={editingDesc}
+                suppressContentEditableWarning
+                style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
+                dangerouslySetInnerHTML={{ __html: descHtml }}
+              />
+            ) : (
+              <article
+                ref={descRef}
+                contentEditable={editingDesc}
+                suppressContentEditableWarning
+                style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
+              >
+                <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
+                <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
+                <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
+              </article>
+            )}
           </article>
 
           <article className="content-block">
