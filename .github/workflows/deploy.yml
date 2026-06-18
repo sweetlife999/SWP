@@ -5,16 +5,18 @@ on:
     branches: [main]
     paths:
       - 'frontend/**'
+      - 'database/**'
       - 'compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:
-  IMAGE: ghcr.io/sweetlife999/swp-frontend
+  FRONTEND_IMAGE: ghcr.io/sweetlife999/swp-frontend
+  DB_IMAGE: ghcr.io/sweetlife999/swp-db
 
 jobs:
   build-and-push:
-    name: Build & push Docker image
+    name: Build & push Docker images
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -30,12 +32,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Build and push frontend
         uses: docker/build-push-action@v6
         with:
           context: ./frontend
           push: true
-          tags: ${{ env.IMAGE }}:latest
+          tags: ${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Build and push db
+        uses: docker/build-push-action@v6
+        with:
+          context: ./database
+          push: true
+          tags: ${{ env.DB_IMAGE }}:latest
 
   deploy:
     name: Deploy to VPS

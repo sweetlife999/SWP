@@ -6,7 +6,7 @@ services:
       - "127.0.0.1:3000:80"
 
   db:
-    build: ./database
+    image: ghcr.io/sweetlife999/swp-db:latest
     restart: unless-stopped
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-su_portal}
