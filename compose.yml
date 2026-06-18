@@ -5,6 +5,16 @@ services:
     ports:
       - "127.0.0.1:3000:80"
 
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file: ./backend/.env
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: ghcr.io/sweetlife999/swp-db:latest
     restart: unless-stopped
