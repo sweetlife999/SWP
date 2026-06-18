@@ -13,33 +13,36 @@ database/
 │   ├── 0001_init.sql        # extensions, enums, tables, indexes, triggers
 │   ├── 0002_content_seed.sql# structural seed: known content-block slugs
 │   └── 0003_stats_views.sql # survey statistics views (optional but cheap)
-├── seeds/
-│   └── dev_seed.sql         # sample data — DEV ONLY, never in production
-├── docker-compose.yml       # local Postgres 16 with auto-init
-├── .env.example             # copy to .env (git-ignored)
+├── Dockerfile               # Postgres 16 image bundling the migrations
 └── README.md
 ```
 
+The database is a service in the project-root [`compose.yml`](../compose.yml)
+(`build: ./database`), so it runs alongside the frontend.
+
 ## Quick start (local)
 
+From the **project root**:
+
 ```bash
-cd database
-cp .env.example .env
-docker compose up -d            # starts Postgres, runs migrations + dev seed
+docker compose up -d db         # builds the image, runs migrations on first start
 docker compose logs -f db       # watch init
 ```
 
 Connect: `postgres://su:su_dev_password@127.0.0.1:5432/su_portal`
+(override `POSTGRES_USER` / `POSTGRES_PASSWORD` / `POSTGRES_DB` via the
+environment or a root `.env`).
 
-Reset from scratch (drops the volume and re-runs init):
+Reset from scratch (drops the volume and re-runs the migrations):
 
 ```bash
-docker compose down -v && docker compose up -d
+docker compose down -v && docker compose up -d db
 ```
 
 ## Applying to production
 
-Do **not** use the dev seed. Apply only the migrations, in order:
+Apply the migrations, in order (the Docker image does this automatically on a
+fresh volume; run them manually against a managed/remote Postgres):
 
 ```bash
 for f in migrations/0001_init.sql migrations/0002_content_seed.sql migrations/0003_stats_views.sql; do
@@ -151,7 +154,9 @@ SELECT cron.schedule('purge-sessions', '*/15 * * * *',
 ## Conventions
 
 - `TIMESTAMPTZ` everywhere (never naive `TIMESTAMP`).
-- Enums for closed sets (`department`, `kanban_col`, `priority`, `question_type`).
+- Enums for fixed closed sets (`department`, `question_type`). Kanban column
+  membership and card priority are kept flexible (a column table + a
+  CHECK-constrained TEXT) rather than enums.
 - `GENERATED ALWAYS AS IDENTITY` for surrogate keys (not `SERIAL`).
 - `JSONB` only for genuinely schemaless data (kanban card `attachment`,
   survey answers) — fixed-shape data stays in real columns. Kanban tags,

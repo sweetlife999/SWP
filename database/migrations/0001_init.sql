@@ -128,14 +128,15 @@ CREATE INDEX idx_questions_survey ON survey_questions (survey_id, position)
   WHERE deleted_at IS NULL;
 
 -- ── Survey responses (append-only log) ──────────────────────────────────────
--- Anonymous by design: NO user reference. answers is keyed by QUESTION ID
--- (stable across reordering), e.g. {"12":"Yes","13":["a","b"],"14":4}.
--- Never UPDATE/DELETE rows here.
+-- Anonymous by design: NO user reference, NO IP tracking. answers is keyed by
+-- QUESTION ID (stable across reordering), e.g. {"12":"Yes","13":["a","b"],"14":4}.
+-- Duplicate-submission guarding is handled client-side (cookie / localStorage),
+-- not in the DB — everyone in Innopolis is behind one IP, so an ip_hash would
+-- be useless anyway. Never UPDATE/DELETE rows here.
 CREATE TABLE survey_responses (
   id           BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   survey_id    INT         NOT NULL REFERENCES surveys (id),
   answers      JSONB       NOT NULL,
-  ip_hash      TEXT,                  -- optional dedup; store a hash, never raw IP
   submitted_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
