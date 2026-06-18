@@ -47,8 +47,8 @@ None in Sprint 3.
 | Metric | Value |
 |--------|-------|
 | Total Product Backlog (Story Points) | TBD |
-| Sprint 3 total (Story Points) | TBD |
-| Sprint 3 completed (Story Points) | TBD |
+| Sprint 3 total (Story Points) | 191+ (remaining TBD: #23, #29, #31, #34, US-01/05/08) |
+| Sprint 3 completed (Story Points) | 71+ (remaining TBD) |
 
 ## MVP v1 scope
 
@@ -59,12 +59,12 @@ PBIs marked `mvp-v1`:
 | US-01 | View upcoming events | TBD | Done |
 | US-05 | View SU member directory | TBD | Done |
 | US-08 | View SU departments info | TBD | Done |
-| US-11 | Publish and manage events | TBD | Done |
-| US-12 | Fill out an active questionnaire | TBD | Done |
-| US-13 | Create and manage questionnaires | TBD | Done |
+| US-11 | Publish and manage events | 13 | Done |
+| US-12 | Fill out an active questionnaire | 13 | Done |
+| US-13 | Create and manage questionnaires | 20 | Done |
 | — | API stub layer | TBD | Done |
-| — | Admin inline editing | TBD | Done |
-| — | Admin login | TBD | Done |
+| — | Admin inline editing | 20 | Done |
+| — | Admin login | 5 | Done |
 | — | CI: lint + type-check | TBD | Done |
 | — | Docker deploy pipeline | TBD | Done |
 
