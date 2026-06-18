@@ -88,8 +88,9 @@ The frontend MVP v1 is live at [https://su.fblrkus.ru](https://su.fblrkus.ru). A
 
 ## Next steps
 
-- Implement FastAPI + PostgreSQL backend (Sprint 4)
-- Replace all API stubs with real endpoints
+- Design database schema and write migrations (Sprint 3, #43)
+- Backend setup: stack, project structure, dev environment (Sprint 3, #41)
+- Connect FastAPI endpoints and replace API stubs (Sprint 4)
 - Add photo gallery (US-03)
 - Add questionnaire result XLSX export (US-14)
 
