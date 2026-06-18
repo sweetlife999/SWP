@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -125,6 +125,113 @@ class SurveyResponseBody(BaseModel):
         dict[str, SurveyAnswerValue],
         Field(max_length=200),  # cap at 200 question keys
     ]
+
+
+# ── Questionnaires (admin CRUD + public read) ─────────────────────────────────
+
+QuestionType = Literal["single", "multi", "scale", "text"]
+QuestionnaireStatus = Literal["draft", "open", "closed"]
+
+
+class QuestionOut(BaseModel):
+    id: int
+    position: int
+    type: str
+    title: str
+    hint: str
+    options: Optional[list[str]] = None
+    scale_low: Optional[str] = None
+    scale_high: Optional[str] = None
+    scale_mid: Optional[int] = None
+
+
+class QuestionnaireOut(BaseModel):
+    """Public-facing shape returned by GET /questionnaires and GET /questionnaires/:id."""
+    id: str
+    tag: str
+    tagCls: str
+    title: str
+    desc: str
+    time: str
+    timeEnding: Optional[bool] = None
+    left: str
+    flowTitle: str
+    eyebrow: str
+    steps: list[QStep]
+
+
+class QuestionnaireAdminOut(BaseModel):
+    """Admin-facing shape with status and management fields."""
+    id: int
+    department: str
+    title: str
+    description: str
+    status: QuestionnaireStatus
+    est_minutes: int
+    closes_at: Optional[str] = None
+    response_count: int
+    questions: list[QuestionOut]
+
+
+class QuestionnaireCreate(BaseModel):
+    department: Department
+    title: str
+    description: str = ""
+    flow_title: str = ""
+    eyebrow: str = ""
+    est_minutes: int = 2
+
+
+class QuestionnairePatch(BaseModel):
+    status: Optional[QuestionnaireStatus] = None
+    title: Optional[str] = None
+    description: Optional[str] = None
+    flow_title: Optional[str] = None
+    eyebrow: Optional[str] = None
+    est_minutes: Optional[int] = None
+    closes_at: Optional[datetime] = None
+
+
+class QuestionCreate(BaseModel):
+    type: QuestionType
+    title: str
+    hint: str = ""
+    options: Optional[list[str]] = None
+    scale_low: Optional[str] = None
+    scale_high: Optional[str] = None
+    scale_mid: Optional[int] = None
+
+
+class QuestionPatch(BaseModel):
+    type: Optional[QuestionType] = None
+    title: Optional[str] = None
+    hint: Optional[str] = None
+    options: Optional[list[str]] = None
+    scale_low: Optional[str] = None
+    scale_high: Optional[str] = None
+    scale_mid: Optional[int] = None
+
+
+class AnswerStat(BaseModel):
+    answer: str
+    count: int
+    pct: float
+
+
+class QuestionResults(BaseModel):
+    question_id: int
+    position: int
+    type: str
+    title: str
+    answered: int
+    stats: list[AnswerStat]
+
+
+class QuestionnaireResults(BaseModel):
+    id: int
+    title: str
+    total_responses: int
+    questions: list[QuestionResults]
 
 
 # ── Content blocks ────────────────────────────────────────────────────────────

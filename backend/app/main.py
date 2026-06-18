@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import create_pool, get_pool
-from app.routers import admin, content, events, kanban, members, surveys
+from app.routers import admin, content, events, kanban, members, questionnaires, surveys
 
 
 @asynccontextmanager
@@ -46,6 +46,8 @@ app.include_router(members.router, prefix="/api")
 app.include_router(surveys.router, prefix="/api")
 app.include_router(content.router, prefix="/api")
 app.include_router(kanban.router, prefix="/api")
+app.include_router(questionnaires.router, prefix="/api")
+app.include_router(questionnaires.admin_router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 
 
