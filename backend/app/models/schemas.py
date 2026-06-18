@@ -14,6 +14,9 @@ DepartmentOrLabel = Literal["SU:Core", "SU:Active", "SU:Media", "core", "active"
 
 # ── Events ────────────────────────────────────────────────────────────────────
 
+EventStatus = Literal["draft", "published", "archived"]
+
+
 class EventOut(BaseModel):
     id: int
     title: str
@@ -29,7 +32,7 @@ class EventOut(BaseModel):
     footLabel: Optional[str] = None
     featured: Optional[bool] = None
     past: Optional[bool] = None
-    status: Optional[str] = None
+    status: EventStatus
     statusText: Optional[str] = None
 
 
@@ -57,6 +60,7 @@ class EventPatch(BaseModel):
     foot: Optional[str] = None
     footLabel: Optional[str] = None
     featured: Optional[bool] = None
+    status: Optional[EventStatus] = None
     statusText: Optional[str] = None
 
 

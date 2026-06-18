@@ -14,7 +14,7 @@ admin_router = APIRouter(prefix="/admin/events", tags=["admin-events"],
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status_text
+           cover_class, foot_text, foot_label, featured, status, status_text
     FROM events
 """
 
@@ -38,30 +38,48 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         footLabel=row["foot_label"] or None,
         featured=row["featured"] or None,
         past=past or None,
-        status="passed" if past else "live",
+        status=row["status"],
         statusText=row["status_text"] or None,
     )
 
 
+# ── Public ────────────────────────────────────────────────────────────────────
+
 @router.get("", response_model=list[EventOut])
 async def list_events(request: Request) -> list[EventOut]:
+    """AC1: drafts are excluded from the public listing."""
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(_SELECT + "ORDER BY event_date DESC, id DESC")
+    rows = await pool.fetch(
+        _SELECT + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC"
+    )
     return [_row_to_event(r) for r in rows]
 
 
 @router.get("/{event_id}", response_model=EventOut)
 async def get_event(event_id: int, request: Request) -> EventOut:
+    """Public. Returns any non-draft event by id."""
     pool: asyncpg.Pool = get_pool(request)
-    row = await pool.fetchrow(_SELECT + "WHERE id = $1", event_id)
+    row = await pool.fetchrow(
+        _SELECT + "WHERE id = $1 AND status IN ('published', 'archived')", event_id
+    )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return _row_to_event(row)
 
 
-@router.post("", response_model=EventOut, status_code=status.HTTP_201_CREATED,
-             dependencies=[Depends(require_admin)])
+# ── Admin ─────────────────────────────────────────────────────────────────────
+
+@admin_router.get("", response_model=list[EventOut])
+async def admin_list_events(request: Request) -> list[EventOut]:
+    """Returns all events regardless of status."""
+    pool: asyncpg.Pool = get_pool(request)
+    rows = await pool.fetch(_SELECT + "ORDER BY event_date DESC, id DESC")
+    return [_row_to_event(r) for r in rows]
+
+
+@admin_router.post("", response_model=EventOut, status_code=status.HTTP_201_CREATED)
 async def create_event(body: EventCreate, request: Request) -> EventOut:
+    """Creates a draft. Status defaults to 'draft' at the DB level."""
     pool: asyncpg.Pool = get_pool(request)
     row = await pool.fetchrow(
         """
@@ -70,13 +88,13 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
            cover_class, foot_text, foot_label, featured, status_text)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id, title, description, event_date, event_time, department,
-                  cover_class, foot_text, foot_label, featured, status_text
+                  cover_class, foot_text, foot_label, featured, status, status_text
         """,
         body.title,
         body.desc,
-        body.date,              # already a datetime.date from Pydantic
+        body.date,
         body.time or None,
-        DEPT_MAP[body.tag],     # Literal guarantees key is valid
+        DEPT_MAP[body.tag],
         body.cover,
         body.foot,
         body.footLabel,
@@ -86,38 +104,28 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
     return _row_to_event(row)
 
 
-@router.patch("/{event_id}", response_model=EventOut,
-              dependencies=[Depends(require_admin)])
-async def patch_event(event_id: int, body: EventPatch, request: Request) -> EventOut:
-    return await _apply_patch(event_id, body, get_pool(request))
-
-
-@router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT,
-               dependencies=[Depends(require_admin)])
-async def delete_event(event_id: int, request: Request) -> None:
-    await _delete_event(event_id, get_pool(request))
-
-
-# ── Admin-namespaced mirrors (/admin/events/*) ────────────────────────────────
-
-@admin_router.get("", response_model=list[EventOut])
-async def admin_list_events(request: Request) -> list[EventOut]:
-    pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(_SELECT + "ORDER BY event_date DESC, id DESC")
-    return [_row_to_event(r) for r in rows]
-
-
 @admin_router.patch("/{event_id}", response_model=EventOut)
-async def admin_patch_event(event_id: int, body: EventPatch, request: Request) -> EventOut:
+async def patch_event(event_id: int, body: EventPatch, request: Request) -> EventOut:
+    """AC2: sending {status: 'published'} makes the event visible on GET /events."""
     return await _apply_patch(event_id, body, get_pool(request))
 
 
 @admin_router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def admin_delete_event(event_id: int, request: Request) -> None:
-    await _delete_event(event_id, get_pool(request))
+async def delete_event(event_id: int, request: Request) -> None:
+    """AC3: only draft events may be deleted; published/archived return 422."""
+    pool: asyncpg.Pool = get_pool(request)
+    row = await pool.fetchrow("SELECT status FROM events WHERE id = $1", event_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
+    if row["status"] != "draft":
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Cannot delete a {row['status']} event; archive it instead",
+        )
+    await pool.execute("DELETE FROM events WHERE id = $1", event_id)
 
 
-# ── Shared helpers ────────────────────────────────────────────────────────────
+# ── Shared helper ─────────────────────────────────────────────────────────────
 
 async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> EventOut:
     provided = body.model_fields_set
@@ -129,16 +137,16 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
     params: list = []
 
     def add(col: str, val) -> None:
-        # col is always a hardcoded string literal below, never user input.
+        # col is always a hardcoded string literal, never user input.
         params.append(val)
         updates.append(f"{col} = ${len(params)}")
 
-    # Non-nullable DB columns: reject explicit null, skip if absent.
+    # Non-nullable columns: reject explicit null.
     for field, col, val in [
-        ("title",    "title",       body.title),
-        ("desc",     "description", body.desc),
-        ("cover",    "cover_class", body.cover),
-        ("foot",     "foot_text",   body.foot),
+        ("title", "title",       body.title),
+        ("desc",  "description", body.desc),
+        ("cover", "cover_class", body.cover),
+        ("foot",  "foot_text",   body.foot),
     ]:
         if field in provided:
             if val is None:
@@ -150,13 +158,13 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         if body.date is None:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                 detail="'date' cannot be null")
-        add("event_date", body.date)   # already datetime.date from Pydantic
+        add("event_date", body.date)
 
     if "tag" in provided:
         if body.tag is None:
             raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
                                 detail="'tag' cannot be null")
-        add("department", DEPT_MAP[body.tag])  # Literal guarantees valid key
+        add("department", DEPT_MAP[body.tag])
 
     if "featured" in provided:
         if body.featured is None:
@@ -164,7 +172,13 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
                                 detail="'featured' cannot be null")
         add("featured", body.featured)
 
-    # Nullable DB columns: explicit null clears the field.
+    if "status" in provided:
+        if body.status is None:
+            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                detail="'status' cannot be null")
+        add("status", body.status)
+
+    # Nullable columns: explicit null clears the field.
     if "time" in provided:
         add("event_time", body.time or None)
     if "footLabel" in provided:
@@ -181,15 +195,9 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         f"UPDATE events SET {', '.join(updates)}, updated_at = now() "
         f"WHERE id = ${len(params)} "
         f"RETURNING id, title, description, event_date, event_time, department, "
-        f"cover_class, foot_text, foot_label, featured, status_text",
+        f"cover_class, foot_text, foot_label, featured, status, status_text",
         *params,
     )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return _row_to_event(row)
-
-
-async def _delete_event(event_id: int, pool: asyncpg.Pool) -> None:
-    result = await pool.execute("DELETE FROM events WHERE id = $1", event_id)
-    if result == "DELETE 0":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
