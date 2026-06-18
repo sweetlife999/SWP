@@ -70,6 +70,7 @@ class MemberOut(BaseModel):
     role: str
     meta: str
     bio: str
+    photo_url: str
     recent: list[str]
 
 
@@ -79,6 +80,7 @@ class MemberCreate(BaseModel):
     role: str
     meta: str = ""
     bio: str = ""
+    photo_url: str = ""
     recent: list[str] = []
 
 
@@ -88,7 +90,13 @@ class MemberPatch(BaseModel):
     role: Optional[str] = None
     meta: Optional[str] = None
     bio: Optional[str] = None
+    photo_url: Optional[str] = None
     recent: Optional[list[str]] = None
+
+
+class MemberReorderItem(BaseModel):
+    id: int
+    sort_order: int
 
 
 # ── Surveys ───────────────────────────────────────────────────────────────────

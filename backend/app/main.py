@@ -43,6 +43,7 @@ app.add_middleware(
 app.include_router(events.router, prefix="/api")
 app.include_router(events.admin_router, prefix="/api")
 app.include_router(members.router, prefix="/api")
+app.include_router(members.admin_router, prefix="/api")
 app.include_router(surveys.router, prefix="/api")
 app.include_router(content.router, prefix="/api")
 app.include_router(kanban.router, prefix="/api")
