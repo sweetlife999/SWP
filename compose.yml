@@ -4,3 +4,23 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:80"
+
+  db:
+    build: ./database
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-su_portal}
+      POSTGRES_USER: ${POSTGRES_USER:-su}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-su_dev_password}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-su} -d ${POSTGRES_DB:-su_portal}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  pgdata:
