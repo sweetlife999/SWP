@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
 const DEP_INFO = {
   core: {
@@ -52,6 +56,34 @@ const DEFAULT_INTRO = `<span class="eyebrow">О студсовете</span>
 <h1>Студенческий совет<br>Университета Иннополис</h1>
 <p class="lead">Представляем интересы студентов, организуем кампусную жизнь и помогаем университету становиться лучше — с 2019 года. Три департамента, одна команда.</p>`
 
+// Мок-данные для новостей, если API недоступен
+const MOCK_NEWS = [
+  {
+    id: '1',
+    title: 'SU Portal v1 запущен!',
+    excerpt: 'Новый портал студсовета — единая точка входа для новостей, ивентов, опросов и донатов.',
+    date: '15 июн 2026',
+    category: 'SU:Core',
+    thumbClass: 'a'
+  },
+  {
+    id: '2',
+    title: 'Hackathon Summer 24h — регистрация открыта',
+    excerpt: '24 часа открытого хакатона. Любая идея, любой стек, любые команды. Регистрируйся сейчас!',
+    date: '10 июн 2026',
+    category: 'SU:Active',
+    thumbClass: 'b'
+  },
+  {
+    id: '3',
+    title: 'Фотоотчёт с Innopolis Open 2026',
+    excerpt: '320 участников, 12 команд, 3 дня интенсивной работы. Смотрите наши фото и видео.',
+    date: '5 июн 2026',
+    category: 'SU:Media',
+    thumbClass: 'c'
+  }
+]
+
 export default function HomePage() {
   const { isAdmin } = useAdmin()
   const [openDep, setOpenDep] = useState<DepKey | null>(null)
@@ -62,14 +94,24 @@ export default function HomePage() {
   const introRef = useRef<HTMLElement>(null)
   const info = openDep ? DEP_INFO[openDep] : null
 
+  const { data: fetchedMembers } = useFetch<any[]>('/api/members');
+  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<any[]>('/api/news');
+
+  // Используем мок-данные, если API вернул ошибку или данные пустые
+  const displayNews = (newsItems && newsItems.length > 0) ? newsItems : MOCK_NEWS
+  const hasError = newsError && !newsItems
+
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
-    api.members.list().then(members => {
-      const counts = { core: 0, active: 0, media: 0 }
-      members.forEach(m => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
-      setDepCounts(counts)
-    }).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (fetchedMembers) {
+      const counts = { core: 0, active: 0, media: 0 }
+      fetchedMembers.forEach((m: any) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
+      setDepCounts(counts)
+    }
+  }, [fetchedMembers]);
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -198,6 +240,55 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* News Section */}
+      <section aria-label="Новости" style={{ marginTop: 48 }}>
+        <div className="section-rule">
+          <div className="sr-left">
+            <span className="eyebrow">Новости</span>
+            <h2>Последние обновления</h2>
+          </div>
+        </div>
+
+        {hasError && (
+          <ErrorBanner 
+            message="Failed to load news. Please try again." 
+            onRetry={newsRetry} 
+          />
+        )}
+
+        {newsLoading && (
+          <div className="news-list">
+            <LoadingSkeleton type="news" count={3} />
+          </div>
+        )}
+
+        {!newsLoading && !hasError && displayNews.length === 0 && (
+          <EmptyState
+            icon="file-text"
+            title="No news yet"
+            description="Stay tuned for updates — new news will appear soon!"
+          />
+        )}
+
+        {!newsLoading && displayNews.length > 0 && (
+          <div className="news-list">
+            {displayNews.map((item: any, index: number) => (
+              <div key={index} className="news-row">
+                <div className={`thumb ${item.thumbClass || ''}`} />
+                <div className="news-body">
+                  <div className="meta">
+                    <span>{item.date || 'Soon'}</span>
+                    <span>{item.category || 'News'}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.excerpt || item.desc || ''}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {info && (

@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
 const BLANK_EVENT: Omit<Event, 'id'> = {
   title: '', desc: '', date: '', dd: '', mm: '', cover: '',
@@ -48,9 +52,13 @@ export default function EventsPage() {
   const [addingEvent, setAddingEvent] = useState(false)
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
 
+  const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>('/api/events');
+
   useEffect(() => {
-    api.events.list().then(setEvents).catch(() => {})
-  }, [])
+    if (fetchedEvents) {
+      setEvents(fetchedEvents);
+    }
+  }, [fetchedEvents]);
 
   async function handleAddEvent() {
     const d = new Date(newEvent.date)
@@ -148,32 +156,102 @@ export default function EventsPage() {
       {seg1 === 0 && (
         <>
           <div className="section-head-row">
-            <h3>Текущие <span className="count">{String(current.length).padStart(2, '0')}</span></h3>
+            <h3>Текущие <span className="count">{loading ? '--' : String(current.length).padStart(2, '0')}</span></h3>
           </div>
-          <div className="events-grid">
-            {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
-            {current.length === 0 && (
-              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
-                {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
-              </p>
-            )}
-          </div>
+
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load events. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="events-grid">
+              <LoadingSkeleton type="event" count={6} />
+            </div>
+          )}
+
+          {!loading && !error && events.length === 0 && (
+            <EmptyState
+              icon="calendar"
+              title="No events"
+              description="There are no events scheduled at the moment. Check back later!"
+            />
+          )}
+
+          {!loading && !error && events.length > 0 && (
+            <div className="events-grid">
+              {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
+              {current.length === 0 && (
+                <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                  Мероприятия не найдены
+                </p>
+              )}
+            </div>
+          )}
         </>
       )}
 
       {seg1 === 1 && (
         <>
           <div className="section-head-row">
-            <h3>Прошедшие <span className="count">{String(past.length).padStart(2, '0')}</span></h3>
+            <h3>Прошедшие <span className="count">{loading ? '--' : String(past.length).padStart(2, '0')}</span></h3>
           </div>
-          <div className="events-grid">
-            {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
-            {past.length === 0 && (
-              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
-                {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
-              </p>
-            )}
-          </div>
+
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load events. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="events-grid">
+              <LoadingSkeleton type="event" count={6} />
+            </div>
+          )}
+
+          {!loading && !error && events.length === 0 && (
+            <EmptyState
+              icon="calendar"
+              title="No events"
+              description="There are no events scheduled at the moment. Check back later!"
+            />
+          )}
+
+          {!loading && !error && events.length > 0 && (
+            <div className="events-grid">
+              {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
+              {past.length === 0 && (
+                <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                  Мероприятия не найдены
+                </p>
+              )}
+            </div>
+          )}
         </>
       )}
 
