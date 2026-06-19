@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-// @ts-ignore
 import QRCode from 'react-qr-code'
 import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
