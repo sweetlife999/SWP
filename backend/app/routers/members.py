@@ -17,7 +17,6 @@ admin_router = APIRouter(prefix="/admin/members", tags=["admin-members"],
 _SELECT = """
     SELECT id, name, department, role, meta, bio, photo_url, recent
     FROM members
-    WHERE active = TRUE
 """
 
 
@@ -46,12 +45,12 @@ async def list_members(
     pool: asyncpg.Pool = get_pool(request)
     if dep:
         rows = await pool.fetch(
-            _SELECT + "AND department = $1 ORDER BY sort_order, id",
+            _SELECT + "WHERE active = TRUE AND department = $1 ORDER BY sort_order, id",
             dep,
         )
     else:
         rows = await pool.fetch(
-            _SELECT + "ORDER BY department, sort_order, id"
+            _SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id"
         )
     return [_row_to_member(r) for r in rows]
 
@@ -59,7 +58,7 @@ async def list_members(
 @router.get("/{member_id}", response_model=MemberOut)
 async def get_member(member_id: int, request: Request) -> MemberOut:
     pool: asyncpg.Pool = get_pool(request)
-    row = await pool.fetchrow(_SELECT + "AND id = $1", member_id)
+    row = await pool.fetchrow(_SELECT + "WHERE active = TRUE AND id = $1", member_id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")
     return _row_to_member(row)
