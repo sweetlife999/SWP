@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import { AdminProvider } from './lib/AdminContext'
 import AppShell from './components/AppShell'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -14,6 +14,11 @@ import FormsViewerPage from './pages/FormsViewerPage'
 import EventsManagementPage from './pages/EventsManagementPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 
+function AdminEntry() {
+  const token = localStorage.getItem('su_admin_token') ?? ''
+  return <Navigate to={token ? '/admin/events' : '/admin/login'} replace />
+}
+
 export default function App() {
   return (
     // AdminProvider holds the JWT and exposes isAdmin to the whole tree.
@@ -23,6 +28,7 @@ export default function App() {
       <Routes>
         {/* Login sits outside AppShell — it has its own minimal layout */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminEntry />} />
 
         <Route element={<AppShell />}>
           {/* Public routes — no auth required */}
@@ -35,6 +41,7 @@ export default function App() {
 
           {/* Admin routes — ProtectedRoute redirects to /admin/login if not authenticated */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/admin/events" element={<EventsManagementPage />} />
             <Route path="/admin/kanban" element={<KanbanPage />} />
             <Route path="/admin/forms/builder" element={<FormBuilderPage />} />
             <Route path="/admin/forms/viewer" element={<FormsViewerPage />} />

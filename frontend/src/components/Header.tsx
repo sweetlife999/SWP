@@ -31,6 +31,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <NavLink className="nav-link" to="/questionnaires">Questionnaires</NavLink>
         <NavLink className="nav-link" to="/donations">Donations</NavLink>
         <span className="nav-sep" />
+        <button className="nav-link" type="button" onClick={() => navigate('/admin/login')}>admin test</button>
         <NavLink className="nav-link" to="/admin/kanban">SU:Core</NavLink>
         <NavLink className="nav-link" to="/admin/forms/builder">Forms</NavLink>
         <NavLink className="nav-link" to="/admin/forms/viewer">Ответы</NavLink>

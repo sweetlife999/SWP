@@ -9,6 +9,10 @@ const BLANK_EVENT: Omit<Event, 'id'> = {
 
 const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
+function sortEvents(list: Event[]) {
+  return [...list].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+}
+
 export default function EventsManagementPage() {
   const [events, setEvents] = useState<Event[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
@@ -49,8 +53,9 @@ export default function EventsManagementPage() {
       mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
     }
     try {
-      const created = await api.events.create(ev)
-      setEvents(prev => [...prev, created])
+      const created = await api.admin.events.create(ev)
+      const published = await api.admin.events.update(created.id, { status: 'published' })
+      setEvents(prev => sortEvents([...prev, published]))
       showToast('Событие создано')
     } catch {
       showToast('Ошибка создания события')
@@ -61,8 +66,8 @@ export default function EventsManagementPage() {
 
   async function handleSaveEdit(id: number) {
     try {
-      await api.admin.events.update(id, editData)
-      setEvents(prev => prev.map(e => e.id === id ? { ...e, ...editData } : e))
+      const updated = await api.admin.events.update(id, editData)
+      setEvents(prev => sortEvents(prev.map(e => e.id === id ? updated : e)))
       showToast('Изменения сохранены')
       setEditingId(null)
     } catch {
@@ -96,7 +101,7 @@ export default function EventsManagementPage() {
           <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Создавайте, редактируйте и удаляйте события.</p>
         </div>
         <button className="btn primary" onClick={() => setAddingEvent(true)}>
-          <Icon id="i-plus" style={{ width: 14, height: 14 }} /> Добавить событие
+          <Icon id="i-plus" style={{ width: 14, height: 14 }} /> Добавить ивент
         </button>
       </div>
 
@@ -131,6 +136,18 @@ export default function EventsManagementPage() {
                     onChange={e => setEditData(v => ({ ...v, date: e.target.value }))}
                   />
                 </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Статус</label>
+                  <select
+                    className="input"
+                    value={editData.status ?? ev.status}
+                    onChange={e => setEditData(v => ({ ...v, status: e.target.value as Event['status'] }))}
+                  >
+                    <option value="draft">Черновик</option>
+                    <option value="published">Опубликован</option>
+                    <option value="archived">Архив</option>
+                  </select>
+                </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn ghost" onClick={() => setEditingId(null)}>Отмена</button>
                   <button className="btn primary" onClick={() => handleSaveEdit(ev.id as number)}>Сохранить</button>
@@ -154,7 +171,7 @@ export default function EventsManagementPage() {
                     style={{ fontSize: 12, flex: 1 }}
                     onClick={() => {
                       setEditingId(ev.id as number)
-                      setEditData({ title: ev.title, desc: ev.desc, date: ev.date })
+                        setEditData({ title: ev.title, desc: ev.desc, date: ev.date, status: ev.status })
                     }}
                   >
                     <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать

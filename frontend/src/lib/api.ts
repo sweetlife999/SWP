@@ -5,7 +5,9 @@ function token() { return localStorage.getItem('su_admin_token') ?? '' }
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init)
   if (!res.ok) throw new Error(String(res.status))
-  return res.json()
+  if (res.status === 204) return undefined as T
+  const text = await res.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 function authHeaders(): HeadersInit {
@@ -21,7 +23,7 @@ export interface Event {
   cover: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
   featured?: boolean; past?: boolean
-  status?: 'live' | 'passed'; statusText?: string
+  status?: 'draft' | 'published' | 'archived'; statusText?: string
 }
 
 export interface Member {
@@ -96,6 +98,7 @@ export const api = {
       }),
     events: {
       list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
+      create: (e: Omit<Event, 'id'>) => req<Event>('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
       update: (id: number | string, e: Partial<Event>) => req<Event>(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
       delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },

@@ -10,12 +10,13 @@ const BLANK_EVENT: Omit<Event, 'id'> = {
 }
 
 function EventCard({ ev }: { ev: Event }) {
+  const label = statusLabel(ev)
   return (
     <Link className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
       <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
-        {ev.statusText && (
-          <span className={`status-badge${ev.status === 'live' ? ' live' : ''}`}>{ev.statusText}</span>
+        {label && (
+          <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>
         )}
       </div>
       <div className="ec-body">
@@ -35,6 +36,16 @@ function EventCard({ ev }: { ev: Event }) {
 }
 
 const MONTH_ABBR = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК']
+
+function statusLabel(ev: Event) {
+  if (ev.statusText) return ev.statusText
+  if (ev.status === 'published') return 'live'
+  return ev.status ?? ''
+}
+
+function sortEvents(list: Event[]) {
+  return [...list].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+}
 
 export default function EventsPage() {
   const { isAdmin } = useAdmin()
@@ -60,10 +71,11 @@ export default function EventsPage() {
       mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
     }
     try {
-      const created = await api.events.create(ev)
-      setEvents(prev => [...prev, created])
+      const created = await api.admin.events.create(ev)
+      const published = await api.admin.events.update(created.id, { status: 'published' })
+      setEvents(prev => sortEvents([...prev, published]))
     } catch {
-      setEvents(prev => [...prev, { ...ev, id: Date.now() }])
+      // The backend must succeed for this flow; otherwise keep the current list unchanged.
     }
     setNewEvent(BLANK_EVENT)
     setAddingEvent(false)
