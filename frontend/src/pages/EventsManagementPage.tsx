@@ -7,7 +7,7 @@ const BLANK_EVENT: Omit<Event, 'id'> = {
   tag: 'SU:Core', tagCls: 'green', time: '', foot: '', past: false,
 }
 
-const MONTH_ABBR = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК']
+const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
 
 export default function EventsManagementPage() {
   const [events, setEvents] = useState<Event[]>([])
