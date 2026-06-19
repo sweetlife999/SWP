@@ -97,10 +97,16 @@ ul, ol { list-style: none; }
     "main";
 }
 
+/* ── Sidebar ─────────────────────────────────────────────────
+   Always a hidden off-screen drawer.
+   Add class .open to slide it in (mobile + tablet).
+   On desktop (≥1025px) it stays hidden — navigation lives
+   in the top header-nav instead.
+   ──────────────────────────────────────────────────────────── */
 .sidebar {
   background: var(--surface);
   border-right: 1px solid var(--border);
-  display: none;
+  display: flex;               /* always flex so children lay out */
   flex-direction: column;
   position: fixed;
   left: 0; top: 0;
@@ -108,13 +114,15 @@ ul, ol { list-style: none; }
   height: 100vh;
   z-index: 50;
   padding: 20px 14px;
-  transform: translateX(-100%);
+  transform: translateX(-100%);   /* hidden by default */
   transition: transform 250ms ease;
   box-shadow: var(--shadow-3);
+  /* visibility hidden prevents keyboard-tab into hidden sidebar */
+  visibility: hidden;
 }
 .sidebar.open {
-  display: flex;
   transform: translateX(0);
+  visibility: visible;
 }
 
 .sidebar-brand {
@@ -179,6 +187,7 @@ ul, ol { list-style: none; }
 .nav-item:hover { background: var(--bg); }
 .nav-item .ic { width: 18px; height: 18px; flex: none; color: var(--muted); transition: color 150ms; }
 .nav-item:hover .ic { color: var(--fg-2); }
+/* React Router sets class "active" on matched NavLink */
 .nav-item.active {
   background: var(--accent);
   color: #fff;
@@ -225,7 +234,7 @@ ul, ol { list-style: none; }
 .sidebar-user .name { font-size: 13px; font-weight: 600; line-height: 1.2; }
 .sidebar-user .role { font-size: 11px; color: var(--muted); margin-top: 2px; }
 
-/* header */
+/* ── Header ──────────────────────────────────────────────────*/
 .header {
   grid-area: header;
   background: var(--surface);
@@ -274,6 +283,7 @@ ul, ol { list-style: none; }
   transition: background 150ms, color 150ms;
 }
 .nav-link:hover { background: var(--bg); color: var(--fg); }
+/* React Router active class on NavLink */
 .nav-link.active { background: var(--accent-50); color: var(--accent-700); }
 .nav-sep { width: 1px; height: 18px; background: var(--border); margin: 0 6px; align-self: center; }
 
@@ -320,11 +330,69 @@ ul, ol { list-style: none; }
   border: 2px solid var(--surface);
 }
 
-/* main */
+/* ── Burger button ───────────────────────────────────────────
+   Hidden on desktop, shown on tablet + mobile (≤1024px).
+   Lives in Header.tsx as <button className="icon-btn menu-btn">
+   ──────────────────────────────────────────────────────────── */
+.menu-btn {
+  display: none;   /* hidden on desktop */
+}
+
+/* ── Main content area ───────────────────────────────────────*/
 .main {
   grid-area: main;
   padding: 28px;
   overflow-x: hidden;
+}
+
+/* ── Scrim (backdrop behind open sidebar) ────────────────────*/
+.scrim {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.4);
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 250ms;
+}
+.scrim.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ============================================================
+   Responsive breakpoints
+   ============================================================ */
+
+/* ── Tablet + mobile: show burger, hide top nav ──────────────*/
+@media (max-width: 1024px) {
+  .menu-btn {
+    display: grid;   /* show burger button */
+  }
+  .header-nav {
+    display: none;   /* hide horizontal nav links */
+  }
+  .header {
+    padding: 0 16px;
+    gap: 10px;
+  }
+  /* Allow scrim to be visible when sidebar is open */
+  .scrim {
+    display: block;
+  }
+}
+
+/* ── Mobile only ─────────────────────────────────────────────*/
+@media (max-width: 720px) {
+  .main { padding: 16px; }
+  .search { display: none; }
+  h1, .h1 { font-size: 24px; }
+  h2, .h2 { font-size: 20px; }
+  .page-head { flex-direction: column; align-items: stretch; }
+  .table thead { display: none; }
+  .table tbody td { display: block; padding: 6px 16px; border: 0; }
+  .table tbody tr { display: block; border-bottom: 1px solid var(--border); padding: 12px 0; }
 }
 
 /* ============================================================
@@ -582,7 +650,7 @@ h4, .h4 {
 .ph-img.portrait { aspect-ratio: 3 / 4; }
 .ph-img.square { aspect-ratio: 1; }
 
-/* portrait placeholder (avatar tiles) — uses an SVG silhouette so it reads as person, not a flat color */
+/* portrait placeholder (avatar tiles) */
 .ph-person {
   background: linear-gradient(135deg, #e3eaee, #cfd9e2);
   border-radius: var(--r-md);
@@ -701,38 +769,6 @@ h4, .h4 {
   .grid.cols-2, .grid.cols-3, .grid.cols-4 { grid-template-columns: 1fr; }
 }
 
-/* responsive sidebar collapse */
-.menu-btn { display: none; }
-.scrim { display: none; }
-@media (max-width: 1024px) {
-  .sidebar.open { display: flex; transform: translateX(0); }
-  .scrim {
-    display: block;
-    position: fixed;
-    inset: 0;
-    background: rgba(17, 24, 39, 0.4);
-    z-index: 40;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 250ms;
-  }
-  .scrim.open { opacity: 1; pointer-events: auto; }
-  .menu-btn { display: grid; }
-  .header-nav { display: none; }
-  .header { padding: 0 16px; }
-}
-@media (max-width: 720px) {
-  .main { padding: 16px; }
-  .search { display: none; }
-  .header { gap: 10px; }
-  h1, .h1 { font-size: 24px; }
-  h2, .h2 { font-size: 20px; }
-  .page-head { flex-direction: column; align-items: stretch; }
-  .table thead { display: none; }
-  .table tbody td { display: block; padding: 6px 16px; border: 0; }
-  .table tbody tr { display: block; border-bottom: 1px solid var(--border); padding: 12px 0; }
-}
-
 /* utility */
 .row { display: flex; align-items: center; gap: 12px; }
 .row.sb { justify-content: space-between; }
@@ -746,12 +782,10 @@ h4, .h4 {
 .mt-2 { margin-top: 8px; } .mt-4 { margin-top: 16px; } .mt-6 { margin-top: 24px; } .mt-8 { margin-top: 32px; }
 .mb-2 { margin-bottom: 8px; } .mb-4 { margin-bottom: 16px; } .mb-6 { margin-bottom: 24px; } .mb-8 { margin-bottom: 32px; }
 
-/* department colours (only for the home departments + tags — not generic accent) */
+/* department colours */
 .dep-core { --dep: #32B247; --dep-50: #E8F7EC; }
 .dep-active { --dep: #2563EB; --dep-50: #DBEAFE; }
 .dep-media { --dep: #DB2777; --dep-50: #FCE7F3; }
-
-
 
 /* icon stroke shorthand */
 .lucide {
@@ -944,7 +978,11 @@ h4, .h4 {
 
         @media (max-width: 1180px) { .acc-table thead th:nth-child(5), .acc-table tbody td:nth-child(5) { display: none; } }
         @media (max-width: 900px) { .acc-table thead th:nth-child(4), .acc-table tbody td:nth-child(4) { display: none; } }
-        @media (max-width: 720px) { .acc-toolbar { padding: 10px; } .acc-toolbar .input-group { width: 100%; flex: 1; } .acc-toolbar .select { flex: 1; } }
+        @media (max-width: 720px) {
+          .acc-toolbar { padding: 10px; }
+          .acc-toolbar .input-group { width: 100%; flex: 1; }
+          .acc-toolbar .select { flex: 1; }
+        }
 
 /* ===== DonationsPage ===== */
         .summary {
@@ -1363,13 +1401,16 @@ h4, .h4 {
 
 /* ===== EventsPage ===== */
         .filters-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 28px; }
+
+        /* AC1: Events grid — 1 col mobile, 2 col tablet, 3 col desktop */
         .events-grid {
           display: grid;
-          grid-template-columns: repeat(3, 1fr);
+          grid-template-columns: repeat(3, 1fr);  /* desktop: 3 columns */
           gap: 22px;
         }
-        @media (max-width: 1280px) { .events-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 640px) { .events-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 1023px) { .events-grid { grid-template-columns: repeat(2, 1fr); } } /* tablet: 2 col */
+        @media (max-width: 767px)  { .events-grid { grid-template-columns: 1fr; } }             /* mobile: 1 col */
+
         .event-card {
           background: var(--surface);
           border: 1px solid var(--border);
@@ -1512,7 +1553,7 @@ h4, .h4 {
         }
         .event-card.featured { grid-column: span 2; }
         @media (max-width: 1280px) { .event-card.featured { grid-column: span 2; } }
-        @media (max-width: 640px) { .event-card.featured { grid-column: auto; } }
+        @media (max-width: 767px)  { .event-card.featured { grid-column: auto; } } /* no span on mobile */
         .event-card.featured .ec-cover { aspect-ratio: 21 / 9; }
         .event-card.featured h3 { font-size: 22px; letter-spacing: -0.015em; }
         .section-head-row {
@@ -1592,6 +1633,13 @@ h4, .h4 {
         }
 
         .questions-list { padding: 20px 28px 28px; display: flex; flex-direction: column; gap: 14px; }
+
+        /* FIX: reduce canvas padding on mobile so it doesn't overflow */
+        @media (max-width: 720px) {
+          .canvas .form-head { padding: 16px 16px 12px; }
+          .questions-list { padding: 14px 14px 20px; }
+          .canvas .form-title { font-size: 20px; }
+        }
 
         .question {
           border: 1px solid var(--border);
@@ -2073,17 +2121,20 @@ h4, .h4 {
           margin-left: -6px;
         }
 
+        /* AC: Kanban — horizontal scroll on mobile */
         .board-wrap {
           overflow-x: auto;
           margin: 0 -28px;
           padding: 4px 28px 28px;
+          /* smooth momentum scrolling on iOS */
+          -webkit-overflow-scrolling: touch;
         }
         @media (max-width: 720px) { .board-wrap { margin: 0 -16px; padding: 4px 16px 28px; } }
         .board {
           display: grid;
           grid-template-columns: repeat(5, minmax(280px, 1fr));
           gap: 16px;
-          min-width: 1320px;
+          min-width: 1320px;   /* forces horizontal scroll on narrow screens */
         }
 
         .kb-col {
@@ -2242,14 +2293,16 @@ h4, .h4 {
         }
 
 /* ===== MembersPage ===== */
+
+        /* AC2: Members grid — 1 col mobile, 2 col tablet, 3 col desktop */
         .members-grid {
           display: grid;
-          grid-template-columns: repeat(5, 1fr);
+          grid-template-columns: repeat(3, 1fr);   /* desktop: 3 columns */
           gap: 18px;
         }
-        @media (max-width: 1280px) { .members-grid { grid-template-columns: repeat(4, 1fr); } }
-        @media (max-width: 980px) { .members-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 640px) { .members-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 1023px) { .members-grid { grid-template-columns: repeat(2, 1fr); } } /* tablet: 2 col */
+        @media (max-width: 767px)  { .members-grid { grid-template-columns: 1fr; } }             /* mobile: 1 col */
+
         .person {
           background: var(--surface);
           border: 1px solid var(--border);
@@ -2341,6 +2394,12 @@ h4, .h4 {
         .roadmap-shell.editing .rm-foot { display: flex; }
         .read-actions { display: flex; }
         .roadmap-shell.editing .read-actions { display: none; }
+
+        /* FIX: reduce rm-edit padding on mobile */
+        @media (max-width: 720px) {
+          .roadmap-shell .rm-edit { padding: 24px 20px; }
+        }
+
         .q-block { display: grid; grid-template-columns: 80px 1fr; gap: 24px; padding: 16px 0; border-bottom: 1px solid var(--border); }
         .q-block .q-title { font-family: var(--font-mono); font-size: 11px; color: var(--accent-700); letter-spacing: 0.08em; text-transform: uppercase; padding-top: 2px; }
         .q-block .q-body h3 { margin-top: 0; }
@@ -2537,7 +2596,9 @@ h4, .h4 {
 }
 .kbc-anim { animation: kbCardIn 0.14s ease; }
 
-/* ===== Modal overlay (shared) ===== */
+/* ===== Modal overlay (shared) =====
+   AC3: Modals stay within viewport on any screen size.
+   max-width: 95vw + reduced padding on mobile (see bottom). */
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -2743,4 +2804,54 @@ h4, .h4 {
   border-radius: 50%;
   background: var(--accent);
   flex: none;
+}
+
+/* ============================================================
+   Mobile overrides (≤767px)
+   AC1: burger shows, nav collapses — handled above at 1024px.
+   AC3: modals stay in viewport — max-width 95vw + less padding.
+   ============================================================ */
+@media (max-width: 767px) {
+  /* AC3: modals fit viewport */
+  .modal-overlay {
+    padding: 10px;
+    align-items: flex-start;
+    overflow-y: auto;
+    padding-top: 40px;
+    padding-bottom: 40px;
+  }
+  .dep-modal,
+  .member-modal {
+    max-width: 95vw;
+    margin: 0 auto;
+  }
+  .dep-modal-header,
+  .dep-modal-body,
+  .dep-modal-foot {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .dep-modal-header {
+    padding-top: 20px;
+    padding-bottom: 16px;
+  }
+  .member-modal-body {
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-bottom: 16px;
+  }
+  .member-modal-photo {
+    aspect-ratio: 16 / 7;
+  }
+
+  /* date panel stacks vertically on mobile so inputs don't overflow */
+  .date-panel {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 14px;
+    gap: 10px;
+  }
+  .date-field input[type="date"] {
+    width: 100%;
+  }
 }
