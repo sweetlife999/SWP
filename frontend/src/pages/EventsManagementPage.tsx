@@ -18,17 +18,23 @@ export default function EventsManagementPage() {
   const [toast, setToast] = useState('')
 
   useEffect(() => {
-    loadEvents()
-  }, [])
+    let cancelled = false
 
-  async function loadEvents() {
-    try {
-      const data = await api.admin.events.list()
-      setEvents(data)
-    } catch {
-      showToast('Ошибка загрузки событий')
+    async function loadEvents() {
+      try {
+        const data = await api.admin.events.list()
+        if (!cancelled) setEvents(data)
+      } catch {
+        if (!cancelled) showToast('Ошибка загрузки событий')
+      }
     }
-  }
+
+    loadEvents()
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   function showToast(msg: string) {
     setToast(msg)
