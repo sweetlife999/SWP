@@ -53,7 +53,7 @@ def event_date_str(d: date) -> str:
 
 
 def is_past(d: date) -> bool:
-    return d < date.today()
+    return d < datetime.now(timezone.utc).date()
 
 
 def survey_time(est_minutes: int) -> str:
