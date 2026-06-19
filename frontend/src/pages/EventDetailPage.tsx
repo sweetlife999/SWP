@@ -6,6 +6,11 @@ import { useAdmin } from '../lib/AdminContext'
 
 export default function EventDetailPage() {
   const { id } = useParams()
+
+  return <EventDetailPageInner key={id} id={id} />
+}
+
+function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
   const [event, setEvent] = useState<Event | null>(null)
@@ -14,7 +19,6 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     if (!id) return
-    setEditingDesc(false)
     api.events.get(id)
       .then(ev => {
         setEvent(ev)
