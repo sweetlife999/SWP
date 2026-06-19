@@ -22,6 +22,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- like 'Core' vs 'core'. Extend with ALTER TYPE ... ADD VALUE in a later
 -- migration if new departments appear.
 CREATE TYPE department    AS ENUM ('core', 'active', 'media');
+CREATE TYPE event_status  AS ENUM ('draft', 'published', 'archived');
 CREATE TYPE question_type AS ENUM ('single', 'multi', 'scale', 'text');
 -- Note: kanban column membership and card priority are intentionally NOT enums.
 -- Columns are a per-project table (kanban_columns) so a board can rename/reorder
@@ -52,12 +53,14 @@ CREATE TABLE events (
   foot_text   TEXT        NOT NULL DEFAULT '',   -- API: foot
   foot_label  TEXT,                              -- API: footLabel
   featured    BOOLEAN     NOT NULL DEFAULT FALSE,
+  status      event_status NOT NULL DEFAULT 'draft',
   status_text TEXT,                              -- API: statusText
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE INDEX idx_events_date       ON events (event_date DESC);
+CREATE INDEX idx_events_status     ON events (status, event_date DESC);
 CREATE INDEX idx_events_department ON events (department);
 CREATE INDEX idx_events_featured   ON events (event_date DESC) WHERE featured;
 
@@ -75,6 +78,7 @@ CREATE TABLE members (
   role       TEXT        NOT NULL,             -- "CO-LEAD · B21-AI"
   meta       TEXT        NOT NULL DEFAULT '',  -- "2 years in SU"
   bio        TEXT        NOT NULL DEFAULT '',
+  photo_url  TEXT        NOT NULL DEFAULT '',
   recent     TEXT[]      NOT NULL DEFAULT '{}',
   sort_order SMALLINT    NOT NULL DEFAULT 0,   -- display order within dept
   active     BOOLEAN     NOT NULL DEFAULT TRUE,
