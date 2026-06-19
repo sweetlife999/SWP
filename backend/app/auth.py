@@ -36,6 +36,10 @@ def check_login_rate(ip: str) -> None:
         )
     window.append(now)
     _login_attempts[ip] = window
+    # Remove IPs whose entire window has expired to prevent unbounded growth.
+    expired = [k for k, ts in _login_attempts.items() if all(now - t >= _RATE_LIMIT_WINDOW for t in ts)]
+    for k in expired:
+        del _login_attempts[k]
 
 
 def create_token() -> str:
