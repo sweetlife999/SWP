@@ -1,34 +1,42 @@
-﻿# STREAM MAGFEST BY FEMTANYL!!!
-If I can get out of this, I'll take myself to Magfest
-I hate how you look at me when you want me undressed
-I see my peers and my friends, I do not think they're impressed
-I do not look good in a skirt, I wear sympathy best
+﻿# STREAM BUSHIDO BY LIL DARKIE!!!
+Quiet day, outside\
+No wrong, no right\
+Some men will fight, some die\
+Some live by the night and some by the sword of the samurai\
+Wild west, no law\
+Hot Sun, quick guns\
+Put a bullet through a mxth4fxck4'\
+It gets done\
+Some live by the pipe and some by the sword of the samurai\
 
-I have never even gone but I would just love to go
-I'd go wander the halls if all the panels are closed
-If I got to be a person, get my head out the scope
-I'd probably go to Magfest, you know it's probably dope
+If you the son of your family, commit harakiri\
+Loud music in my headphones, I'm hard of hearing\
+I'm walking through the desert and my skin start peeling\
+Some people spend their life ignoring their own heart's feelings\
+I'm watching Spirited Away and Princess Mononoke\
+I used to listen to C418 and early Coldplay\
+I think today will be a good day, like I was O'Shea\
+I make eggs with toast and bacon and a cup of OJ\
+I'm slaying demons, I feel like I am Inosuke\
+Life's a game, so is switch, but I really don't play\
+They told me I would never make it, that there could be no way\
+I told my mama what I'm making, all she said was, "No way!"\
+I'm in Italy enjoying gelato and sorbet\
+This shxt it take you a year to do, it might take me four days\
+I'm going all around the country, we got lots of tour days\
+Pop out if you a hater, lemme see the look on your face\
 
-Saw when I was a child 100 karat smile
-In cringe comp number 9 I hope that you're alr-
-I started hurting myself, it's a problem again
-If I was just at Magfest, maybe I'd bring a friend
-We's go check out the vendors, all laid out on the floor
-I think it's go to Magfest or just not live anymore
+Brown boy is flying (Brown boy is flying)\
+Brown boy is flying (That brown boy is flying again)\
+Brown boy is flying (Brown boy is flying)\
+Brown boy is flying (That brown boy is flying again)\
 
-I'm gone, I play with no consequences
-But I find a way back to the light
-I'm gone, I play with no consequences
-But I find a way back to the light
-
-If I was just at Magfest
-If I was just at Magfest
-If I was just at Magfest
-If I was just at Magfest
-(Make your peace with it, there's no last bus home)
-
-If I was just at Magfest
-If I was just at Magfest
-If I was just at Magfest
-If I was just at Magfest
-(Make your peace with it, there's no last bus home)
+Q-Q-Quiet day, outside\
+No wrong, no right\
+Some men will fight, some die\
+Some live by the night and some by the sword of the samurai\
+W-W-Wild west, no law\
+Hot Sun, quick guns\
+Put a bullet through a mxth4fxck4'\
+It gets done\
+Some live by the pipe and some by the sword of the samurai
