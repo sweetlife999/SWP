@@ -8,6 +8,7 @@ export default function EventDetailPage() {
   const { id } = useParams()
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
+  const [setEvent] = useState<Event | null>(null)
   const [editingDesc, setEditingDesc] = useState(false)
   const [descHtml, setDescHtml] = useState('')
   const descRef = useRef<HTMLElement>(null)
@@ -24,7 +25,7 @@ export default function EventDetailPage() {
             desc: '24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.',
             date: '2026-06-20',
             dd: '20',
-            mm: 'ИЮН',
+            mm: 'JUN',
             cover: '',
             tag: 'SU:Core',
             tagCls: 'green',
