@@ -15,20 +15,14 @@ A centralized web platform connecting Innopolis University students with the Stu
 Requires Docker.
 
 ```bash
-docker compose up --build
+docker build -t swp-frontend ./frontend
+docker run -p 3000:80 swp-frontend
+# → http://localhost:3000
 ```
-
-This starts three services:
-
-- Frontend at [http://localhost:3000](http://localhost:3000)
-- Backend health endpoint at [http://localhost:8080/health](http://localhost:8080/health)
-- PostgreSQL with persistent data in the named `pgdata` volume
-
-The frontend container proxies `/api` requests to the backend, so the browser can talk to the app from a single origin.
 
 ### Without Docker
 
-Requires Node.js ≥ 18 for the frontend and Python 3.12+ for the backend.
+Requires Node.js ≥ 18.
 
 ```bash
 cd frontend
@@ -40,16 +34,6 @@ npm run dev        # → http://localhost:5173
 npm run build      # production build → frontend/dist/
 npm run preview    # → http://localhost:4173
 ```
-
-```bash
-cd backend
-python -m venv .venv
-.\.venv\Scripts\activate
-pip install -r requirements.txt -r requirements-dev.txt
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-Before running the backend locally, copy [backend/.env.example](backend/.env.example) to `backend/.env` and adjust the secrets if needed. The backend expects PostgreSQL at `postgresql://su:su_dev_password@localhost:5432/su_portal` when running outside Docker.
 
 ## Deployment
 
@@ -63,9 +47,8 @@ The server runs the container on `127.0.0.1:3000`; nginx proxies HTTPS traffic t
 ## Structure
 
 ```
-backend/           — FastAPI + PostgreSQL API
 frontend/          — React + TypeScript + Vite (source)
-compose.yml        — Docker Compose for the frontend, backend, and PostgreSQL services
+compose.yml        — Docker Compose for the frontend service
 reports/week2/     — Assignment 2 report
 .github/
   workflows/
