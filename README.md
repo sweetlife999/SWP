@@ -35,6 +35,16 @@ npm run build      # production build → frontend/dist/
 npm run preview    # → http://localhost:4173
 ```
 
+```bash
+cd backend
+python -m venv .venv
+.\.venv\Scripts\activate
+pip install -r requirements.txt -r requirements-dev.txt
+uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Before running the backend locally, copy [backend/.env.example](backend/.env.example) to `backend/.env` and adjust the secrets if needed. The backend expects PostgreSQL at `postgresql://su:su_dev_password@localhost:5432/su_portal` when running outside Docker.
+
 ## Deployment
 
 The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every push to `main` that touches `frontend/` or `compose.yml`, GitHub Actions:
