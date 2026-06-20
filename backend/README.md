@@ -64,15 +64,4 @@ pip install -r requirements.txt -r requirements-dev.txt
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-## Production Deployment
-1. Build Docker image:
-   ```bash
-   docker build -t swp-backend:latest .
-   ```
-2. Push to container registry
-3. Deploy with:
-   ```bash
-   docker compose up -d
-   ```
-```
-
+Before running the backend locally, copy [backend/.env.example](backend/.env.example) to `backend/.env` and adjust the secrets if needed. The backend expects PostgreSQL at `postgresql://su:su_dev_password@localhost:5432/su_portal` when running outside Docker.
