@@ -1,5 +1,3 @@
-from typing import Optional
-
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
@@ -7,12 +5,17 @@ from app.auth import require_admin
 from app.computed import dept_tag
 from app.database import get_pool
 from app.models.schemas import (
-    Department, MemberCreate, MemberOut, MemberPatch, MemberReorderItem,
+    Department,
+    MemberCreate,
+    MemberOut,
+    MemberPatch,
+    MemberReorderItem,
 )
 
 router = APIRouter(prefix="/members", tags=["members"])
-admin_router = APIRouter(prefix="/admin/members", tags=["admin-members"],
-                         dependencies=[Depends(require_admin)])
+admin_router = APIRouter(
+    prefix="/admin/members", tags=["admin-members"], dependencies=[Depends(require_admin)]
+)
 
 _SELECT = """
     SELECT id, name, department, role, meta, bio, photo_url, recent
@@ -36,10 +39,11 @@ def _row_to_member(row: asyncpg.Record) -> MemberOut:
 
 # ── Public ────────────────────────────────────────────────────────────────────
 
+
 @router.get("", response_model=list[MemberOut])
 async def list_members(
     request: Request,
-    dep: Optional[Department] = None,
+    dep: Department | None = None,
 ) -> list[MemberOut]:
     """AC1: optional ?dep=core|active|media filter."""
     pool: asyncpg.Pool = get_pool(request)
@@ -49,9 +53,7 @@ async def list_members(
             dep,
         )
     else:
-        rows = await pool.fetch(
-            _SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id"
-        )
+        rows = await pool.fetch(_SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id")
     return [_row_to_member(r) for r in rows]
 
 
@@ -65,6 +67,7 @@ async def get_member(member_id: int, request: Request) -> MemberOut:
 
 
 # ── Admin ─────────────────────────────────────────────────────────────────────
+
 
 @admin_router.post("", response_model=MemberOut, status_code=status.HTTP_201_CREATED)
 async def create_member(body: MemberCreate, request: Request) -> MemberOut:
@@ -105,8 +108,9 @@ async def reorder_members(body: list[MemberReorderItem], request: Request) -> No
 async def patch_member(member_id: int, body: MemberPatch, request: Request) -> MemberOut:
     provided = body.model_fields_set
     if not provided:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
+        )
 
     updates: list[str] = []
     params: list = []
@@ -133,8 +137,9 @@ async def patch_member(member_id: int, body: MemberPatch, request: Request) -> M
         add("recent", list(body.recent) if body.recent is not None else [])
 
     if not updates:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No valid fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No valid fields to update"
+        )
 
     pool: asyncpg.Pool = get_pool(request)
     params.append(member_id)

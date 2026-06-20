@@ -1,8 +1,7 @@
 from datetime import date, datetime
-from typing import Annotated, Literal, Optional
+from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
-
 
 # ── Shared validators ─────────────────────────────────────────────────────────
 
@@ -27,13 +26,13 @@ class EventOut(BaseModel):
     cover: str
     tag: str
     tagCls: str
-    time: Optional[str] = None
+    time: str | None = None
     foot: str
-    footLabel: Optional[str] = None
-    featured: Optional[bool] = None
-    past: Optional[bool] = None
+    footLabel: str | None = None
+    featured: bool | None = None
+    past: bool | None = None
     status: EventStatus
-    statusText: Optional[str] = None
+    statusText: str | None = None
 
 
 class EventCreate(BaseModel):
@@ -42,29 +41,30 @@ class EventCreate(BaseModel):
     date: date
     cover: str = ""
     tag: DepartmentOrLabel
-    time: Optional[str] = None
+    time: str | None = None
     foot: str = ""
-    footLabel: Optional[str] = None
+    footLabel: str | None = None
     featured: bool = False
-    statusText: Optional[str] = None
+    statusText: str | None = None
 
 
 class EventPatch(BaseModel):
-    title: Optional[str] = None
-    desc: Optional[str] = None
-    date: Optional[date] = None
+    title: str | None = None
+    desc: str | None = None
+    date: date | None = None
     # Nullable in DB — explicit null in request clears the field.
-    time: Optional[str] = None
-    tag: Optional[DepartmentOrLabel] = None
-    cover: Optional[str] = None
-    foot: Optional[str] = None
-    footLabel: Optional[str] = None
-    featured: Optional[bool] = None
-    status: Optional[EventStatus] = None
-    statusText: Optional[str] = None
+    time: str | None = None
+    tag: DepartmentOrLabel | None = None
+    cover: str | None = None
+    foot: str | None = None
+    footLabel: str | None = None
+    featured: bool | None = None
+    status: EventStatus | None = None
+    statusText: str | None = None
 
 
 # ── Members ───────────────────────────────────────────────────────────────────
+
 
 class MemberOut(BaseModel):
     id: str
@@ -89,13 +89,13 @@ class MemberCreate(BaseModel):
 
 
 class MemberPatch(BaseModel):
-    dep: Optional[Department] = None
-    name: Optional[str] = None
-    role: Optional[str] = None
-    meta: Optional[str] = None
-    bio: Optional[str] = None
-    photo_url: Optional[str] = None
-    recent: Optional[list[str]] = None
+    dep: Department | None = None
+    name: str | None = None
+    role: str | None = None
+    meta: str | None = None
+    bio: str | None = None
+    photo_url: str | None = None
+    recent: list[str] | None = None
 
 
 class MemberReorderItem(BaseModel):
@@ -105,14 +105,15 @@ class MemberReorderItem(BaseModel):
 
 # ── Surveys ───────────────────────────────────────────────────────────────────
 
+
 class QStep(BaseModel):
     type: str
     title: str
     hint: str
-    options: Optional[list[str]] = None
-    low: Optional[str] = None
-    high: Optional[str] = None
-    median: Optional[int] = None
+    options: list[str] | None = None
+    low: str | None = None
+    high: str | None = None
+    median: int | None = None
 
 
 class SurveyOut(BaseModel):
@@ -122,7 +123,7 @@ class SurveyOut(BaseModel):
     title: str
     desc: str
     time: str
-    timeEnding: Optional[bool] = None
+    timeEnding: bool | None = None
     left: str
     flowTitle: str
     eyebrow: str
@@ -131,6 +132,7 @@ class SurveyOut(BaseModel):
 
 # Answer values: text answer, scale integer, or list of chosen option indices.
 SurveyAnswerValue = str | int | list[str] | list[int]
+
 
 class SurveyResponseBody(BaseModel):
     answers: Annotated[
@@ -151,21 +153,22 @@ class QuestionOut(BaseModel):
     type: str
     title: str
     hint: str
-    options: Optional[list[str]] = None
-    scale_low: Optional[str] = None
-    scale_high: Optional[str] = None
-    scale_mid: Optional[int] = None
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
 
 
 class QuestionnaireOut(BaseModel):
     """Public-facing shape returned by GET /questionnaires and GET /questionnaires/:id."""
+
     id: str
     tag: str
     tagCls: str
     title: str
     desc: str
     time: str
-    timeEnding: Optional[bool] = None
+    timeEnding: bool | None = None
     left: str
     flowTitle: str
     eyebrow: str
@@ -174,13 +177,14 @@ class QuestionnaireOut(BaseModel):
 
 class QuestionnaireAdminOut(BaseModel):
     """Admin-facing shape with status and management fields."""
+
     id: int
     department: str
     title: str
     description: str
     status: QuestionnaireStatus
     est_minutes: int
-    closes_at: Optional[str] = None
+    closes_at: str | None = None
     response_count: int
     questions: list[QuestionOut]
 
@@ -195,33 +199,33 @@ class QuestionnaireCreate(BaseModel):
 
 
 class QuestionnairePatch(BaseModel):
-    status: Optional[QuestionnaireStatus] = None
-    title: Optional[str] = None
-    description: Optional[str] = None
-    flow_title: Optional[str] = None
-    eyebrow: Optional[str] = None
-    est_minutes: Optional[int] = None
-    closes_at: Optional[datetime] = None
+    status: QuestionnaireStatus | None = None
+    title: str | None = None
+    description: str | None = None
+    flow_title: str | None = None
+    eyebrow: str | None = None
+    est_minutes: int | None = None
+    closes_at: datetime | None = None
 
 
 class QuestionCreate(BaseModel):
     type: QuestionType
     title: str
     hint: str = ""
-    options: Optional[list[str]] = None
-    scale_low: Optional[str] = None
-    scale_high: Optional[str] = None
-    scale_mid: Optional[int] = None
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
 
 
 class QuestionPatch(BaseModel):
-    type: Optional[QuestionType] = None
-    title: Optional[str] = None
-    hint: Optional[str] = None
-    options: Optional[list[str]] = None
-    scale_low: Optional[str] = None
-    scale_high: Optional[str] = None
-    scale_mid: Optional[int] = None
+    type: QuestionType | None = None
+    title: str | None = None
+    hint: str | None = None
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
 
 
 class AnswerStat(BaseModel):
@@ -248,10 +252,11 @@ class QuestionnaireResults(BaseModel):
 
 # ── Content blocks ────────────────────────────────────────────────────────────
 
+
 class ContentBlockOut(BaseModel):
     html: str
-    updatedAt: Optional[str] = None
-    updatedBy: Optional[str] = None
+    updatedAt: str | None = None
+    updatedBy: str | None = None
 
 
 class ContentBlockUpdate(BaseModel):
@@ -260,23 +265,24 @@ class ContentBlockUpdate(BaseModel):
 
 # ── Kanban ────────────────────────────────────────────────────────────────────
 
+
 class KanbanTag(BaseModel):
     label: str
     cls: str
-    dot: Optional[bool] = None
+    dot: bool | None = None
 
 
 class KanbanMeta(BaseModel):
     icon: str
     text: str
-    urgent: Optional[bool] = None
-    soon: Optional[bool] = None
+    urgent: bool | None = None
+    soon: bool | None = None
 
 
 class KanbanAssignee(BaseModel):
     initials: str
     bg: str
-    offset: Optional[bool] = None
+    offset: bool | None = None
 
 
 class KanbanAttachment(BaseModel):
@@ -288,14 +294,14 @@ class KanbanAttachment(BaseModel):
 class KanbanCardOut(BaseModel):
     id: str
     col: str
-    blocker: Optional[bool] = None
+    blocker: bool | None = None
     tags: list[KanbanTag]
     title: str
-    desc: Optional[str] = None
-    attachment: Optional[KanbanAttachment] = None
-    progressPct: Optional[int] = None
-    progressLabel: Optional[str] = None
-    meta: Optional[list[KanbanMeta]] = None
+    desc: str | None = None
+    attachment: KanbanAttachment | None = None
+    progressPct: int | None = None
+    progressLabel: str | None = None
+    meta: list[KanbanMeta] | None = None
     priority: str
     pLabel: str
     assignees: list[KanbanAssignee]
@@ -307,6 +313,7 @@ class KanbanCardPatch(BaseModel):
 
 # ── Admin forms (survey list for admin) ──────────────────────────────────────
 
+
 class FormOut(BaseModel):
     id: str
     tag: str
@@ -316,6 +323,7 @@ class FormOut(BaseModel):
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
+
 
 class LoginRequest(BaseModel):
     password: str

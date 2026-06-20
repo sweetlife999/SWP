@@ -1,5 +1,3 @@
-from collections import defaultdict
-
 import asyncpg
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
@@ -11,6 +9,7 @@ router = APIRouter(prefix="/questionnaires", tags=["questionnaires"])
 
 
 # ── Shared helpers (imported by admin_questionnaires) ─────────────────────────
+
 
 def _question_to_step(row: asyncpg.Record) -> QStep:
     return QStep(
@@ -37,6 +36,7 @@ async def _fetch_questions(pool: asyncpg.Pool, survey_id: int) -> list[asyncpg.R
 
 
 # ── Public endpoints ──────────────────────────────────────────────────────────
+
 
 def _row_to_public(row: asyncpg.Record, steps: list[QStep]) -> QuestionnaireOut:
     return QuestionnaireOut(
@@ -132,8 +132,9 @@ async def submit_response(
         questionnaire_id,
     )
     if not exists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Questionnaire not found or closed")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Questionnaire not found or closed"
+        )
 
     await pool.execute(
         "INSERT INTO survey_responses (survey_id, answers) VALUES ($1, $2)",

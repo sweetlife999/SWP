@@ -1,7 +1,7 @@
 import secrets
 import time
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import jwt
@@ -37,7 +37,9 @@ def check_login_rate(ip: str) -> None:
     window.append(now)
     _login_attempts[ip] = window
     # Remove IPs whose entire window has expired to prevent unbounded growth.
-    expired = [k for k, ts in _login_attempts.items() if all(now - t >= _RATE_LIMIT_WINDOW for t in ts)]
+    expired = [
+        k for k, ts in _login_attempts.items() if all(now - t >= _RATE_LIMIT_WINDOW for t in ts)
+    ]
     for k in expired:
         del _login_attempts[k]
 
@@ -45,8 +47,8 @@ def check_login_rate(ip: str) -> None:
 def create_token() -> str:
     payload = {
         "sub": "admin",
-        "iat": datetime.now(timezone.utc),
-        "exp": datetime.now(timezone.utc) + timedelta(hours=settings.token_expire_hours),
+        "iat": datetime.now(UTC),
+        "exp": datetime.now(UTC) + timedelta(hours=settings.token_expire_hours),
     }
     return jwt.encode(payload, settings.jwt_secret, algorithm=_ALGORITHM)
 
@@ -55,10 +57,14 @@ def _decode_token(token: str) -> dict:
     # algorithms list prevents the "none" algorithm confusion attack.
     try:
         return jwt.decode(token, settings.jwt_secret, algorithms=[_ALGORITHM])
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
-    except jwt.PyJWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except jwt.ExpiredSignatureError as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired"
+        ) from err
+    except jwt.PyJWTError as err:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token"
+        ) from err
 
 
 async def require_admin(
