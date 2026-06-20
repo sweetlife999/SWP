@@ -20,8 +20,10 @@ export interface Event {
   id: number
   title: string; desc: string
   date: string; dd: string; mm: string
+  endDate?: string; endDd?: string; endMm?: string
   cover: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
+  endTime?: string
   featured?: boolean; past?: boolean
   status?: 'draft' | 'published' | 'archived'; statusText?: string
 }

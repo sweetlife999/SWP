@@ -32,10 +32,14 @@ function EventDetailPageInner({ id }: { id?: string }) {
           date: '2026-06-20',
           dd: '20',
           mm: 'JUN',
+          endDate: '2026-06-21',
+          endDd: '21',
+          endMm: 'JUN',
           cover: '',
           tag: 'SU:Core',
           tagCls: 'green',
           time: '10:00',
+          endTime: '18:00',
           foot: '32 участника',
           past: false,
           status: 'published',
@@ -68,7 +72,21 @@ function EventDetailPageInner({ id }: { id?: string }) {
     const title = event?.title ?? 'Hackathon Summer 24h'
     const datePart = (event?.date ?? '2026-06-20').replace(/-/g, '')
     const startTime = (event?.time ?? '10:00').replace(':', '')
-    const ics = `BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nSUMMARY:${title}\r\nDTSTART:${datePart}T${startTime}\r\nDTEND:20260621T180000\r\nLOCATION:Sport Tower 519, Иннополис\r\nDESCRIPTION:${event?.desc ?? '24 часа открытого хакатона. SU:Core.'}\r\nEND:VEVENT\r\nEND:VCALENDAR`
+    const endDatePart = (event?.endDate ?? event?.date ?? '2026-06-20').replace(/-/g, '')
+    const endTime = (event?.endTime ?? event?.time ?? '10:00').replace(':', '')
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `SUMMARY:${title}`,
+      `DTSTART:${datePart}T${startTime}`,
+      `DTEND:${endDatePart}T${endTime}`,
+      'LOCATION:Sport Tower 519, Иннополис',
+      `DESCRIPTION:${event?.desc ?? '24 часа открытого хакатона. SU:Core.'}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n')
     const blob = new Blob([ics], { type: 'text/calendar' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
