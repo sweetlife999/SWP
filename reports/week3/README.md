@@ -74,4 +74,4 @@
 
 - Reflection: [`reports/week3/reflection.md`](reflection.md)
 - Retrospective: [`reports/week3/retrospective.md`](retrospective.md)
-- LLM report: добавляется отдельно перед сдачей
+- LLM report: [`reports/week3/llm-report.md`](llm-report.md)

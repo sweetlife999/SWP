@@ -46,27 +46,32 @@ None in Sprint 3.
 
 | Metric | Value |
 |--------|-------|
-| Total Product Backlog (Story Points) | TBD |
-| Sprint 3 total (Story Points) | 191+ (remaining TBD: #23, #29, #31, #34, US-01/05/08) |
-| Sprint 3 completed (Story Points) | 71+ (remaining TBD) |
+| Total Product Backlog (Story Points) | 596+ (TBD: #17, #18, #20, #27, #39, #40, #42, #47, #56) |
+| Sprint 3 total (Story Points) | 284 SP (#56 excluded — backlog, not started) |
+| Sprint 3 completed (Story Points) | 218 SP |
 
 ## MVP v1 scope
 
 PBIs marked `mvp-v1`:
 
-| ID | Title | SP | Status |
-|----|-------|----|--------|
-| US-01 | View upcoming events | TBD | Done |
-| US-05 | View SU member directory | TBD | Done |
-| US-08 | View SU departments info | TBD | Done |
-| US-11 | Publish and manage events | 13 | Done |
-| US-12 | Fill out an active questionnaire | 13 | Done |
-| US-13 | Create and manage questionnaires | 20 | Done |
-| — | API stub layer | TBD | Done |
-| — | Admin inline editing | 20 | Done |
-| — | Admin login | 5 | Done |
-| — | CI: lint + type-check | TBD | Done |
-| — | Docker deploy pipeline | TBD | Done |
+| ID | Title | Issue | SP | Status |
+|----|-------|-------|----|--------|
+| US-01 | View upcoming events | [#15](https://github.com/sweetlife999/SWP/issues/15) | 20 | Done |
+| US-04 | Donate to SU | [#16](https://github.com/sweetlife999/SWP/issues/16) | 8 | Done |
+| US-05 | View SU member directory | [#19](https://github.com/sweetlife999/SWP/issues/19) | 13 | Done |
+| US-08 | View SU departments info | [#21](https://github.com/sweetlife999/SWP/issues/21) | 13 | Done |
+| US-10 | Manage tasks on kanban board | [#23](https://github.com/sweetlife999/SWP/issues/23) | 40 | Done |
+| US-11 | Publish and manage events | [#35](https://github.com/sweetlife999/SWP/issues/35) | 13 | Review |
+| US-12 | Fill out an active questionnaire | [#25](https://github.com/sweetlife999/SWP/issues/25) | 13 | In Progress |
+| US-13 | Create and manage questionnaires | [#24](https://github.com/sweetlife999/SWP/issues/24) | 20 | Done |
+| US-14 | View and export questionnaire results | [#26](https://github.com/sweetlife999/SWP/issues/26) | 13 | Done |
+| — | API stub layer | [#29](https://github.com/sweetlife999/SWP/issues/29) | 40 | Done |
+| — | Admin inline editing | [#32](https://github.com/sweetlife999/SWP/issues/32) | 20 | In Progress |
+| — | Admin login | [#30](https://github.com/sweetlife999/SWP/issues/30) | 5 | Done |
+| — | CI: lint + type-check | [#31](https://github.com/sweetlife999/SWP/issues/31) | 8 | Done |
+| — | Docker deploy pipeline | [#34](https://github.com/sweetlife999/SWP/issues/34) | 13 | Done |
+| — | Database schema and migrations | [#43](https://github.com/sweetlife999/SWP/issues/43) | 100 | Done |
+| — | Backend setup: stack, project, dev env | [#41](https://github.com/sweetlife999/SWP/issues/41) | 20 | Ready |
 
 ## PBI types, statuses, and task decomposition
 
@@ -98,10 +103,8 @@ The frontend MVP v1 is live at [https://su.fblrkus.ru](https://su.fblrkus.ru). A
 
 | Team member | GitHub | Issues | PRs | Reviews |
 |-------------|--------|--------|-----|---------|
-| | | | | |
-| | | | | |
-| | | | | |
-| | | | | |
-| | | | | |
-
-<!-- Fill in after issues and PRs are created -->
+| Iaroslav Moskvin | [@sweetlife999](https://github.com/sweetlife999) | [#32](https://github.com/sweetlife999/SWP/issues/32), [#42](https://github.com/sweetlife999/SWP/issues/42), [#44](https://github.com/sweetlife999/SWP/issues/44), [#46](https://github.com/sweetlife999/SWP/issues/46) | [PR#51](https://github.com/sweetlife999/SWP/pull/51), [PR#55](https://github.com/sweetlife999/SWP/pull/55) | [PR#50](https://github.com/sweetlife999/SWP/pull/50), [PR#52](https://github.com/sweetlife999/SWP/pull/52), [PR#53](https://github.com/sweetlife999/SWP/pull/53), [PR#54](https://github.com/sweetlife999/SWP/pull/54), [PR#58](https://github.com/sweetlife999/SWP/pull/58), [PR#59](https://github.com/sweetlife999/SWP/pull/59), [PR#61](https://github.com/sweetlife999/SWP/pull/61) |
+| Dmitrii Malofeev | [@FblRKUS](https://github.com/FblRKUS) | [#40](https://github.com/sweetlife999/SWP/issues/40), [#42](https://github.com/sweetlife999/SWP/issues/42), [#44](https://github.com/sweetlife999/SWP/issues/44), [#45](https://github.com/sweetlife999/SWP/issues/45), [#56](https://github.com/sweetlife999/SWP/issues/56) | [PR#50](https://github.com/sweetlife999/SWP/pull/50), [PR#53](https://github.com/sweetlife999/SWP/pull/53), [PR#54](https://github.com/sweetlife999/SWP/pull/54), [PR#58](https://github.com/sweetlife999/SWP/pull/58), [PR#61](https://github.com/sweetlife999/SWP/pull/61) | [PR#51](https://github.com/sweetlife999/SWP/pull/51), [PR#55](https://github.com/sweetlife999/SWP/pull/55), [PR#59](https://github.com/sweetlife999/SWP/pull/59), [PR#60](https://github.com/sweetlife999/SWP/pull/60) |
+| Zakhar Gurtovoi | [@Meduzium](https://github.com/Meduzium) | [#35](https://github.com/sweetlife999/SWP/issues/35), [#37](https://github.com/sweetlife999/SWP/issues/37), [#41](https://github.com/sweetlife999/SWP/issues/41), [#43](https://github.com/sweetlife999/SWP/issues/43), [#48](https://github.com/sweetlife999/SWP/issues/48) | [PR#52](https://github.com/sweetlife999/SWP/pull/52) | [PR#55](https://github.com/sweetlife999/SWP/pull/55) |
+| Olga Frolovskaia | [@Kkoi33](https://github.com/Kkoi33) | [#38](https://github.com/sweetlife999/SWP/issues/38), [#49](https://github.com/sweetlife999/SWP/issues/49) | [PR#59](https://github.com/sweetlife999/SWP/pull/59) | [PR#52](https://github.com/sweetlife999/SWP/pull/52), [PR#55](https://github.com/sweetlife999/SWP/pull/55) |
+| Alisa Kondakova | [@AlisaKondakova](https://github.com/AlisaKondakova) | [#25](https://github.com/sweetlife999/SWP/issues/25), [#38](https://github.com/sweetlife999/SWP/issues/38), [#49](https://github.com/sweetlife999/SWP/issues/49) | [PR#60](https://github.com/sweetlife999/SWP/pull/60) | [PR#55](https://github.com/sweetlife999/SWP/pull/55) |
