@@ -66,7 +66,7 @@
 ## Customer review
 
 - Customer review summary: [`reports/week3/customer-review-summary.md`](customer-review-summary.md)
-- Customer review transcript: [`reports/week3/customer-review-transcript.md`](customer-review-transcript.md) *(pending customer approval for publication)*
+- Customer review transcript: [`reports/week3/customer-review-transcript.md`](customer-review-transcript.md)
 
 ---
 
