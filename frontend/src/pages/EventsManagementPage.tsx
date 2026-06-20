@@ -2,19 +2,32 @@ import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { api, type Event } from '../lib/api'
 
+// Define a type for custom dynamic database extensions safely
+type DatabaseEvent = Event & {
+  description?: string
+  event_date?: string
+  event_time?: string
+  department?: string
+  cover_class?: string
+  foot_text?: string
+  foot_label?: string
+  status_text?: string
+  tagCls?: string
+}
+
 const BLANK_EVENT = {
   title: '',
-  description: '', // API mapping for 'desc'
+  description: '',
   event_date: '',
   event_time: '',
-  department: 'core', // string enum mapping to database type
+  department: '',
   cover_class: '',
   foot_text: '',
   foot_label: '',
   status: 'draft',
 }
 
-function sortEvents(list: any[]) {
+function sortEvents(list: DatabaseEvent[]) {
   return [...list].sort((a, b) => {
     const dateA = a.event_date ?? a.date ?? ''
     const dateB = b.event_date ?? b.date ?? ''
@@ -23,11 +36,11 @@ function sortEvents(list: any[]) {
 }
 
 export default function EventsManagementPage() {
-  const [events, setEvents] = useState<any[]>([])
+  const [events, setEvents] = useState<DatabaseEvent[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editData, setEditData] = useState<any>({})
+  const [editData, setEditData] = useState<Partial<DatabaseEvent>>({})
   const [addingEvent, setAddingEvent] = useState(false)
-  const [newEvent, setNewEvent] = useState<any>(BLANK_EVENT)
+  const [newEvent, setNewEvent] = useState<typeof BLANK_EVENT>(BLANK_EVENT)
   const [toast, setToast] = useState('')
 
   useEffect(() => {
@@ -35,7 +48,7 @@ export default function EventsManagementPage() {
 
     async function loadEvents() {
       try {
-        const data = await api.admin.events.list()
+        const data = await api.admin.events.list() as DatabaseEvent[]
         if (!cancelled) setEvents(data)
       } catch {
         if (!cancelled) showToast('Ошибка загрузки событий')
@@ -56,10 +69,9 @@ export default function EventsManagementPage() {
 
   async function handleAddEvent() {
     try {
-      const created = await api.admin.events.create(newEvent)
-      // Automatically publish on creation if intended by your flow
+      const created = await api.admin.events.create(newEvent as unknown as Event)
       const published = await api.admin.events.update(created.id, { status: 'published' })
-      setEvents(prev => sortEvents([...prev, published]))
+      setEvents(prev => sortEvents([...prev, published as DatabaseEvent]))
       showToast('Событие создано')
     } catch {
       showToast('Ошибка создания события')
@@ -70,8 +82,8 @@ export default function EventsManagementPage() {
 
   async function handleSaveEdit(id: number) {
     try {
-      const updated = await api.admin.events.update(id, editData)
-      setEvents(prev => sortEvents(prev.map(e => e.id === id ? updated : e)))
+      const updated = await api.admin.events.update(id, editData as Partial<Event>)
+      setEvents(prev => sortEvents(prev.map(e => e.id === id ? (updated as DatabaseEvent) : e)))
       showToast('Изменения сохранены')
       setEditingId(null)
     } catch {
@@ -127,7 +139,7 @@ export default function EventsManagementPage() {
                   <textarea
                     className="textarea"
                     rows={2}
-                    value={editData.description ?? editData.desc ?? ev.description ?? ev.desc}
+                    value={editData.description ?? editData.desc ?? ev.description ?? ev.desc ?? ''}
                     onChange={e => setEditData({ ...editData, description: e.target.value })}
                   />
                 </div>
@@ -136,12 +148,12 @@ export default function EventsManagementPage() {
                   <input
                     className="input"
                     type="date"
-                    value={editData.event_date ?? editData.date ?? ev.event_date ?? ev.date}
+                    value={editData.event_date ?? editData.date ?? ev.event_date ?? ev.date ?? ''}
                     onChange={e => setEditData({ ...editData, event_date: e.target.value })}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Локация (footLabel)</label>
+                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Локация</label>
                   <input
                     className="input"
                     value={editData.foot_label ?? editData.footLabel ?? ev.foot_label ?? ev.footLabel ?? ''}
@@ -153,7 +165,7 @@ export default function EventsManagementPage() {
                   <select
                     className="input"
                     value={editData.status ?? ev.status}
-                    onChange={e => setEditData({ ...editData, status: e.target.value })}
+                    onChange={e => setEditData({ ...editData, status: e.target.value as 'draft' | 'published' | 'archived' })}
                   >
                     <option value="draft">Черновик</option>
                     <option value="published">Опубликован</option>
@@ -168,14 +180,15 @@ export default function EventsManagementPage() {
             ) : (
               <>
                 <div style={{ marginBottom: 12 }}>
-                  {/* Dynamic tag read from SQL derived response */}
-                  <span className={`tag ${ev.tagCls ?? 'green'}`} style={{ fontSize: 11 }}>{ev.tag ?? `SU:${ev.department}`}</span>
+                  <span className={`tag ${ev.tagCls ?? 'green'}`} style={{ fontSize: 11 }}>
+                    {ev.tag ?? (ev.department ? `SU:${ev.department}` : '')}
+                  </span>
                   {ev.past && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)' }}>Прошедшее</span>}
                 </div>
                 <h3 style={{ marginBottom: 8, fontSize: 16, lineHeight: 1.2 }}>{ev.title}</h3>
                 <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{ev.description ?? ev.desc}</p>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-                  <div>{ev.dd} {ev.mm}{ev.event_time ?? ev.time ? ` · ${ev.event_time ?? ev.time}` : ''}</div>
+                  <div>{ev.dd} {ev.mm}{(ev.event_time ?? ev.time) ? ` · ${ev.event_time ?? ev.time}` : ''}</div>
                   <div>{ev.foot_text ?? ev.foot ?? ''}</div>
                   {ev.foot_label ?? ev.footLabel ? <div style={{ fontStyle: 'italic', marginTop: 2 }}>{ev.foot_label ?? ev.footLabel}</div> : null}
                 </div>

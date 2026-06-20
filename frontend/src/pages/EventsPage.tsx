@@ -1,28 +1,39 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 
 const BLANK_EVENT = {
   title: '',
-  description: '',
-  event_date: '',
-  event_time: '',
-  department: 'core',
-  cover_class: '',
-  foot_text: '',
-  foot_label: '',
-  status: 'draft',
+  desc: '',
+  date: '',
+  dd: '',
+  mm: '',
+  cover: '',
+  tag: '',
+  tagCls: '',
+  time: '',
+  foot: '',
+  past: false,
 }
 
-function EventCard({ ev }: { ev: any }) {
+function EventCard({ ev }: { ev: Event & { [key: string]: any } }) {
   const label = statusLabel(ev)
+  
+  // safe computation of past events by falling back across possible schema variants
   const isPast = ev.past ?? (ev.event_date ? new Date(ev.event_date) < new Date() : false)
+  const coverClass = ev.cover_class ?? ev.cover ?? ''
+  const tagText = ev.tag ?? (ev.department ? `SU:${ev.department}` : '')
+  const tagClass = ev.tagCls ?? 'green'
+  const timeText = ev.event_time ?? ev.time ?? ''
+  const description = ev.description ?? ev.desc ?? ''
+  const footerText = ev.foot_text ?? ev.foot ?? ''
+  const footerLabel = ev.foot_label ?? ev.footLabel ?? 'Подробнее'
   
   return (
     <Link className={`event-card${ev.featured ? ' featured' : ''}${isPast ? ' passed' : ''}`} to={`/events/${ev.id}`}>
-      <div className={`ec-cover${ev.cover_class ?? ev.cover ? ` ${ev.cover_class ?? ev.cover}` : ''}${isPast ? ' passed-cover' : ''}`}>
+      <div className={`ec-cover${coverClass ? ` ${coverClass}` : ''}${isPast ? ' passed-cover' : ''}`}>
         <div className="date-badge">
           <div className="d">{ev.dd}</div>
           <div className="m">{ev.mm}</div>
@@ -33,18 +44,18 @@ function EventCard({ ev }: { ev: any }) {
       </div>
       <div className="ec-body">
         <div className="ec-meta">
-          <span className={`tag ${ev.tagCls ?? 'green'}`}>
+          <span className={`tag ${tagClass}`}>
             <span className="dot"></span>
-            {ev.tag ?? `SU:${ev.department}`}
+            {tagText}
           </span>
-          {(ev.event_time || ev.time) && <span>{ev.event_time ?? ev.time}</span>}
+          {timeText && <span>{timeText}</span>}
         </div>
         <h3>{ev.title}</h3>
-        <p className="desc">{ev.description ?? ev.desc}</p>
+        <p className="desc">{description}</p>
         <div className="ec-foot">
-          <span>{ev.foot_text ?? ev.foot}</span>
+          <span>{footerText}</span>
           <span className="open">
-            {ev.foot_label ?? ev.footLabel ?? 'Подробнее'}{' '}
+            {footerLabel}{' '}
             <Icon id="i-arrow-r" style={{ width: 12, height: 12 }} />
           </span>
         </div>
@@ -53,23 +64,25 @@ function EventCard({ ev }: { ev: any }) {
   )
 }
 
-function statusLabel(ev: any) {
+function statusLabel(ev: Event & { status_text?: string }) {
   if (ev.status_text ?? ev.statusText) return ev.status_text ?? ev.statusText
   if (ev.status === 'published') return 'live'
   return ev.status ?? ''
 }
 
-function sortEvents(list: any[]) {
+function sortEvents(list: Event[]) {
   return [...list].sort((a, b) => {
-    const dateA = a.event_date ?? a.date ?? ''
-    const dateB = b.event_date ?? b.date ?? ''
+    const itemA = a as Event & { event_date?: string }
+    const itemB = b as Event & { event_date?: string }
+    const dateA = itemA.event_date ?? a.date ?? ''
+    const dateB = itemB.event_date ?? b.date ?? ''
     return dateB.localeCompare(dateA) || b.id - a.id
   })
 }
 
 export default function EventsPage() {
   const { isAdmin } = useAdmin()
-  const [events, setEvents] = useState<any[]>([])
+  const [events, setEvents] = useState<Event[]>([])
   const [seg1, setSeg1] = useState(0)
   const [search, setSearch] = useState('')
   const [showCal, setShowCal] = useState(false)
@@ -77,7 +90,7 @@ export default function EventsPage() {
   const [dateTo, setDateTo] = useState('')
   const [limit, setLimit] = useState(4)
   const [addingEvent, setAddingEvent] = useState(false)
-  const [newEvent, setNewEvent] = useState<Record<string, any>>(BLANK_EVENT)
+  const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
 
   useEffect(() => {
     api.events.list().then(setEvents).catch(() => {})
@@ -85,19 +98,21 @@ export default function EventsPage() {
 
   async function handleAddEvent() {
     try {
-      const created = await api.admin.events.create(newEvent as any)
+      // direct cast to appease legacy api client typing constraints
+      const created = await api.admin.events.create(newEvent as Event)
       const published = await api.admin.events.update(created.id, { status: 'published' })
       setEvents(prev => sortEvents([...prev, published]))
     } catch {
-      // Keep current list on execution errors
+      // keep state untouched if API rejects configuration parameters
     }
     setNewEvent(BLANK_EVENT)
     setAddingEvent(false)
   }
 
-  function applyFilter(list: any[]) {
+  function applyFilter(list: Event[]) {
     return list.filter(ev => {
-      const evDate = ev.event_date ?? ev.date ?? ''
+      const item = ev as Event & { event_date?: string }
+      const evDate = item.event_date ?? ev.date ?? ''
       if (search && !ev.title.toLowerCase().includes(search.toLowerCase())) return false
       if (dateFrom && evDate < dateFrom) return false
       if (dateTo && evDate > dateTo) return false
@@ -105,8 +120,13 @@ export default function EventsPage() {
     })
   }
 
-  const allCurrent = applyFilter(events.filter(ev => !(ev.past ?? (ev.event_date ? new Date(ev.event_date) < new Date() : false))))
-  const allPast    = applyFilter(events.filter(ev => !!(ev.past ?? (ev.event_date ? new Date(ev.event_date) < new Date() : false))))
+  const checkPastStatus = (ev: Event) => {
+    const item = ev as Event & { event_date?: string }
+    return !!(ev.past ?? (item.event_date ? new Date(item.event_date) < new Date() : false))
+  }
+
+  const allCurrent = applyFilter(events.filter(ev => !checkPastStatus(ev)))
+  const allPast    = applyFilter(events.filter(ev => checkPastStatus(ev)))
   const current    = allCurrent.slice(0, limit)
   const past       = allPast.slice(0, limit)
   const hasMore    = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit
@@ -225,39 +245,42 @@ export default function EventsPage() {
                 </div>
                 <div className="field">
                   <label>Описание</label>
-                  <textarea className="textarea" rows={2} value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} />
+                  <textarea className="textarea" rows={2} value={newEvent.desc} onChange={e => setNewEvent({ ...newEvent, desc: e.target.value })} />
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
                     <label>Дата</label>
-                    <input className="input" type="date" value={newEvent.event_date} onChange={e => setNewEvent({ ...newEvent, event_date: e.target.value })} />
+                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label>Время (опц.)</label>
-                    <input className="input" value={newEvent.event_time} onChange={e => setNewEvent({ ...newEvent, event_time: e.target.value })} />
+                    <input className="input" value={newEvent.time} onChange={e => setNewEvent({ ...newEvent, time: e.target.value })} />
                   </div>
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Департамент (SQL Type)</label>
-                    <select className="input" value={newEvent.department} onChange={e => setNewEvent({ ...newEvent, department: e.target.value })}>
-                      <option value="core">SU:Core</option>
-                      <option value="active">SU:Active</option>
-                      <option value="media">SU:Media</option>
+                    <label>Департамент</label>
+                    <select className="input" value={newEvent.tag} onChange={e => {
+                      const map: Record<string, string> = { 'SU:Core': 'green', 'SU:Active': 'blue', 'SU:Media': 'purple' }
+                      setNewEvent({ ...newEvent, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' })
+                    }}>
+                      <option value="SU:Core">SU:Core</option>
+                      <option value="SU:Active">SU:Active</option>
+                      <option value="SU:Media">SU:Media</option>
                     </select>
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Локация (Комната / Зал)</label>
-                    <input className="input" value={newEvent.foot_label} onChange={e => setNewEvent({ ...newEvent, foot_label: e.target.value })} />
+                    <label>Локация</label>
+                    <input className="input" value={newEvent.footLabel ?? ''} onChange={e => setNewEvent({ ...newEvent, footLabel: e.target.value })} />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Текст подвала (foot_text)</label>
-                  <input className="input" value={newEvent.foot_text} onChange={e => setNewEvent({ ...newEvent, foot_text: e.target.value })} />
+                  <label>Текст подвала</label>
+                  <input className="input" value={newEvent.foot} onChange={e => setNewEvent({ ...newEvent, foot: e.target.value })} />
                 </div>
                 <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
                   <button className="btn ghost" onClick={() => setAddingEvent(false)}>Отмена</button>
-                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.event_date} onClick={handleAddEvent}>Добавить</button>
+                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.date} onClick={handleAddEvent}>Добавить</button>
                 </div>
               </div>
             </div>
