@@ -53,7 +53,7 @@
 ![MVP v1](images/mvp_v1_filtered_view.png)
 
 **SemVer release**
-<!-- ![Release](images/semver_release.png) — add after v1.0.0 is created -->
+![Release](images/semver_release.png)
 
 **Delivered MVP v1**
 ![MVP v1 live](images/delivered_MVP_v1.png)
