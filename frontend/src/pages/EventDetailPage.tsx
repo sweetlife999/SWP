@@ -82,8 +82,8 @@ function EventDetailPageInner({ id }: { id?: string }) {
       `SUMMARY:${title}`,
       `DTSTART:${datePart}T${startTime}`,
       `DTEND:${endDatePart}T${endTime}`,
-      'LOCATION:Sport Tower 519, Иннополис',
-      `DESCRIPTION:${event?.desc ?? '24 часа открытого хакатона. SU:Core.'}`,
+      `LOCATION:${event?.footLabel ?? ''}`,
+      `DESCRIPTION:${event?.desc ?? ''}`,
       'END:VEVENT',
       'END:VCALENDAR',
     ].join('\r\n')
@@ -110,12 +110,12 @@ function EventDetailPageInner({ id }: { id?: string }) {
               <span className="b">{event?.tag ?? 'SU:Core'} · TOP</span>
               <span className={`b${event?.status === 'published' ? ' live' : ''}`}>{event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}</span>
             </div>
-            <h1>{event?.title ?? 'Hackathon Summer 24h'}</h1>
-            <p className="sub">{event?.desc ?? '24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.'}</p>
+            <h1>{event?.title ?? ''}</h1>
+            <p className="sub">{event?.desc ?? ''}</p>
           </div>
           <div className="quick-meta">
-            <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">{event ? `${event.dd} ${event.mm}` : '20–21 ИЮН'}</span></div>
-            <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">{event?.footLabel ?? '519 Sport Tower'}</span></div>
+            <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">{event ? `${event.dd} ${event.mm}` : ''}</span></div>
+            <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">{event?.footLabel ?? ''}</span></div>
           </div>
         </div>
       </section>
