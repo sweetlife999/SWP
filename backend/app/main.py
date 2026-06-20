@@ -7,7 +7,16 @@ from fastapi.responses import JSONResponse
 
 from app.config import settings
 from app.database import create_pool, get_pool
-from app.routers import admin, admin_questionnaires, content, events, kanban, members, questionnaires, surveys
+from app.routers import (
+    admin,
+    admin_questionnaires,
+    content,
+    events,
+    kanban,
+    members,
+    questionnaires,
+    surveys,
+)
 
 
 @asynccontextmanager
@@ -34,7 +43,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE"],
     allow_headers=["Content-Type", "Authorization"],

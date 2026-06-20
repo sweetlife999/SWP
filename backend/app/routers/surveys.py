@@ -82,8 +82,9 @@ async def submit_response(survey_id: int, body: SurveyResponseBody, request: Req
         survey_id,
     )
     if not exists:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Survey not found or closed")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Survey not found or closed"
+        )
 
     await pool.execute(
         "INSERT INTO survey_responses (survey_id, answers) VALUES ($1, $2)",
