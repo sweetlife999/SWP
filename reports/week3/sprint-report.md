@@ -83,9 +83,12 @@ PBIs marked `mvp-v1`:
 
 ## Verification evidence
 
-<!-- Links to PRs with AC verification tables -->
-
-- PR #TBD — ...
+| PR | Issues closed | AC verified |
+|----|--------------|-------------|
+| [PR#55](https://github.com/sweetlife999/SWP/pull/55) | #24 (US-13), #30 (admin login), #37 (questionnaire API), #42 (events API), #45 (members API) | All 15 AC verified — see PR description |
+| [PR#52](https://github.com/sweetlife999/SWP/pull/52) | #35 (US-11) | Admin events UI in review |
+| [PR#59](https://github.com/sweetlife999/SWP/pull/59) | #38 (responsive layout) | Mobile and tablet breakpoints verified manually |
+| [PR#51](https://github.com/sweetlife999/SWP/pull/51) | #43 (DB schema) | All tables created, migrations run on deploy |
 
 ## Current product status
 

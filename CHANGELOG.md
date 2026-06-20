@@ -8,7 +8,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-06-20
+
 ### Added
+- FastAPI backend: events CRUD, members CRUD, questionnaires lifecycle, kanban and content endpoints
+- PostgreSQL database with Alembic migrations; all MVP v1 tables in place
+- Admin authentication: `POST /admin/token` issues JWT; `require_admin` dependency guards all `/admin/**` routes
+- `GET /admin/questionnaires/:id/results` — admin view of all submitted responses per questionnaire
+- Responsive layout: mobile and tablet breakpoints across all pages
 - Admin inline editing for Roadmap and History sections (MembersPage)
 - "Add member" modal for admins with department, name, role, tag, bio, and recent activity fields
 - "Add event" modal for admins with title, description, date, time, department, and status fields
@@ -23,6 +30,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 - ESLint error: removed synchronous `setState` call inside `useEffect` in FormsViewerPage
+- Backend config: `cors_origins` parsed as `str` + `@property` to avoid pydantic-settings v2 `json.loads()` on comma-separated env values
 
 ---
 

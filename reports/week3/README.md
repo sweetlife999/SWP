@@ -30,36 +30,36 @@
 
 ## Reviewed issue-linked PRs (Week 3)
 
-<!-- Add links to reviewed PRs created during Week 3 -->
-
-- PR #TBD — ...
+- [PR#52](https://github.com/sweetlife999/SWP/pull/52) — feat: add admin events management interface (#35)
+- [PR#55](https://github.com/sweetlife999/SWP/pull/55) — Backend: events, members, questionnaires, admin auth (#24, #30, #37, #42, #45)
+- [PR#59](https://github.com/sweetlife999/SWP/pull/59) — Responsive layout: mobile and tablet breakpoints (#38)
+- [PR#60](https://github.com/sweetlife999/SWP/pull/60) — Error handling and empty states (#49)
+- [PR#61](https://github.com/sweetlife999/SWP/pull/61) — Fix backend config: cors_origins, DB credentials
 
 ---
 
 ## Screenshots
 
-> Add screenshots to `reports/week3/images/` and embed below.
-
 **Product Backlog view**
-<!-- ![Product Backlog](images/product-backlog.png) -->
+![Product Backlog](images/product_backlog_view.png)
 
 **Sprint Backlog view**
-<!-- ![Sprint Backlog](images/sprint-backlog.png) -->
+![Sprint Backlog](images/sprint_backlog_view.png)
 
 **Sprint milestone**
-<!-- ![Sprint milestone](images/sprint-milestone.png) -->
+![Sprint milestone](images/sprint_milestone_view.png)
 
-**MVP v1 grouped view**
-<!-- ![MVP v1](images/mvp-v1-view.png) -->
+**MVP v1 filtered view**
+![MVP v1](images/mvp_v1_filtered_view.png)
 
 **SemVer release**
-<!-- ![Release](images/semver-release.png) -->
+<!-- ![Release](images/semver_release.png) — add after v1.0.0 is created -->
 
 **Delivered MVP v1**
-<!-- ![MVP v1 live](images/mvp-v1-live.png) -->
+![MVP v1 live](images/delivered_MVP_v1.png)
 
 **Example reviewed PR**
-<!-- ![Reviewed PR](images/reviewed-pr.png) -->
+![Reviewed PR](images/example_reviewed_pr.png)
 
 ---
 
