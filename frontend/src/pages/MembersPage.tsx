@@ -3,6 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Member as ApiMember } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -26,7 +30,6 @@ const DEFAULT_HISTORY_HTML = `<div class="meta-line">SU IU · оригинал �
 
 const BLANK_MEMBER: Omit<Member, 'id'> = { dep: 'core', tag: '', name: '', role: '', meta: '', bio: '', recent: ['', '', ''] }
 
-
 export default function MembersPage() {
   const { isAdmin } = useAdmin()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -49,11 +52,19 @@ export default function MembersPage() {
   const roadmapRef = useRef<HTMLDivElement>(null)
   const historyRef = useRef<HTMLElement>(null)
 
+  const { data: fetchedMembers, loading, error, retry } = useFetch<Member[]>('/api/members');
+
   useEffect(() => {
-    api.members.list().then(setMembers).catch(() => {})
     api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
     api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (fetchedMembers) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMembers(fetchedMembers);
+    }
+  }, [fetchedMembers]);
 
   function showToast(msg: string) {
     setToast(msg)
@@ -96,7 +107,6 @@ export default function MembersPage() {
       const created = await api.members.create(m)
       setMembers(prev => [...prev, created])
     } catch {
-      // optimistic: add with temp id
       setMembers(prev => [...prev, { ...m, id: `local-${Date.now()}` }])
     }
     setNewMember(BLANK_MEMBER)
@@ -115,6 +125,7 @@ export default function MembersPage() {
           {toast}
         </div>
       )}
+
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Команда и история</span>
@@ -135,7 +146,6 @@ export default function MembersPage() {
         ))}
       </div>
 
-      {/* Members pane */}
       {tab === 'members' && (
         <div>
           {isAdmin && (
@@ -145,6 +155,7 @@ export default function MembersPage() {
               </button>
             </div>
           )}
+
           <div className="members-filters-bar">
             <div className="seg">
               {['Все', 'SU:Core', 'SU:Active', 'SU:Media'].map((l, i) => (
@@ -158,31 +169,66 @@ export default function MembersPage() {
             <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
 
-          <div className="members-grid">
-            {visibleMembers.map((p, i) => (
-              <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
-                <div className="photo">
-                  <span className="dep-tag">{p.tag}</span>
-                  <div className="silhouette"></div>
-                </div>
-                <div className="body">
-                  <div className="name">{p.name}</div>
-                  <div className="role">{p.role}</div>
-                  <div className="meta">{p.meta}</div>
-                </div>
-              </article>
-            ))}
-          </div>
-
-          {!showAll && filteredMembers.length > 8 && (
-            <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
-              <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load members. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
             </div>
+          )}
+
+          {loading && (
+            <div className="members-grid">
+              <LoadingSkeleton type="member" count={8} />
+            </div>
+          )}
+
+          {!loading && !error && members.length === 0 && (
+            <EmptyState
+              
+              title="No members"
+              description="The community is growing! Check back soon for new members."
+            />
+          )}
+
+          {!loading && !error && members.length > 0 && (
+            <>
+              <div className="members-grid">
+                {visibleMembers.map((p, i) => (
+                  <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
+                    <div className="photo">
+                      <span className="dep-tag">{p.tag}</span>
+                      <div className="silhouette"></div>
+                    </div>
+                    <div className="body">
+                      <div className="name">{p.name}</div>
+                      <div className="role">{p.role}</div>
+                      <div className="meta">{p.meta}</div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {!showAll && filteredMembers.length > 8 && (
+                <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
+                  <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {/* History pane */}
       {tab === 'history' && (
         <div>
           {isAdmin && (
@@ -208,7 +254,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Roadmap pane */}
       {tab === 'roadmap' && (
         <div>
           <div className="row sb mb-4">
@@ -260,7 +305,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Add member modal */}
       {addingMember && (
         <div className="modal-overlay" onClick={() => setAddingMember(false)}>
           <div className="member-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
@@ -314,7 +358,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Member modal */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
           <div className="member-modal" onClick={e => e.stopPropagation()}>
