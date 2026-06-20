@@ -61,6 +61,7 @@ export default function MembersPage() {
 
   useEffect(() => {
     if (fetchedMembers) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setMembers(fetchedMembers);
     }
   }, [fetchedMembers]);

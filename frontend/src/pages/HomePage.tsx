@@ -1,12 +1,21 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
+
+interface NewsItem {
+  thumbClass?: string
+  date?: string
+  category?: string
+  title: string
+  excerpt?: string
+  desc?: string
+}
 
 const DEP_INFO = {
   core: {
@@ -62,23 +71,21 @@ export default function HomePage() {
   const [editingIntro, setEditingIntro] = useState(false)
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
-  const [depCounts, setDepCounts] = useState({ core: 8, active: 14, media: 6 })
   const introRef = useRef<HTMLElement>(null)
   const info = openDep ? DEP_INFO[openDep] : null
 
-  const { data: fetchedMembers } = useFetch<any[]>('/api/members');
-  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<any[]>('/api/news');
+  const { data: fetchedMembers } = useFetch<Member[]>('/api/members');
+  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
 
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    if (fetchedMembers) {
-      const counts = { core: 0, active: 0, media: 0 }
-      fetchedMembers.forEach((m: any) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
-      setDepCounts(counts)
-    }
+  const depCounts = useMemo(() => {
+    if (!fetchedMembers) return { core: 8, active: 14, media: 6 }
+    const counts = { core: 0, active: 0, media: 0 }
+    fetchedMembers.forEach((m: Member) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
+    return counts
   }, [fetchedMembers]);
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
@@ -241,7 +248,7 @@ export default function HomePage() {
 
         {!newsLoading && !newsError && newsItems && newsItems.length > 0 && (
           <div className="news-list">
-            {newsItems.map((item: any, index: number) => (
+            {newsItems.map((item: NewsItem, index: number) => (
               <div key={index} className="news-row">
                 <div className={`thumb ${item.thumbClass || ''}`} />
                 <div className="news-body">

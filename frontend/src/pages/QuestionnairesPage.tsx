@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Icon } from '../components/Icon'
-import { api, type Survey, type QStep } from '../lib/api'
+import { type Survey, type QStep } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -8,26 +8,20 @@ import { ErrorBanner } from '../components/ErrorBanner'
 const KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 export default function QuestionnairesPage() {
-  const [surveys, setSurveys] = useState<Survey[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
   const { data: fetchedSurveys, loading, error, retry } = useFetch<Survey[]>('/api/questionnaires');
 
-  useEffect(() => {
-    if (fetchedSurveys) {
-      setSurveys(fetchedSurveys);
-      if (fetchedSurveys.length > 0) setActiveId(fetchedSurveys[0].id);
-    }
-  }, [fetchedSurveys]);
-
+  const surveys = fetchedSurveys ?? []
+  const activeId = selectedId ?? surveys[0]?.id ?? null
   const active = surveys.find(q => q.id === activeId) ?? null
 
   function selectQ(id: string) {
     if (id === activeId) return
-    setActiveId(id)
+    setSelectedId(id)
     setStep(0)
     setAnswers({})
     setSubmitted(false)

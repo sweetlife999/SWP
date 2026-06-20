@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -239,6 +238,7 @@ export default function KanbanPage() {
 
   useEffect(() => {
     if (kanbanData) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setFetchedCards(kanbanData);
       setCardCols(Object.fromEntries(kanbanData.map(c => [c.id, c.col as ColKey])));
     }
