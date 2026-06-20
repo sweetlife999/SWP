@@ -4,8 +4,6 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 **Live:** [https://su.fblrkus.ru](https://su.fblrkus.ru)
 
-## Assignment 2 report
-
 ---
 
 ## Reports
@@ -24,34 +22,16 @@ The deployed site is publicly accessible at [https://su.fblrkus.ru](https://su.f
 **Admin panel:** navigate to [https://su.fblrkus.ru/admin](https://su.fblrkus.ru/admin) — redirects to `/admin/login`. No public login button on the main site by design. Contact the team for admin credentials.
 
 ---
+
 ## Local setup
 
-### With Docker (recommended)
-
-Requires Docker.
-
-```bash
-docker build -t swp-frontend ./frontend
-docker run -p 3000:80 swp-frontend
-# → http://localhost:3000
-```
+### Requirements
 
 - Node.js ≥ 18
 - Python 3.12
 - Docker + Docker Compose (for full stack)
 
-### Frontend only
-### Without Docker
-
-Requires Node.js ≥ 18.
-
-```bash
-cd frontend
-npm install
-npm run dev        # → http://localhost:5173
-```
-
-### Full stack (frontend + backend + database)
+### Full stack (recommended)
 
 ```bash
 docker compose up --build
@@ -60,6 +40,15 @@ docker compose up --build
 - Frontend: http://localhost:3000
 - Backend API: http://localhost:8000
 - API docs: http://localhost:8000/docs
+
+### Frontend only (without Docker)
+
+```bash
+cd frontend
+npm install
+npm run dev        # → http://localhost:5173
+npm run build      # production build → frontend/dist/
+```
 
 ### Backend only (without Docker)
 
@@ -82,43 +71,29 @@ cd backend && ruff check . && ruff format --check .
 
 ---
 
+## Deployment
+
+The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every push to `main` that touches `frontend/`, `backend/`, or `compose.yml`, GitHub Actions:
+
+1. Builds Docker images and pushes them to GHCR
+2. SSHes to the server and runs `docker compose pull && docker compose up -d`
+
+---
+
 ## Repository structure
 
 ```
 frontend/          — React + TypeScript + Vite
 backend/           — FastAPI + asyncpg + Alembic
-deploy/            — Docker Compose, server config
+database/          — PostgreSQL migrations
 docs/              — user-stories.md, roadmap.md, definition-of-done.md
 reports/
   week2/           — Assignment 2 reports
   week3/           — Assignment 3 reports (Sprint 3 — MVP v1)
 .github/
-  workflows/       — CI: frontend lint, link-check, backend lint
+  workflows/       — CI: frontend lint, backend lint, link-check, deploy
   ISSUE_TEMPLATE/
-```bash
-npm run build      # production build → frontend/dist/
-npm run preview    # → http://localhost:4173
-```
-
-## Deployment
-
-The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every push to `main` that touches `frontend/` or `compose.yml`, GitHub Actions:
-
-1. Builds a Docker image and pushes it to `ghcr.io/sweetlife999/swp-frontend:latest`
-2. SSHes to the server and runs `docker compose pull && docker compose up -d`
-
-The server runs the container on `127.0.0.1:3000`; nginx proxies HTTPS traffic to it.
-
-## Structure
-
-```
-frontend/          — React + TypeScript + Vite (source)
-compose.yml        — Docker Compose for the frontend service
-reports/week2/     — Assignment 2 report
-.github/
-  workflows/
-    deploy.yml     — CI/CD: build Docker image, push to GHCR, deploy to VPS
-    link-check.yml — Lychee link checker
   pull_request_template.md
 CHANGELOG.md
+compose.yml
 ```
