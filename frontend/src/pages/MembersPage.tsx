@@ -194,7 +194,7 @@ export default function MembersPage() {
 
           {!loading && !error && members.length === 0 && (
             <EmptyState
-              icon="users"
+              
               title="No members"
               description="The community is growing! Check back soon for new members."
             />

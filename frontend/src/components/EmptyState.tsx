@@ -1,7 +1,6 @@
 import React from 'react';
 
 interface EmptyStateProps {
-  icon?: string;
   title: string;
   description: string;
   action?: {
@@ -10,7 +9,7 @@ interface EmptyStateProps {
   };
 }
 
-export function EmptyState({ icon = 'inbox', title, description, action }: EmptyStateProps) {
+export function EmptyState({ title, description, action }: EmptyStateProps) {
   return (
     <div className="empty-state">
       <div className="empty-icon">

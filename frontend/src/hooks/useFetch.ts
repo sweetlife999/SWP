@@ -13,7 +13,7 @@ export function useFetch<T>(url: string, options?: RequestInit) {
     error: null,
   });
   const startTimeRef = useRef<number>(0);
-  const minLoadingTime = 300; // 300ms минимальное время загрузки
+  const minLoadingTime = 300;
 
   const fetchData = useCallback(async () => {
     startTimeRef.current = Date.now();
@@ -26,7 +26,6 @@ export function useFetch<T>(url: string, options?: RequestInit) {
       }
       const data = await response.json();
       
-      // Ждем минимальное время загрузки
       const elapsed = Date.now() - startTimeRef.current;
       if (elapsed < minLoadingTime) {
         await new Promise(resolve => setTimeout(resolve, minLoadingTime - elapsed));

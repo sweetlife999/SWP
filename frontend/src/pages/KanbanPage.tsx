@@ -235,7 +235,7 @@ export default function KanbanPage() {
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
   const [toast, setToast] = useState<string | null>(null)
 
-  const { data: kanbanData, loading, error, retry } = useFetch<CardData[]>('/api/kanban');
+  const { data: kanbanData, loading, error, retry } = useFetch<CardData[]>('/api/admin/kanban');
 
   useEffect(() => {
     if (kanbanData) {
@@ -302,20 +302,21 @@ export default function KanbanPage() {
       return
     }
 
-    // Optimistic update
     setCardCols(prev => ({ ...prev, [cardId]: col }))
 
-    // Send PATCH to server
-    fetch(`/api/kanban/${cardId}`, {
+    const token = localStorage.getItem('token')
+    fetch(`/api/admin/kanban/${cardId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+      },
       body: JSON.stringify({ col })
     })
     .then(res => {
       if (!res.ok) throw new Error('Failed to update task')
     })
     .catch(() => {
-      // Rollback on error
       setCardCols(prev => ({ ...prev, [cardId]: prevCol }))
       setToast('Failed to move task. Please try again.')
     })
@@ -388,7 +389,6 @@ export default function KanbanPage() {
           </div>
         </div>
         <EmptyState
-          icon="grid"
           title="Board is empty"
           description="No tasks on the board. Start by adding a new task!"
         />
@@ -412,7 +412,6 @@ export default function KanbanPage() {
           fontWeight: 500,
           boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
           zIndex: 2000,
-          animation: 'slideUp 0.3s ease'
         }}>
           {toast}
         </div>

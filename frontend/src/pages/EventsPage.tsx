@@ -185,7 +185,7 @@ export default function EventsPage() {
 
           {!loading && !error && events.length === 0 && (
             <EmptyState
-              icon="calendar"
+              
               title="No events"
               description="There are no events scheduled at the moment. Check back later!"
             />
@@ -236,7 +236,7 @@ export default function EventsPage() {
 
           {!loading && !error && events.length === 0 && (
             <EmptyState
-              icon="calendar"
+              
               title="No events"
               description="There are no events scheduled at the moment. Check back later!"
             />
