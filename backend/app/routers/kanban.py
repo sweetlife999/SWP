@@ -5,11 +5,15 @@ from app.auth import require_admin
 from app.computed import PRIORITY_LABEL
 from app.database import get_pool
 from app.models.schemas import (
-    KanbanAssignee, KanbanAttachment, KanbanCardOut, KanbanCardPatch, KanbanMeta, KanbanTag
+    KanbanAssignee,
+    KanbanAttachment,
+    KanbanCardOut,
+    KanbanCardPatch,
+    KanbanMeta,
+    KanbanTag,
 )
 
-router = APIRouter(prefix="/admin/kanban", tags=["kanban"],
-                   dependencies=[Depends(require_admin)])
+router = APIRouter(prefix="/admin/kanban", tags=["kanban"], dependencies=[Depends(require_admin)])
 
 _CARD_SELECT = """
     SELECT
@@ -29,7 +33,9 @@ _CARD_SELECT = """
         ) AS tags,
         COALESCE(
             (SELECT json_agg(
-                jsonb_build_object('icon', m.icon, 'text', m.text, 'urgent', m.urgent, 'soon', m.soon)
+                jsonb_build_object(
+                    'icon', m.icon, 'text', m.text, 'urgent', m.urgent, 'soon', m.soon
+                )
                 ORDER BY m.order_index
              )
              FROM kanban_card_meta m WHERE m.card_id = c.id),
@@ -57,14 +63,18 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
         desc=row["description"] or None,
         attachment=KanbanAttachment(
             icon=att.get("icon", ""), bold=att.get("bold", ""), rest=att.get("rest", "")
-        ) if att else None,
+        )
+        if att
+        else None,
         progressPct=row["progress_pct"],
         progressLabel=row["progress_label"] or None,
         meta=[
-            KanbanMeta(icon=m["icon"], text=m["text"],
-                       urgent=m["urgent"] or None, soon=m["soon"] or None)
+            KanbanMeta(
+                icon=m["icon"], text=m["text"], urgent=m["urgent"] or None, soon=m["soon"] or None
+            )
             for m in row["meta"]
-        ] or None,
+        ]
+        or None,
         priority=priority,
         pLabel=PRIORITY_LABEL.get(priority, "P2"),
         assignees=[KanbanAssignee(initials=a["initials"], bg=a["bg"]) for a in row["assignees"]],
@@ -74,9 +84,7 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
 @router.get("", response_model=list[KanbanCardOut])
 async def list_cards(request: Request) -> list[KanbanCardOut]:
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(
-        _CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id"
-    )
+    rows = await pool.fetch(_CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id")
     return [_row_to_card(r) for r in rows]
 
 
@@ -97,8 +105,10 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
         body.col,
     )
     if col_row is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                            detail="Card not found or column does not belong to its project")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Card not found or column does not belong to its project",
+        )
 
     if col_row["target_column_id"] != col_row["current_column_id"]:
         await pool.execute(

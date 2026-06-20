@@ -1,11 +1,11 @@
 from typing import Annotated
 
 import asyncpg
-from fastapi import APIRouter, Depends, Path, Request, status
+from fastapi import APIRouter, Depends, Path, Request
 
 from app.auth import require_admin
 from app.database import get_pool
-from app.models.schemas import ContentBlockOut, ContentBlockUpdate, SlugStr
+from app.models.schemas import ContentBlockOut, ContentBlockUpdate
 
 router = APIRouter(prefix="/content", tags=["content"])
 
