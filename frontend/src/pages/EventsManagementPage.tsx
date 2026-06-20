@@ -2,23 +2,32 @@ import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { api, type Event } from '../lib/api'
 
-const BLANK_EVENT: Omit<Event, 'id'> = {
-  title: '', desc: '', date: '', dd: '', mm: '', cover: '',
-  tag: 'SU:Core', tagCls: 'green', time: '', foot: '', past: false,
+const BLANK_EVENT = {
+  title: '',
+  description: '', // API mapping for 'desc'
+  event_date: '',
+  event_time: '',
+  department: 'core', // string enum mapping to database type
+  cover_class: '',
+  foot_text: '',
+  foot_label: '',
+  status: 'draft',
 }
 
-const MONTH_ABBR = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC']
-
-function sortEvents(list: Event[]) {
-  return [...list].sort((a, b) => b.date.localeCompare(a.date) || b.id - a.id)
+function sortEvents(list: any[]) {
+  return [...list].sort((a, b) => {
+    const dateA = a.event_date ?? a.date ?? ''
+    const dateB = b.event_date ?? b.date ?? ''
+    return dateB.localeCompare(dateA) || b.id - a.id
+  })
 }
 
 export default function EventsManagementPage() {
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<any[]>([])
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editData, setEditData] = useState<Partial<Event>>({})
+  const [editData, setEditData] = useState<any>({})
   const [addingEvent, setAddingEvent] = useState(false)
-  const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
+  const [newEvent, setNewEvent] = useState<any>(BLANK_EVENT)
   const [toast, setToast] = useState('')
 
   useEffect(() => {
@@ -46,14 +55,9 @@ export default function EventsManagementPage() {
   }
 
   async function handleAddEvent() {
-    const d = new Date(newEvent.date)
-    const ev = {
-      ...newEvent,
-      dd: newEvent.date ? String(d.getDate()).padStart(2, '0') : '',
-      mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
-    }
     try {
-      const created = await api.admin.events.create(ev)
+      const created = await api.admin.events.create(newEvent)
+      // Automatically publish on creation if intended by your flow
       const published = await api.admin.events.update(created.id, { status: 'published' })
       setEvents(prev => sortEvents([...prev, published]))
       showToast('Событие создано')
@@ -115,7 +119,7 @@ export default function EventsManagementPage() {
                   <input
                     className="input"
                     value={editData.title ?? ev.title}
-                    onChange={e => setEditData(v => ({ ...v, title: e.target.value }))}
+                    onChange={e => setEditData({ ...editData, title: e.target.value })}
                   />
                 </div>
                 <div>
@@ -123,8 +127,8 @@ export default function EventsManagementPage() {
                   <textarea
                     className="textarea"
                     rows={2}
-                    value={editData.desc ?? ev.desc}
-                    onChange={e => setEditData(v => ({ ...v, desc: e.target.value }))}
+                    value={editData.description ?? editData.desc ?? ev.description ?? ev.desc}
+                    onChange={e => setEditData({ ...editData, description: e.target.value })}
                   />
                 </div>
                 <div>
@@ -132,8 +136,16 @@ export default function EventsManagementPage() {
                   <input
                     className="input"
                     type="date"
-                    value={editData.date ?? ev.date}
-                    onChange={e => setEditData(v => ({ ...v, date: e.target.value }))}
+                    value={editData.event_date ?? editData.date ?? ev.event_date ?? ev.date}
+                    onChange={e => setEditData({ ...editData, event_date: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Локация (footLabel)</label>
+                  <input
+                    className="input"
+                    value={editData.foot_label ?? editData.footLabel ?? ev.foot_label ?? ev.footLabel ?? ''}
+                    onChange={e => setEditData({ ...editData, foot_label: e.target.value })}
                   />
                 </div>
                 <div>
@@ -141,7 +153,7 @@ export default function EventsManagementPage() {
                   <select
                     className="input"
                     value={editData.status ?? ev.status}
-                    onChange={e => setEditData(v => ({ ...v, status: e.target.value as Event['status'] }))}
+                    onChange={e => setEditData({ ...editData, status: e.target.value })}
                   >
                     <option value="draft">Черновик</option>
                     <option value="published">Опубликован</option>
@@ -150,28 +162,36 @@ export default function EventsManagementPage() {
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button className="btn ghost" onClick={() => setEditingId(null)}>Отмена</button>
-                  <button className="btn primary" onClick={() => handleSaveEdit(ev.id as number)}>Сохранить</button>
+                  <button className="btn primary" onClick={() => handleSaveEdit(ev.id)}>Сохранить</button>
                 </div>
               </div>
             ) : (
               <>
                 <div style={{ marginBottom: 12 }}>
-                  <span className={`tag ${ev.tagCls}`} style={{ fontSize: 11 }}>{ev.tag}</span>
+                  {/* Dynamic tag read from SQL derived response */}
+                  <span className={`tag ${ev.tagCls ?? 'green'}`} style={{ fontSize: 11 }}>{ev.tag ?? `SU:${ev.department}`}</span>
                   {ev.past && <span style={{ marginLeft: 8, fontSize: 11, color: 'var(--text-muted)' }}>Прошедшее</span>}
                 </div>
                 <h3 style={{ marginBottom: 8, fontSize: 16, lineHeight: 1.2 }}>{ev.title}</h3>
-                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{ev.desc}</p>
+                <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8 }}>{ev.description ?? ev.desc}</p>
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
-                  <div>{ev.dd} {ev.mm}{ev.time && ` · ${ev.time}`}</div>
-                  {ev.foot && <div>{ev.foot}</div>}
+                  <div>{ev.dd} {ev.mm}{ev.event_time ?? ev.time ? ` · ${ev.event_time ?? ev.time}` : ''}</div>
+                  <div>{ev.foot_text ?? ev.foot ?? ''}</div>
+                  {ev.foot_label ?? ev.footLabel ? <div style={{ fontStyle: 'italic', marginTop: 2 }}>{ev.foot_label ?? ev.footLabel}</div> : null}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
                     className="btn ghost"
                     style={{ fontSize: 12, flex: 1 }}
                     onClick={() => {
-                      setEditingId(ev.id as number)
-                        setEditData({ title: ev.title, desc: ev.desc, date: ev.date, status: ev.status })
+                      setEditingId(ev.id)
+                      setEditData({ 
+                        title: ev.title, 
+                        description: ev.description ?? ev.desc, 
+                        event_date: ev.event_date ?? ev.date, 
+                        status: ev.status,
+                        foot_label: ev.foot_label ?? ev.footLabel
+                      })
                     }}
                   >
                     <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать
@@ -179,7 +199,7 @@ export default function EventsManagementPage() {
                   <button
                     className="btn ghost"
                     style={{ fontSize: 12, color: 'var(--red)' }}
-                    onClick={() => handleDeleteEvent(ev.id as number)}
+                    onClick={() => handleDeleteEvent(ev.id)}
                   >
                     <Icon id="i-trash" style={{ width: 12, height: 12 }} />
                   </button>
@@ -206,49 +226,43 @@ export default function EventsManagementPage() {
               <div className="col gap-3">
                 <div className="field">
                   <label>Название</label>
-                  <input className="input" placeholder="Hackathon Summer 24h" value={newEvent.title} onChange={e => setNewEvent(v => ({ ...v, title: e.target.value }))} />
+                  <input className="input" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} />
                 </div>
                 <div className="field">
                   <label>Описание</label>
-                  <textarea className="textarea" rows={2} placeholder="Краткое описание…" value={newEvent.desc} onChange={e => setNewEvent(v => ({ ...v, desc: e.target.value }))} />
+                  <textarea className="textarea" rows={2} value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })} />
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
                     <label>Дата</label>
-                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent(v => ({ ...v, date: e.target.value }))} />
+                    <input className="input" type="date" value={newEvent.event_date} onChange={e => setNewEvent({ ...newEvent, event_date: e.target.value })} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label>Время (опц.)</label>
-                    <input className="input" placeholder="19:00" value={newEvent.time ?? ''} onChange={e => setNewEvent(v => ({ ...v, time: e.target.value }))} />
+                    <input className="input" value={newEvent.event_time} onChange={e => setNewEvent({ ...newEvent, event_time: e.target.value })} />
                   </div>
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Департамент</label>
-                    <select className="input" value={newEvent.tag} onChange={e => {
-                      const map: Record<string, string> = { 'SU:Core': 'green', 'SU:Active': 'blue', 'SU:Media': 'purple' }
-                      setNewEvent(v => ({ ...v, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' }))
-                    }}>
-                      <option>SU:Core</option>
-                      <option>SU:Active</option>
-                      <option>SU:Media</option>
+                    <label>Департамент (SQL Type)</label>
+                    <select className="input" value={newEvent.department} onChange={e => setNewEvent({ ...newEvent, department: e.target.value })}>
+                      <option value="core">SU:Core</option>
+                      <option value="active">SU:Active</option>
+                      <option value="media">SU:Media</option>
                     </select>
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Статус</label>
-                    <select className="input" value={newEvent.past ? 'past' : 'current'} onChange={e => setNewEvent(v => ({ ...v, past: e.target.value === 'past' }))}>
-                      <option value="current">Текущее</option>
-                      <option value="past">Прошедшее</option>
-                    </select>
+                    <label>Локация (Комната / Зал)</label>
+                    <input className="input" value={newEvent.foot_label} onChange={e => setNewEvent({ ...newEvent, foot_label: e.target.value })} />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Доп. инфо (участники, места)</label>
-                  <input className="input" placeholder="32 участника" value={newEvent.foot} onChange={e => setNewEvent(v => ({ ...v, foot: e.target.value }))} />
+                  <label>Текст подвала (foot_text)</label>
+                  <input className="input" value={newEvent.foot_text} onChange={e => setNewEvent({ ...newEvent, foot_text: e.target.value })} />
                 </div>
                 <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
                   <button className="btn ghost" onClick={() => setAddingEvent(false)}>Отмена</button>
-                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.date} onClick={handleAddEvent}>Добавить</button>
+                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.event_date} onClick={handleAddEvent}>Добавить</button>
                 </div>
               </div>
             </div>
