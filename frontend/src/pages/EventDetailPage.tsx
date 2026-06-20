@@ -25,28 +25,8 @@ function EventDetailPageInner({ id }: { id?: string }) {
         setDescDraft(ev.desc)
       })
       .catch(() => {
-        const mockEvent: Event = {
-          id: Number(id),
-          title: 'Hackathon Summer 24h',
-          desc: '24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.',
-          date: '2026-06-20',
-          dd: '20',
-          mm: 'JUN',
-          endDate: '2026-06-21',
-          endDd: '21',
-          endMm: 'JUN',
-          cover: '',
-          tag: 'SU:Core',
-          tagCls: 'green',
-          time: '10:00',
-          endTime: '18:00',
-          foot: '32 участника',
-          past: false,
-          status: 'published',
-          statusText: 'live',
-        }
-        setEvent(mockEvent)
-        setDescDraft(mockEvent.desc)
+        console.error('Failed to fetch event')
+        setEvent(null)
       })
   }, [id])
 
@@ -69,11 +49,11 @@ function EventDetailPageInner({ id }: { id?: string }) {
   }
 
   function handleCalendar() {
-    const title = event?.title ?? 'Hackathon Summer 24h'
-    const datePart = (event?.date ?? '2026-06-20').replace(/-/g, '')
-    const startTime = (event?.time ?? '10:00').replace(':', '')
-    const endDatePart = (event?.endDate ?? event?.date ?? '2026-06-20').replace(/-/g, '')
-    const endTime = (event?.endTime ?? event?.time ?? '10:00').replace(':', '')
+    const title = event?.title ?? ''
+    const datePart = (event?.date ?? '').replace(/-/g, '')
+    const startTime = (event?.time ?? '').replace(':', '')
+    const endDatePart = (event?.endDate ?? event?.date ?? '').replace(/-/g, '')
+    const endTime = (event?.endTime ?? event?.time ?? '').replace(':', '')
 
     const ics = [
       'BEGIN:VCALENDAR',
@@ -87,15 +67,18 @@ function EventDetailPageInner({ id }: { id?: string }) {
       'END:VEVENT',
       'END:VCALENDAR',
     ].join('\r\n')
+
     const blob = new Blob([ics], { type: 'text/calendar' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = 'hackathon-summer-24h.ics'; a.click()
+    a.href = url
+    a.download = `${title.toLowerCase().replace(/\s+/g, '-') || 'event'}.ics`
+    a.click()
     URL.revokeObjectURL(url)
     showToast('Файл .ics скачан')
   }
 
-    return (
+  return (
     <>
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
@@ -108,14 +91,22 @@ function EventDetailPageInner({ id }: { id?: string }) {
           <div>
             <div className="badges">
               <span className="b">{event?.tag ?? 'SU:Core'} · TOP</span>
-              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>{event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}</span>
+              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>
+                {event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}
+              </span>
             </div>
             <h1>{event?.title ?? ''}</h1>
             <p className="sub">{event?.desc ?? ''}</p>
           </div>
           <div className="quick-meta">
-            <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">{event ? `${event.dd} ${event.mm}` : ''}</span></div>
-            <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">{event?.footLabel ?? ''}</span></div>
+            <div className="qm">
+              <span className="qm-label">КОГДА</span>
+              <span className="qm-value">{event ? `${event.dd} ${event.mm}` : ''}</span>
+            </div>
+            <div className="qm">
+              <span className="qm-label">ГДЕ</span>
+              <span className="qm-value">{event?.footLabel ?? ''}</span>
+            </div>
           </div>
         </div>
       </section>
@@ -160,6 +151,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             )}
           </article>
 
+          {/* SCHEDULE BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <div className="row sb mb-4">
               <h2 style={{ marginBottom: 0 }}>Расписание</h2>
@@ -189,6 +181,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             ))}
           </article>
 
+          {/* ORGANIZERS BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <h2>Кто за это отвечает</h2>
             <div className="org-list" style={{ marginTop: 8 }}>
@@ -206,22 +199,28 @@ function EventDetailPageInner({ id }: { id?: string }) {
             </div>
           </article>
 
+          {/* LOCATION BLOCK (footLabel dynamic data where possible) */}
           <article className="content-block">
             <h2>Локация</h2>
             <div className="row gap-3 mb-4">
               <Icon id="i-pin" style={{ width: 18, height: 18, color: 'var(--accent)' }} />
               <div>
-                <div style={{ fontWeight: 500 }}>Sport Tower · 519 · open-space</div>
+                <div style={{ fontWeight: 500 }}>{event?.footLabel ?? 'Sport Tower · 519 · open-space'}</div>
                 <div className="text-muted" style={{ fontSize: 13 }}>Университетская 1, Иннополис · 5 минут пешком от общежитий</div>
               </div>
             </div>
             <div className="map-card"></div>
             <div className="row gap-2 mt-4">
-              <a className="btn secondary" href="https://yandex.ru/maps/?text=Иннополис+Университет+519+Sport+Tower" target="_blank" rel="noopener noreferrer"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</a>
-              <button className="btn ghost" onClick={() => navigator.clipboard.writeText('Университетская 1, Иннополис, Sport Tower 519')}><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
+              <a className="btn secondary" href={`https://yandex.ru/maps/?text=${encodeURIComponent(`Иннополис Университет ${event?.footLabel ?? ''}`)}`} target="_blank" rel="noopener noreferrer">
+                <Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах
+              </a>
+              <button className="btn ghost" onClick={() => navigator.clipboard.writeText(`Иннополис, Университетская 1, ${event?.footLabel ?? ''}`)}>
+                <Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес
+              </button>
             </div>
           </article>
 
+          {/* RELATED EVENTS BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <h2>Похожие мероприятия</h2>
             <div className="related-grid">
@@ -241,6 +240,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
           </article>
         </div>
 
+        {/* SIDEBAR BLOCK (dynamic .foot and .tag fields, keeps hardcoded structures) */}
         <aside>
           <div className="reg-card">
             <div>
@@ -254,18 +254,14 @@ function EventDetailPageInner({ id }: { id?: string }) {
               </div>
             </div>
             <div className="reg-status">
-              <span className="num">32 / 44</span>
-              <div className="progress" style={{ flex: 1 }}><div className="bar" style={{ width: '72%' }}></div></div>
+              <span className="num">{event?.foot ?? ''}</span>
             </div>
-            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест</span>
             <button className="btn primary lg" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
-              <div className="row sb"><span className="lbl">Категория</span><span className="val">Hackathon</span></div>
-              <div className="row sb"><span className="lbl">Департамент</span><span className="val">SU:Core</span></div>
-              <div className="row sb"><span className="lbl">Длительность</span><span className="val">24 ч</span></div>
+              <div className="row sb"><span className="lbl">Категория</span><span className="val">Мероприятие</span></div>
+              <div className="row sb"><span className="lbl">Департамент</span><span className="val">{event?.tag ?? ''}</span></div>
               <div className="row sb"><span className="lbl">Формат</span><span className="val">Оффлайн</span></div>
               <div className="row sb"><span className="lbl">Возраст</span><span className="val">18+</span></div>
-              <div className="row sb"><span className="lbl">Команды</span><span className="val">до 5 чел</span></div>
             </div>
           </div>
         </aside>
