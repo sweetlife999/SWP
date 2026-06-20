@@ -18,28 +18,38 @@ const BLANK_EVENT = {
   past: false,
 }
 
-function EventCard({ ev }: { ev: Event & { [key: string]: any } }) {
+function EventCard({ ev }: { ev: Event & Record<string, unknown> }) {
+  // cast ev locally, so compiler understands snake_case backend parameters
+  const dbEv = ev as Event & {
+    event_date?: string
+    cover_class?: string
+    department?: string
+    event_time?: string
+    description?: string
+    foot_text?: string
+    foot_label?: string
+  }
+
   const label = statusLabel(ev)
   
-  // safe computation of past events by falling back across possible schema variants
-  const isPast = ev.past ?? (ev.event_date ? new Date(ev.event_date) < new Date() : false)
-  const coverClass = ev.cover_class ?? ev.cover ?? ''
-  const tagText = ev.tag ?? (ev.department ? `SU:${ev.department}` : '')
-  const tagClass = ev.tagCls ?? 'green'
-  const timeText = ev.event_time ?? ev.time ?? ''
-  const description = ev.description ?? ev.desc ?? ''
-  const footerText = ev.foot_text ?? ev.foot ?? ''
-  const footerLabel = ev.foot_label ?? ev.footLabel ?? 'Подробнее'
+  const isPast = dbEv.past ?? (dbEv.event_date ? new Date(dbEv.event_date) < new Date() : false)
+  const coverClass = dbEv.cover_class ?? dbEv.cover ?? ''
+  const tagText = dbEv.tag ?? (dbEv.department ? `SU:${dbEv.department}` : '')
+  const tagClass = dbEv.tagCls ?? 'green'
+  const timeText = dbEv.event_time ?? dbEv.time ?? ''
+  const description = dbEv.description ?? dbEv.desc ?? ''
+  const footerText = dbEv.foot_text ?? dbEv.foot ?? ''
+  const footerLabel = dbEv.foot_label ?? dbEv.footLabel ?? 'Подробнее'
   
   return (
-    <Link className={`event-card${ev.featured ? ' featured' : ''}${isPast ? ' passed' : ''}`} to={`/events/${ev.id}`}>
+    <Link className={`event-card${dbEv.featured ? ' featured' : ''}${isPast ? ' passed' : ''}`} to={`/events/${dbEv.id}`}>
       <div className={`ec-cover${coverClass ? ` ${coverClass}` : ''}${isPast ? ' passed-cover' : ''}`}>
         <div className="date-badge">
-          <div className="d">{ev.dd}</div>
-          <div className="m">{ev.mm}</div>
+          <div className="d">{dbEv.dd}</div>
+          <div className="m">{dbEv.mm}</div>
         </div>
         {label && (
-          <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>
+          <span className={`status-badge${dbEv.status === 'published' ? ' live' : ''}`}>{label}</span>
         )}
       </div>
       <div className="ec-body">
@@ -50,7 +60,7 @@ function EventCard({ ev }: { ev: Event & { [key: string]: any } }) {
           </span>
           {timeText && <span>{timeText}</span>}
         </div>
-        <h3>{ev.title}</h3>
+        <h3>{dbEv.title}</h3>
         <p className="desc">{description}</p>
         <div className="ec-foot">
           <span>{footerText}</span>
@@ -198,7 +208,7 @@ export default function EventsPage() {
             <h3>Текущие <span className="count">{String(current.length).padStart(2, '0')}</span></h3>
           </div>
           <div className="events-grid">
-            {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
+            {current.map(ev => <EventCard key={ev.id} ev={ev as unknown as Event & Record<string, unknown>} />)}
             {current.length === 0 && (
               <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
                 {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
@@ -214,7 +224,7 @@ export default function EventsPage() {
             <h3>Прошедшие <span className="count">{String(past.length).padStart(2, '0')}</span></h3>
           </div>
           <div className="events-grid">
-            {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
+            {past.map(ev => <EventCard key={ev.id} ev={ev as unknown as Event & Record<string, unknown>} />)}
             {past.length === 0 && (
               <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
                 {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
