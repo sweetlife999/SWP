@@ -1,16 +1,63 @@
-import { Link } from 'react-router-dom'
+import { useState, useEffect, useRef } from 'react'
+import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { api } from '../lib/api'
+import { useAdmin } from '../lib/AdminContext'
 
 export default function EventDetailPage() {
+  const { id } = useParams()
+  const { isAdmin } = useAdmin()
+  const [toast, setToast] = useState('')
+  const [editingDesc, setEditingDesc] = useState(false)
+  const [descHtml, setDescHtml] = useState('')
+  const descRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!id) return
+    api.content.get(`event-desc-${id}`).then(d => setDescHtml(d.html)).catch(() => {})
+  }, [id])
+
+  async function handleDescSave() {
+    const html = descRef.current?.innerHTML ?? descHtml
+    try {
+      await api.content.update(`event-desc-${id}`, html)
+      setDescHtml(html)
+      showToast('Сохранено')
+    } catch {
+      showToast('Ошибка сохранения')
+    }
+    setEditingDesc(false)
+  }
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  function handleCalendar() {
+    const ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nSUMMARY:Hackathon Summer 24h\r\nDTSTART:20260620T100000\r\nDTEND:20260621T180000\r\nLOCATION:Sport Tower 519, Иннополис\r\nDESCRIPTION:24 часа открытого хакатона. SU:Core.\r\nEND:VEVENT\r\nEND:VCALENDAR'
+    const blob = new Blob([ics], { type: 'text/calendar' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url; a.download = 'hackathon-summer-24h.ics'; a.click()
+    URL.revokeObjectURL(url)
+    showToast('Файл .ics скачан')
+  }
+
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
 
       <section className="event-banner">
         <div className="banner-inner">
           <div>
             <div className="badges">
               <span className="b">SU:Core · TOP</span>
-              <span className="b live">live · регистрация открыта</span>
+              <span className="b live">live</span>
             </div>
             <h1>Hackathon Summer 24h</h1>
             <p className="sub">24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.</p>
@@ -18,7 +65,6 @@ export default function EventDetailPage() {
           <div className="quick-meta">
             <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">20–21 ИЮН</span></div>
             <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">519 Sport Tower</span></div>
-            <div className="qm"><span className="qm-label">ОЧКИ</span><span className="qm-value">+120 IP</span></div>
           </div>
         </div>
       </section>
@@ -26,10 +72,37 @@ export default function EventDetailPage() {
       <div className="detail-grid">
         <div>
           <article className="content-block">
-            <h2>О мероприятии</h2>
-            <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
-            <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
-            <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
+            <div className="row sb" style={{ marginBottom: 12 }}>
+              <h2 style={{ marginBottom: 0 }}>О мероприятии</h2>
+              {isAdmin && !editingDesc && (
+                <button className="btn ghost" style={{ fontSize: 12 }} onClick={() => setEditingDesc(true)}>
+                  <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать
+                </button>
+              )}
+              {editingDesc && (
+                <div className="row gap-2">
+                  <button className="btn ghost" onClick={() => setEditingDesc(false)}>Отмена</button>
+                  <button className="btn primary" style={{ fontSize: 12 }} onClick={handleDescSave}>
+                    <Icon id="i-check" style={{ width: 12, height: 12 }} /> Сохранить
+                  </button>
+                </div>
+              )}
+            </div>
+            <article
+              ref={descRef}
+              contentEditable={editingDesc}
+              suppressContentEditableWarning
+              style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
+              dangerouslySetInnerHTML={descHtml ? { __html: descHtml } : undefined}
+            >
+              {!descHtml && (
+                <>
+                  <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
+                  <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
+                  <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
+                </>
+              )}
+            </article>
           </article>
 
           <article className="content-block">
@@ -89,26 +162,26 @@ export default function EventDetailPage() {
             </div>
             <div className="map-card"></div>
             <div className="row gap-2 mt-4">
-              <button className="btn secondary"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</button>
-              <button className="btn ghost"><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
+              <a className="btn secondary" href="https://yandex.ru/maps/?text=Иннополис+Университет+519+Sport+Tower" target="_blank" rel="noopener noreferrer"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</a>
+              <button className="btn ghost" onClick={() => navigator.clipboard.writeText('Университетская 1, Иннополис, Sport Tower 519')}><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
             </div>
           </article>
 
           <article className="content-block">
             <h2>Похожие мероприятия</h2>
             <div className="related-grid">
-              <a className="related-card" href="#">
+              <Link className="related-card" to="/events/1">
                 <div className="img"></div>
                 <div className="body"><div className="meta">12 ИЮЛ · SU:CORE</div><h4>Open meeting Q3: бюджет и ивенты</h4></div>
-              </a>
-              <a className="related-card" href="#">
+              </Link>
+              <Link className="related-card" to="/events/1">
                 <div className="img a"></div>
                 <div className="body"><div className="meta">14 ИЮН · SU:ACTIVE</div><h4>Open Mic: stand-up evening</h4></div>
-              </a>
-              <a className="related-card" href="#">
+              </Link>
+              <Link className="related-card" to="/events/1">
                 <div className="img b"></div>
                 <div className="body"><div className="meta">5 ИЮЛ · SU:ACTIVE</div><h4>Гребля и BBQ · закрытие Summer Days</h4></div>
-              </a>
+              </Link>
             </div>
           </article>
         </div>
@@ -125,20 +198,12 @@ export default function EventDetailPage() {
                 <span className="price-label">для всех IU студентов</span>
               </div>
             </div>
-            <div className="points-block">
-              <Icon id="i-coin" style={{ width: 20, height: 20 }} />
-              <div>
-                <b>+120 Innopoints</b><br />
-                <span style={{ fontSize: 11, color: 'var(--accent-700)', opacity: 0.8 }}>+50 если довести проект до защиты</span>
-              </div>
-            </div>
             <div className="reg-status">
               <span className="num">32 / 44</span>
               <div className="progress" style={{ flex: 1 }}><div className="bar" style={{ width: '72%' }}></div></div>
             </div>
-            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест · регистрация до 19 июня 18:00</span>
-            <button className="btn primary lg">Зарегистрироваться <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></button>
-            <button className="btn secondary">Сохранить в календарь</button>
+            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест</span>
+            <button className="btn primary lg" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
               <div className="row sb"><span className="lbl">Категория</span><span className="val">Hackathon</span></div>
               <div className="row sb"><span className="lbl">Департамент</span><span className="val">SU:Core</span></div>

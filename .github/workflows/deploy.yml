@@ -5,50 +5,86 @@ on:
     branches: [main]
     paths:
       - 'frontend/**'
+      - 'backend/**'
+      - 'database/**'
+      - 'compose.yml'
       - '.github/workflows/deploy.yml'
   workflow_dispatch:
 
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  FRONTEND_IMAGE: ghcr.io/sweetlife999/swp-frontend
+  BACKEND_IMAGE: ghcr.io/sweetlife999/swp-backend
+  DB_IMAGE: ghcr.io/sweetlife999/swp-db
 
 jobs:
+  build-and-push:
+    name: Build & push Docker images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: ${{ env.FRONTEND_IMAGE }}:latest
+
+      - name: Build and push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: ${{ env.BACKEND_IMAGE }}:latest
+
+      - name: Build and push db
+        uses: docker/build-push-action@v6
+        with:
+          context: ./database
+          push: true
+          tags: ${{ env.DB_IMAGE }}:latest
+
   deploy:
-    name: Build & deploy frontend
+    name: Deploy to VPS
+    needs: build-and-push
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: Install dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build
-        working-directory: frontend
-        run: npm run build
-
-      - name: Setup SSH key
+      - name: Setup SSH
         run: |
           install -m 600 -D /dev/null ~/.ssh/id_deploy
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Upload dist to server
+      - name: Copy compose file
         run: |
-          rsync -az --delete \
-            -e "ssh -i ~/.ssh/id_deploy" \
-            frontend/dist/ \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/var/www/swp/
+          scp -i ~/.ssh/id_deploy compose.yml \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/swp/compose.yml
 
-      - name: Reload nginx
+      - name: Write backend .env
         run: |
           ssh -i ~/.ssh/id_deploy \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            'sudo nginx -t && sudo systemctl reload nginx'
+            'mkdir -p /opt/swp/backend'
+          echo "${{ secrets.BACKEND_ENV }}" | ssh -i ~/.ssh/id_deploy \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'cat > /opt/swp/backend/.env'
+
+      - name: Pull and restart
+        run: |
+          ssh -i ~/.ssh/id_deploy \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            'cd /opt/swp && docker compose pull && docker compose up -d'

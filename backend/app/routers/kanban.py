@@ -1,0 +1,123 @@
+import asyncpg
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+
+from app.auth import require_admin
+from app.computed import PRIORITY_LABEL
+from app.database import get_pool
+from app.models.schemas import (
+    KanbanAssignee,
+    KanbanAttachment,
+    KanbanCardOut,
+    KanbanCardPatch,
+    KanbanMeta,
+    KanbanTag,
+)
+
+router = APIRouter(prefix="/admin/kanban", tags=["kanban"], dependencies=[Depends(require_admin)])
+
+_CARD_SELECT = """
+    SELECT
+        c.id,
+        col.key AS col,
+        c.blocker,
+        c.title,
+        c.description,
+        c.priority,
+        c.attachment,
+        c.progress_pct,
+        c.progress_label,
+        COALESCE(
+            (SELECT json_agg(jsonb_build_object('label', t.label, 'color', t.color))
+             FROM kanban_card_tags t WHERE t.card_id = c.id),
+            '[]'
+        ) AS tags,
+        COALESCE(
+            (SELECT json_agg(
+                jsonb_build_object(
+                    'icon', m.icon, 'text', m.text, 'urgent', m.urgent, 'soon', m.soon
+                )
+                ORDER BY m.order_index
+             )
+             FROM kanban_card_meta m WHERE m.card_id = c.id),
+            '[]'
+        ) AS meta,
+        COALESCE(
+            (SELECT json_agg(jsonb_build_object('initials', a.initials, 'bg', a.bg))
+             FROM kanban_card_assignees a WHERE a.card_id = c.id),
+            '[]'
+        ) AS assignees
+    FROM kanban_cards c
+    JOIN kanban_columns col ON col.id = c.column_id
+"""
+
+
+def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
+    priority = row["priority"] or "p-low"
+    att = row["attachment"]
+    return KanbanCardOut(
+        id=str(row["id"]),
+        col=row["col"],
+        blocker=row["blocker"] or None,
+        tags=[KanbanTag(label=t["label"], cls=t["color"] or "") for t in row["tags"]],
+        title=row["title"],
+        desc=row["description"] or None,
+        attachment=KanbanAttachment(
+            icon=att.get("icon", ""), bold=att.get("bold", ""), rest=att.get("rest", "")
+        )
+        if att
+        else None,
+        progressPct=row["progress_pct"],
+        progressLabel=row["progress_label"] or None,
+        meta=[
+            KanbanMeta(
+                icon=m["icon"], text=m["text"], urgent=m["urgent"] or None, soon=m["soon"] or None
+            )
+            for m in row["meta"]
+        ]
+        or None,
+        priority=priority,
+        pLabel=PRIORITY_LABEL.get(priority, "P2"),
+        assignees=[KanbanAssignee(initials=a["initials"], bg=a["bg"]) for a in row["assignees"]],
+    )
+
+
+@router.get("", response_model=list[KanbanCardOut])
+async def list_cards(request: Request) -> list[KanbanCardOut]:
+    pool: asyncpg.Pool = get_pool(request)
+    rows = await pool.fetch(_CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id")
+    return [_row_to_card(r) for r in rows]
+
+
+@router.patch("/{card_id}", response_model=KanbanCardOut)
+async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> KanbanCardOut:
+    pool: asyncpg.Pool = get_pool(request)
+
+    # Resolve target column within the card's own project.
+    # Also fetch current column_id to detect a no-op move.
+    col_row = await pool.fetchrow(
+        """
+        SELECT col.id AS target_column_id, c.column_id AS current_column_id
+        FROM kanban_columns col
+        JOIN kanban_cards c ON c.project_id = col.project_id
+        WHERE c.id = $1 AND col.key = $2
+        """,
+        card_id,
+        body.col,
+    )
+    if col_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Card not found or column does not belong to its project",
+        )
+
+    if col_row["target_column_id"] != col_row["current_column_id"]:
+        await pool.execute(
+            "UPDATE kanban_cards SET column_id = $1, updated_at = now() WHERE id = $2",
+            col_row["target_column_id"],
+            card_id,
+        )
+
+    row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", card_id)
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
+    return _row_to_card(row)

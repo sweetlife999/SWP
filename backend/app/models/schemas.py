@@ -1,0 +1,333 @@
+from datetime import date, datetime
+from typing import Annotated, Literal
+
+from pydantic import BaseModel, Field, StringConstraints
+
+# ── Shared validators ─────────────────────────────────────────────────────────
+
+SlugStr = Annotated[str, StringConstraints(pattern=r"^[a-z0-9_-]+$", max_length=128)]
+
+Department = Literal["core", "active", "media"]
+DepartmentOrLabel = Literal["SU:Core", "SU:Active", "SU:Media", "core", "active", "media"]
+
+
+# ── Events ────────────────────────────────────────────────────────────────────
+
+EventStatus = Literal["draft", "published", "archived"]
+
+
+class EventOut(BaseModel):
+    id: int
+    title: str
+    desc: str
+    date: str
+    dd: str
+    mm: str
+    cover: str
+    tag: str
+    tagCls: str
+    time: str | None = None
+    foot: str
+    footLabel: str | None = None
+    featured: bool | None = None
+    past: bool | None = None
+    status: EventStatus
+    statusText: str | None = None
+
+
+class EventCreate(BaseModel):
+    title: str
+    desc: str
+    date: date
+    cover: str = ""
+    tag: DepartmentOrLabel
+    time: str | None = None
+    foot: str = ""
+    footLabel: str | None = None
+    featured: bool = False
+    statusText: str | None = None
+
+
+class EventPatch(BaseModel):
+    title: str | None = None
+    desc: str | None = None
+    date: date | None = None
+    # Nullable in DB — explicit null in request clears the field.
+    time: str | None = None
+    tag: DepartmentOrLabel | None = None
+    cover: str | None = None
+    foot: str | None = None
+    footLabel: str | None = None
+    featured: bool | None = None
+    status: EventStatus | None = None
+    statusText: str | None = None
+
+
+# ── Members ───────────────────────────────────────────────────────────────────
+
+
+class MemberOut(BaseModel):
+    id: str
+    dep: str
+    tag: str
+    name: str
+    role: str
+    meta: str
+    bio: str
+    photo_url: str
+    recent: list[str]
+
+
+class MemberCreate(BaseModel):
+    dep: Department
+    name: str
+    role: str
+    meta: str = ""
+    bio: str = ""
+    photo_url: str = ""
+    recent: list[str] = []
+
+
+class MemberPatch(BaseModel):
+    dep: Department | None = None
+    name: str | None = None
+    role: str | None = None
+    meta: str | None = None
+    bio: str | None = None
+    photo_url: str | None = None
+    recent: list[str] | None = None
+
+
+class MemberReorderItem(BaseModel):
+    id: int
+    sort_order: int
+
+
+# ── Surveys ───────────────────────────────────────────────────────────────────
+
+
+class QStep(BaseModel):
+    type: str
+    title: str
+    hint: str
+    options: list[str] | None = None
+    low: str | None = None
+    high: str | None = None
+    median: int | None = None
+
+
+class SurveyOut(BaseModel):
+    id: str
+    tag: str
+    tagCls: str
+    title: str
+    desc: str
+    time: str
+    timeEnding: bool | None = None
+    left: str
+    flowTitle: str
+    eyebrow: str
+    steps: list[QStep]
+
+
+# Answer values: text answer, scale integer, or list of chosen option indices.
+SurveyAnswerValue = str | int | list[str] | list[int]
+
+
+class SurveyResponseBody(BaseModel):
+    answers: Annotated[
+        dict[str, SurveyAnswerValue],
+        Field(max_length=200),  # cap at 200 question keys
+    ]
+
+
+# ── Questionnaires (admin CRUD + public read) ─────────────────────────────────
+
+QuestionType = Literal["single", "multi", "scale", "text"]
+QuestionnaireStatus = Literal["draft", "open", "closed"]
+
+
+class QuestionOut(BaseModel):
+    id: int
+    position: int
+    type: str
+    title: str
+    hint: str
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
+
+
+class QuestionnaireOut(BaseModel):
+    """Public-facing shape returned by GET /questionnaires and GET /questionnaires/:id."""
+
+    id: str
+    tag: str
+    tagCls: str
+    title: str
+    desc: str
+    time: str
+    timeEnding: bool | None = None
+    left: str
+    flowTitle: str
+    eyebrow: str
+    steps: list[QStep]
+
+
+class QuestionnaireAdminOut(BaseModel):
+    """Admin-facing shape with status and management fields."""
+
+    id: int
+    department: str
+    title: str
+    description: str
+    status: QuestionnaireStatus
+    est_minutes: int
+    closes_at: str | None = None
+    response_count: int
+    questions: list[QuestionOut]
+
+
+class QuestionnaireCreate(BaseModel):
+    department: Department
+    title: str
+    description: str = ""
+    flow_title: str = ""
+    eyebrow: str = ""
+    est_minutes: int = 2
+
+
+class QuestionnairePatch(BaseModel):
+    status: QuestionnaireStatus | None = None
+    title: str | None = None
+    description: str | None = None
+    flow_title: str | None = None
+    eyebrow: str | None = None
+    est_minutes: int | None = None
+    closes_at: datetime | None = None
+
+
+class QuestionCreate(BaseModel):
+    type: QuestionType
+    title: str
+    hint: str = ""
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
+
+
+class QuestionPatch(BaseModel):
+    type: QuestionType | None = None
+    title: str | None = None
+    hint: str | None = None
+    options: list[str] | None = None
+    scale_low: str | None = None
+    scale_high: str | None = None
+    scale_mid: int | None = None
+
+
+class AnswerStat(BaseModel):
+    answer: str
+    count: int
+    pct: float
+
+
+class QuestionResults(BaseModel):
+    question_id: int
+    position: int
+    type: str
+    title: str
+    answered: int
+    stats: list[AnswerStat]
+
+
+class QuestionnaireResults(BaseModel):
+    id: int
+    title: str
+    total_responses: int
+    questions: list[QuestionResults]
+
+
+# ── Content blocks ────────────────────────────────────────────────────────────
+
+
+class ContentBlockOut(BaseModel):
+    html: str
+    updatedAt: str | None = None
+    updatedBy: str | None = None
+
+
+class ContentBlockUpdate(BaseModel):
+    html: str
+
+
+# ── Kanban ────────────────────────────────────────────────────────────────────
+
+
+class KanbanTag(BaseModel):
+    label: str
+    cls: str
+    dot: bool | None = None
+
+
+class KanbanMeta(BaseModel):
+    icon: str
+    text: str
+    urgent: bool | None = None
+    soon: bool | None = None
+
+
+class KanbanAssignee(BaseModel):
+    initials: str
+    bg: str
+    offset: bool | None = None
+
+
+class KanbanAttachment(BaseModel):
+    icon: str
+    bold: str
+    rest: str
+
+
+class KanbanCardOut(BaseModel):
+    id: str
+    col: str
+    blocker: bool | None = None
+    tags: list[KanbanTag]
+    title: str
+    desc: str | None = None
+    attachment: KanbanAttachment | None = None
+    progressPct: int | None = None
+    progressLabel: str | None = None
+    meta: list[KanbanMeta] | None = None
+    priority: str
+    pLabel: str
+    assignees: list[KanbanAssignee]
+
+
+class KanbanCardPatch(BaseModel):
+    col: Literal["backlog", "next", "doing", "review", "done"]
+
+
+# ── Admin forms (survey list for admin) ──────────────────────────────────────
+
+
+class FormOut(BaseModel):
+    id: str
+    tag: str
+    tagClass: str
+    title: str
+    count: int
+
+
+# ── Auth ──────────────────────────────────────────────────────────────────────
+
+
+class LoginRequest(BaseModel):
+    password: str
+
+
+class LoginResponse(BaseModel):
+    token: str
