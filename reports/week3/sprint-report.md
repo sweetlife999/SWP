@@ -89,15 +89,15 @@ PBIs marked `mvp-v1`:
 
 ## Current product status
 
-The frontend MVP v1 is live at [https://su.fblrkus.ru](https://su.fblrkus.ru). All six MVP v1 user stories are implemented in the frontend with API stubs. The FastAPI backend is not yet deployed; the site shows loading/empty states for dynamic content until the backend is live.
+The frontend MVP v1 is live at [https://su.fblrkus.ru](https://su.fblrkus.ru). The FastAPI backend is implemented and deployed; database schema, migrations, and all API endpoints are in place. Backend-to-frontend wiring (replacing API stubs with live calls) is planned for Sprint 4.
 
 ## Next steps
 
-- Design database schema and write migrations (Sprint 3, #43)
-- Backend setup: stack, project structure, dev environment (Sprint 3, #41)
-- Connect FastAPI endpoints and replace API stubs (Sprint 4)
-- Add photo gallery (US-03)
-- Add questionnaire result XLSX export (US-14)
+- Merge open PRs: US-11 events management (PR#52), error handling (PR#60), backend setup (PR#63)
+- Connect FastAPI endpoints to frontend, replace API stubs (Sprint 4)
+- Complete US-12: questionnaire filling by students (#25)
+- Complete admin inline editing (#32)
+- Add questionnaire result XLSX export (#56)
 
 ## Contribution traceability
 
