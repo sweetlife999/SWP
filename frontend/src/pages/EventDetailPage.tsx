@@ -205,7 +205,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <div className="row gap-3 mb-4">
               <Icon id="i-pin" style={{ width: 18, height: 18, color: 'var(--accent)' }} />
               <div>
-                <div style={{ fontWeight: 500 }}>{event?.footLabel ?? 'Sport Tower · 519 · open-space'}</div>
+                <div style={{ fontWeight: 500 }}>{event?.footLabel ?? ''}</div>
                 <div className="text-muted" style={{ fontSize: 13 }}>Университетская 1, Иннополис · 5 минут пешком от общежитий</div>
               </div>
             </div>
