@@ -1,44 +1,27 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Icon } from '../components/Icon'
-import { api, type Survey, type QStep } from '../lib/api'
+import { type Survey, type QStep } from '../lib/api'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
 
 const KEYS = ['A', 'B', 'C', 'D', 'E', 'F']
 
 export default function QuestionnairesPage() {
-  const [surveys, setSurveys] = useState<Survey[]>([])
-  const [activeId, setActiveId] = useState<string | null>(null)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState(0)
-  const [archived, setArchived] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
-  useEffect(() => {
-    api.surveys.list().then(data => {
-      setSurveys(data)
-      if (data.length > 0) setActiveId(data[0].id)
-    }).catch(() => {})
-  }, [])
+  const { data: fetchedSurveys, loading, error, retry } = useFetch<Survey[]>('/api/questionnaires');
 
+  const surveys = fetchedSurveys ?? []
+  const activeId = selectedId ?? surveys[0]?.id ?? null
   const active = surveys.find(q => q.id === activeId) ?? null
-  if (!active) {
-    return (
-      <div className="page-head">
-        <div className="title">
-          <span className="eyebrow">Студсовет</span>
-          <h1>Questionnaires</h1>
-          <p className="text-muted" style={{ marginTop: 16 }}>{surveys.length === 0 ? 'Загрузка…' : 'Нет активных опросов'}</p>
-        </div>
-      </div>
-    )
-  }
-
-  const totalSteps = active.steps.length
-  const progress = ((step + 1) / totalSteps) * 100
-  const currentStep = active.steps[step] as QStep
 
   function selectQ(id: string) {
     if (id === activeId) return
-    setActiveId(id)
+    setSelectedId(id)
     setStep(0)
     setAnswers({})
     setSubmitted(false)
@@ -65,23 +48,91 @@ export default function QuestionnairesPage() {
     setAnswers(a => ({ ...a, [step]: cur.includes(optIdx) ? cur.filter(x => x !== optIdx) : [...cur, optIdx] }))
   }
 
+  if (error) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">Студсовет</span>
+            <h1>Questionnaires</h1>
+            <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Открытые опросы от SU. Ваш голос помогает планировать ивенты, бюджет и работу департаментов.</p>
+          </div>
+        </div>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '300px',
+          width: '100%'
+        }}>
+          <div style={{ maxWidth: '600px', width: '100%' }}>
+            <ErrorBanner 
+              message="Failed to load questionnaires. Please try again." 
+              onRetry={retry}
+              stack={error}
+            />
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  // Если active есть, но step выходит за пределы - сбрасываем step
+  if (active && step >= active.steps.length) {
+    setStep(0)
+  }
+
+  if (!active) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">Студсовет</span>
+            <h1>Questionnaires</h1>
+            <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Открытые опросы от SU. Ваш голос помогает планировать ивенты, бюджет и работу департаментов.</p>
+          </div>
+        </div>
+        <div className="q-layout">
+          <section>
+            <div className="row sb mb-4">
+              <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
+            </div>
+            {loading && (
+              <div className="q-list">
+                <LoadingSkeleton type="questionnaire" count={4} />
+              </div>
+            )}
+            {!loading && surveys.length === 0 && (
+              <p className="text-muted" style={{ padding: '24px 0', fontSize: 14 }}>
+                Нет активных опросов
+              </p>
+            )}
+          </section>
+        </div>
+      </>
+    )
+  }
+
+  const totalSteps = active.steps.length
+  const progress = ((step + 1) / totalSteps) * 100
+  const currentStep = active.steps[step] as QStep
+
   return (
     <>
       <div className="page-head">
         <div className="title">
-          <span className="eyebrow">Опросы студсовета</span>
+          <span className="eyebrow">Студсовет</span>
           <h1>Questionnaires</h1>
           <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Открытые опросы от SU. Ваш голос помогает планировать ивенты, бюджет и работу департаментов.</p>
         </div>
       </div>
 
       <div className="q-layout">
-
         <section>
           <div className="row sb mb-4">
             <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
-            <button className="btn ghost sm" onClick={() => setArchived(v => !v)}>{archived ? 'Скрыть архив' : 'Архив'}</button>
           </div>
+
           <div className="q-list">
             {surveys.map(q => (
               <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
@@ -111,7 +162,6 @@ export default function QuestionnairesPage() {
         </section>
 
         <section className="q-flow">
-
           <header className="q-flow-head">
             <div className="topbar">
               <div>
@@ -213,7 +263,6 @@ export default function QuestionnairesPage() {
               )}
             </div>
           </div>
-
         </section>
       </div>
     </>
