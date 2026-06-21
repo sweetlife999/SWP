@@ -18,7 +18,7 @@ const BLANK_EVENT = {
   past: false,
 }
 
-function EventCard({ ev }: { ev: Event & Record<string, unknown> }) {
+function EventCard({ ev }: { ev: Event }) {
   // cast ev locally, so compiler understands snake_case backend parameters
   const dbEv = ev as Event & {
     event_date?: string
@@ -208,7 +208,7 @@ export default function EventsPage() {
             <h3>Текущие <span className="count">{String(current.length).padStart(2, '0')}</span></h3>
           </div>
           <div className="events-grid">
-            {current.map(ev => <EventCard key={ev.id} ev={ev as unknown as Event & Record<string, unknown>} />)}
+            {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
             {current.length === 0 && (
               <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
                 {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}
@@ -224,7 +224,7 @@ export default function EventsPage() {
             <h3>Прошедшие <span className="count">{String(past.length).padStart(2, '0')}</span></h3>
           </div>
           <div className="events-grid">
-            {past.map(ev => <EventCard key={ev.id} ev={ev as unknown as Event & Record<string, unknown>} />)}
+            {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
             {past.length === 0 && (
               <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
                 {events.length === 0 ? 'Загрузка…' : 'Мероприятия не найдены'}

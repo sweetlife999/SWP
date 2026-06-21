@@ -33,7 +33,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
   async function handleDescSave() {
     if (!id) return
     try {
-      const updated = await api.admin.events.update(id, { desc: descDraft })
+      const updated = await api.admin.events.update(id, { desc: descDraft }) as Event
       setEvent(updated)
       setDescDraft(updated.desc)
       showToast('Сохранено')
