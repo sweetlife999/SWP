@@ -4,13 +4,22 @@ import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.auth import require_admin
-from app.computed import DEPT_MAP, dept_tag, dept_tag_cls, event_date_str, event_dd, event_mm, is_past
+from app.computed import (
+    DEPT_MAP,
+    dept_tag,
+    dept_tag_cls,
+    event_date_str,
+    event_dd,
+    event_mm,
+    is_past,
+)
 from app.database import get_pool
 from app.models.schemas import EventCreate, EventOut, EventPatch
 
 router = APIRouter(prefix="/events", tags=["events"])
-admin_router = APIRouter(prefix="/admin/events", tags=["admin-events"],
-                         dependencies=[Depends(require_admin)])
+admin_router = APIRouter(
+    prefix="/admin/events", tags=["admin-events"], dependencies=[Depends(require_admin)]
+)
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
@@ -45,6 +54,7 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
 
 # ── Public ────────────────────────────────────────────────────────────────────
 
+
 @router.get("", response_model=list[EventOut])
 async def list_events(request: Request) -> list[EventOut]:
     """AC1: drafts are excluded from the public listing."""
@@ -68,6 +78,7 @@ async def get_event(event_id: int, request: Request) -> EventOut:
 
 
 # ── Admin ─────────────────────────────────────────────────────────────────────
+
 
 @admin_router.get("", response_model=list[EventOut])
 async def admin_list_events(request: Request) -> list[EventOut]:
@@ -127,11 +138,13 @@ async def delete_event(event_id: int, request: Request) -> None:
 
 # ── Shared helper ─────────────────────────────────────────────────────────────
 
+
 async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> EventOut:
     provided = body.model_fields_set
     if not provided:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
+        )
 
     updates: list[str] = []
     params: list = []
@@ -143,39 +156,45 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
 
     # Non-nullable columns: reject explicit null.
     for field, col, val in [
-        ("title", "title",       body.title),
-        ("desc",  "description", body.desc),
+        ("title", "title", body.title),
+        ("desc", "description", body.desc),
         ("cover", "cover_class", body.cover),
-        ("foot",  "foot_text",   body.foot),
+        ("foot", "foot_text", body.foot),
     ]:
         if field in provided:
             if val is None:
-                raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                    detail=f"'{field}' cannot be null")
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"'{field}' cannot be null",
+                )
             add(col, val)
 
     if "date" in provided:
         if body.date is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail="'date' cannot be null")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="'date' cannot be null"
+            )
         add("event_date", body.date)
 
     if "tag" in provided:
         if body.tag is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail="'tag' cannot be null")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="'tag' cannot be null"
+            )
         add("department", DEPT_MAP[body.tag])
 
     if "featured" in provided:
         if body.featured is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail="'featured' cannot be null")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="'featured' cannot be null"
+            )
         add("featured", body.featured)
 
     if "status" in provided:
         if body.status is None:
-            raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                                detail="'status' cannot be null")
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="'status' cannot be null"
+            )
         add("status", body.status)
 
     # Nullable columns: explicit null clears the field.
@@ -187,8 +206,9 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("status_text", body.statusText)
 
     if not updates:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No valid fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No valid fields to update"
+        )
 
     params.append(event_id)
     row = await pool.fetchrow(

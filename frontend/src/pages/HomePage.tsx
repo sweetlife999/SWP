@@ -1,8 +1,21 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
+
+interface NewsItem {
+  thumbClass?: string
+  date?: string
+  category?: string
+  title: string
+  excerpt?: string
+  desc?: string
+}
 
 const DEP_INFO = {
   core: {
@@ -58,18 +71,22 @@ export default function HomePage() {
   const [editingIntro, setEditingIntro] = useState(false)
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
-  const [depCounts, setDepCounts] = useState({ core: 8, active: 14, media: 6 })
   const introRef = useRef<HTMLElement>(null)
   const info = openDep ? DEP_INFO[openDep] : null
 
+  const { data: fetchedMembers } = useFetch<Member[]>('/api/members');
+  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
+
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
-    api.members.list().then(members => {
-      const counts = { core: 0, active: 0, media: 0 }
-      members.forEach(m => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
-      setDepCounts(counts)
-    }).catch(() => {})
   }, [])
+
+  const depCounts = useMemo(() => {
+    if (!fetchedMembers) return { core: 8, active: 14, media: 6 }
+    const counts = { core: 0, active: 0, media: 0 }
+    fetchedMembers.forEach((m: Member) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
+    return counts
+  }, [fetchedMembers]);
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -198,6 +215,54 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </section>
+
+      {/* News Section */}
+      <section aria-label="Новости" style={{ marginTop: 48 }}>
+        <div className="section-rule">
+          <div className="sr-left">
+            <span className="eyebrow">Новости</span>
+            <h2>Последние обновления</h2>
+          </div>
+        </div>
+
+        {newsError && (
+          <ErrorBanner 
+            message="Failed to load news. Please try again." 
+            onRetry={newsRetry} 
+          />
+        )}
+
+        {newsLoading && (
+          <div className="news-list">
+            <LoadingSkeleton type="news" count={3} />
+          </div>
+        )}
+
+        {!newsLoading && !newsError && (!newsItems || newsItems.length === 0) && (
+          <EmptyState
+            title="No news yet"
+            description="Stay tuned for updates — new news will appear soon!"
+          />
+        )}
+
+        {!newsLoading && !newsError && newsItems && newsItems.length > 0 && (
+          <div className="news-list">
+            {newsItems.map((item: NewsItem, index: number) => (
+              <div key={index} className="news-row">
+                <div className={`thumb ${item.thumbClass || ''}`} />
+                <div className="news-body">
+                  <div className="meta">
+                    <span>{item.date || 'Soon'}</span>
+                    <span>{item.category || 'News'}</span>
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.excerpt || item.desc || ''}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {info && (

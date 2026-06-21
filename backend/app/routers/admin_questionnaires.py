@@ -1,5 +1,5 @@
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -7,25 +7,35 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.auth import require_admin
 from app.database import get_pool
 from app.models.schemas import (
-    AnswerStat, QuestionCreate, QuestionnaireAdminOut, QuestionnaireCreate,
-    QuestionnairePatch, QuestionnaireResults, QuestionOut,
-    QuestionPatch, QuestionResults,
+    AnswerStat,
+    QuestionCreate,
+    QuestionnaireAdminOut,
+    QuestionnaireCreate,
+    QuestionnairePatch,
+    QuestionnaireResults,
+    QuestionOut,
+    QuestionPatch,
+    QuestionResults,
 )
 from app.routers.questionnaires import _fetch_questions
 
-admin_router = APIRouter(prefix="/admin/questionnaires", tags=["admin-questionnaires"],
-                         dependencies=[Depends(require_admin)])
+admin_router = APIRouter(
+    prefix="/admin/questionnaires",
+    tags=["admin-questionnaires"],
+    dependencies=[Depends(require_admin)],
+)
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+
 
 def _compute_status(published: bool, closes_at) -> str:
     if not published:
         return "draft"
     if closes_at is None:
         return "open"
-    now = datetime.now(timezone.utc)
-    tz_aware = closes_at if closes_at.tzinfo else closes_at.replace(tzinfo=timezone.utc)
+    now = datetime.now(UTC)
+    tz_aware = closes_at if closes_at.tzinfo else closes_at.replace(tzinfo=UTC)
     return "open" if tz_aware > now else "closed"
 
 
@@ -77,8 +87,11 @@ async def _build_admin_out(pool: asyncpg.Pool, survey_id: int) -> QuestionnaireA
 
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 
+
 @admin_router.post("", response_model=QuestionnaireAdminOut, status_code=status.HTTP_201_CREATED)
-async def create_questionnaire(body: QuestionnaireCreate, request: Request) -> QuestionnaireAdminOut:
+async def create_questionnaire(
+    body: QuestionnaireCreate, request: Request
+) -> QuestionnaireAdminOut:
     """Creates a new questionnaire in draft status (published=FALSE)."""
     pool: asyncpg.Pool = get_pool(request)
     row = await pool.fetchrow(
@@ -124,8 +137,9 @@ async def patch_questionnaire(
 
     provided = body.model_fields_set
     if not provided:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
+        )
 
     updates: list[str] = []
     params: list = []
@@ -138,7 +152,7 @@ async def patch_questionnaire(
         if body.status == "open":
             add("published", True)
         elif body.status == "closed":
-            add("closes_at", datetime.now(timezone.utc))
+            add("closes_at", datetime.now(UTC))
         elif body.status == "draft":
             add("published", False)
 
@@ -165,8 +179,9 @@ async def patch_questionnaire(
     return await _build_admin_out(pool, questionnaire_id)
 
 
-@admin_router.post("/{questionnaire_id}/questions",
-                   response_model=QuestionOut, status_code=status.HTTP_201_CREATED)
+@admin_router.post(
+    "/{questionnaire_id}/questions", response_model=QuestionOut, status_code=status.HTTP_201_CREATED
+)
 async def add_question(
     questionnaire_id: int,
     body: QuestionCreate,
@@ -185,9 +200,11 @@ async def add_question(
             row = await conn.fetchrow(
                 """
                 INSERT INTO survey_questions
-                  (survey_id, position, type, title, hint, options, scale_low, scale_high, scale_mid)
+                  (survey_id, position, type, title, hint, options,
+                   scale_low, scale_high, scale_mid)
                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-                RETURNING id, position, type, title, hint, options, scale_low, scale_high, scale_mid
+                RETURNING id, position, type, title, hint, options,
+                          scale_low, scale_high, scale_mid
                 """,
                 questionnaire_id,
                 next_pos,
@@ -202,8 +219,7 @@ async def add_question(
     return _row_to_question(row)
 
 
-@admin_router.patch("/{questionnaire_id}/questions/{question_id}",
-                    response_model=QuestionOut)
+@admin_router.patch("/{questionnaire_id}/questions/{question_id}", response_model=QuestionOut)
 async def patch_question(
     questionnaire_id: int,
     question_id: int,
@@ -214,8 +230,9 @@ async def patch_question(
 
     provided = body.model_fields_set
     if not provided:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                            detail="No fields to update")
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
+        )
 
     updates: list[str] = []
     params: list = []
@@ -251,8 +268,9 @@ async def patch_question(
     return _row_to_question(row)
 
 
-@admin_router.delete("/{questionnaire_id}/questions/{question_id}",
-                     status_code=status.HTTP_204_NO_CONTENT)
+@admin_router.delete(
+    "/{questionnaire_id}/questions/{question_id}", status_code=status.HTTP_204_NO_CONTENT
+)
 async def delete_question(
     questionnaire_id: int,
     question_id: int,
@@ -292,8 +310,10 @@ async def get_results(questionnaire_id: int, request: Request) -> QuestionnaireR
     q_rows = await _fetch_questions(pool, questionnaire_id)
     if not q_rows:
         return QuestionnaireResults(
-            id=questionnaire_id, title=survey["title"],
-            total_responses=total, questions=[],
+            id=questionnaire_id,
+            title=survey["title"],
+            total_responses=total,
+            questions=[],
         )
 
     scalar_stats = await pool.fetch(
@@ -305,7 +325,8 @@ async def get_results(questionnaire_id: int, request: Request) -> QuestionnaireR
         questionnaire_id,
     )
     text_rows = await pool.fetch(
-        "SELECT answers FROM survey_responses WHERE survey_id = $1 ORDER BY submitted_at DESC LIMIT 200",
+        "SELECT answers FROM survey_responses"
+        " WHERE survey_id = $1 ORDER BY submitted_at DESC LIMIT 200",
         questionnaire_id,
     )
 
@@ -353,14 +374,16 @@ async def get_results(questionnaire_id: int, request: Request) -> QuestionnaireR
             answered = len(samples)
             stats = [AnswerStat(answer=a, count=1, pct=0.0) for a in samples]
 
-        questions.append(QuestionResults(
-            question_id=qid,
-            position=q["position"],
-            type=q["type"],
-            title=q["title"],
-            answered=answered,
-            stats=stats,
-        ))
+        questions.append(
+            QuestionResults(
+                question_id=qid,
+                position=q["position"],
+                type=q["type"],
+                title=q["title"],
+                answered=answered,
+                stats=stats,
+            )
+        )
 
     return QuestionnaireResults(
         id=questionnaire_id,
