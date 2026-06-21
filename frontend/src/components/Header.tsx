@@ -34,6 +34,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <NavLink className="nav-link" to="/admin/kanban">SU:Core</NavLink>
         <NavLink className="nav-link" to="/admin/forms/builder">Forms</NavLink>
         <NavLink className="nav-link" to="/admin/forms/viewer">Ответы</NavLink>
+        <NavLink className="nav-link" to="/admin/events">Manage events</NavLink>
       </nav>
       {isAdmin && (
         <button className="btn ghost" style={{ fontSize: 12, gap: 6, marginLeft: 8 }} onClick={handleLogout}>

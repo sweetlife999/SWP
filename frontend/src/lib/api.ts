@@ -5,7 +5,9 @@ function token() { return localStorage.getItem('su_admin_token') ?? '' }
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init)
   if (!res.ok) throw new Error(String(res.status))
-  return res.json()
+  if (res.status === 204) return undefined as T
+  const text = await res.text()
+  return (text ? JSON.parse(text) : undefined) as T
 }
 
 function authHeaders(): HeadersInit {
@@ -18,10 +20,12 @@ export interface Event {
   id: number
   title: string; desc: string
   date: string; dd: string; mm: string
+  endDate?: string; endDd?: string; endMm?: string
   cover: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
+  endTime?: string
   featured?: boolean; past?: boolean
-  status?: 'live' | 'passed'; statusText?: string
+  status?: 'draft' | 'published' | 'archived'; statusText?: string
 }
 
 export interface Member {
@@ -68,6 +72,8 @@ export const api = {
     list:   () => req<Event[]>('/events'),
     get:    (id: number | string) => req<Event>(`/events/${id}`),
     create: (e: Omit<Event, 'id'>) => req<Event>('/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+    update: (id: number | string, e: Partial<Event>) => req<Event>(`/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
+    delete: (id: number | string) => req<void>(`/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
   },
   members: {
     list:   () => req<Member[]>('/members'),
@@ -92,6 +98,12 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       }),
+    events: {
+      list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
+      create: (e: Record<string, unknown>) => req('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+      update: (id: number | string, e: Record<string, unknown>) => req(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
+      delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
+    },
     kanban: {
       list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
       update: (id: string, col: ColKey) =>
