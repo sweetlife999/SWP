@@ -109,8 +109,8 @@ export default function EventsPage() {
   async function handleAddEvent() {
     try {
       // direct cast to appease legacy api client typing constraints
-      const created = await api.admin.events.create(newEvent as Event)
-      const published = await api.admin.events.update(created.id, { status: 'published' })
+      const created = await api.admin.events.create(newEvent) as Event
+      const published = await api.admin.events.update(created.id, { status: 'published' }) as Event
       setEvents(prev => sortEvents([...prev, published]))
     } catch {
       // keep state untouched if API rejects configuration parameters

@@ -100,8 +100,8 @@ export const api = {
       }),
     events: {
       list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
-      create: (e: Omit<Event, 'id'>) => req<Event>('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
-      update: (id: number | string, e: Partial<Event>) => req<Event>(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
+      create: (e: Record<string, unknown>) => req('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+      update: (id: number | string, e: Record<string, unknown>) => req(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(e) }),
       delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },
     kanban: {

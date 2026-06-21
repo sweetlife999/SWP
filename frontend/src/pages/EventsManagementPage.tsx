@@ -69,7 +69,7 @@ export default function EventsManagementPage() {
 
   async function handleAddEvent() {
     try {
-      const created = await api.admin.events.create(newEvent as unknown as Event)
+      const created = await api.admin.events.create(newEvent) as DatabaseEvent
       const published = await api.admin.events.update(created.id, { status: 'published' })
       setEvents(prev => sortEvents([...prev, published as DatabaseEvent]))
       showToast('Событие создано')
