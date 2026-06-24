@@ -8,6 +8,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-06-25
+
+
+### Added
+- Forms Viewer page: Export to .xslx is now available for admins (available from client-side, no backend endpoint needed)
+
 ## [1.0.0] — 2026-06-20
 
 ### Added
