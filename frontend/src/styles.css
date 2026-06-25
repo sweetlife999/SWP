@@ -982,7 +982,7 @@ h4, .h4 { font-size: 16px; font-weight: 600; line-height: 1.35; }
 
 .opt-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; }
 .opt-row .opt-dot { width: 16px; height: 16px; border: 1.5px solid var(--border-2); border-radius: 50%; flex: none; }
-.opt-row.checkbox .opt-dot { border-radius: 4px; }
+.opt-row.multi .opt-dot { border-radius: 4px; }
 .opt-row .opt-input { flex: 1; border: 0; background: transparent; outline: 0; font-size: 14px; color: var(--fg-2); padding: 4px 0; border-bottom: 1px dashed transparent; }
 .opt-row .opt-input:focus { border-bottom-color: var(--accent); }
 .opt-row .icon-btn { width: 24px; height: 24px; }
@@ -2192,7 +2192,7 @@ h4, .h4 { font-size: 16px; font-weight: 600; line-height: 1.35; }
           width: 16px; height: 16px; border: 1.5px solid var(--border-2);
           border-radius: 50%; flex: none;
         }
-        .opt-row.checkbox .opt-dot { border-radius: 4px; }
+        .opt-row.multi .opt-dot { border-radius: 4px; }
         .opt-row .opt-input {
           flex: 1; border: 0; background: transparent; outline: 0;
           font-size: 14px; color: var(--fg-2); padding: 4px 0;

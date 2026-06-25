@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-import { api, type QStepType, type QuestionInput } from '../lib/api'
+import { api, type QStepType, type QuestionInput, type QuestionnaireAdmin } from '../lib/api'
 
 type QType = 'scale' | 'multi' | 'single' | 'text' | 'short' | 'stars' | 'section'
 
@@ -37,14 +37,8 @@ const TYPE_ICON: Record<QType, string> = {
   text: 'i-list', short: 'i-text', stars: 'i-star', section: 'i-grid',
 }
 
-const INITIAL: Question[] = [
-  { id: 1, type: 'scale', title: 'Насколько полезной была Welcome Week в целом?', hint: '1 — совсем бесполезно, 10 — изменило, как я смотрю на университет', options: [], required: true },
-  { id: 2, type: 'multi', title: 'Какие события Welcome Week запомнились?', hint: 'Можно выбрать несколько', options: ['Гид по корпусам с Тимуром Карповым', 'Вечер знакомств в Sport Tower', 'Лекция «Как устроен IU за пределами лекций»', 'Ярмарка клубов и кружков'], required: false },
-  { id: 3, type: 'single', title: 'Хотели бы вы помочь со следующей Welcome Week?', hint: '', options: ['Да, готов(а) быть buddy для первого курса', 'Да, помогу с логистикой / точечно', 'Не уверен(а), нужно подумать', 'Нет, спасибо'], required: true },
-  { id: 4, type: 'text', title: 'Что обязательно нужно поменять / убрать?', hint: 'Конкретные пожелания и идеи. Ответ читают вручную.', options: [], required: false },
-]
-
 let nextId = 10
+const blankQuestion = (): Question => ({ id: nextId++, type: 'single', title: '', hint: '', options: ['Вариант 1', 'Вариант 2'], required: false })
 
 function QuestionCard({ q, num, total, onDelete, onChange }: {
   q: Question; num: number; total: number
@@ -141,7 +135,7 @@ function QuestionCard({ q, num, total, onDelete, onChange }: {
         {hasOptions && (
           <div style={{ marginTop: 8 }}>
             {q.options.map((opt, i) => (
-              <div key={i} className={`opt-row${q.type === 'multi' ? ' checkbox' : ''}`}>
+              <div key={i} className={`opt-row${q.type === 'multi' ? ' multi' : ''}`}>
                 <span className="opt-dot"></span>
                 <input className="opt-input" value={opt} placeholder="Вариант ответа…" onChange={e => setOption(i, e.target.value)} />
                 <button className="icon-btn" onClick={() => removeOption(i)}><Icon id="i-x" /></button>
@@ -195,12 +189,20 @@ function QuestionCard({ q, num, total, onDelete, onChange }: {
 
 export default function FormBuilderPage() {
   const [preview, setPreview] = useState(false)
-  const [questions, setQuestions] = useState<Question[]>(INITIAL)
+  const [questions, setQuestions] = useState<Question[]>([blankQuestion()])
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [toast, setToast] = useState('')
   const [saving, setSaving] = useState(false)
-  const [formTitle, setFormTitle] = useState('Фидбек Welcome Week 2026')
-  const [formDesc, setFormDesc] = useState('Помогите оценить программу Welcome Week и понять, что улучшить к следующему набору. Опрос анонимный, около 2 минут.')
+  const [formTitle, setFormTitle] = useState('Новый опрос')
+  const [formDesc, setFormDesc] = useState('')
+  // The questionnaire being edited: null = unsaved new one. Picker lists all of them.
+  const [currentId, setCurrentId] = useState<number | null>(null)
+  const [list, setList] = useState<QuestionnaireAdmin[]>([])
+
+  function loadList() {
+    api.admin.questionnaires.list().then(setList).catch(() => {})
+  }
+  useEffect(() => { loadList() }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -215,34 +217,63 @@ export default function FormBuilderPage() {
     return input
   }
 
-  function resetBuilder() {
-    setQuestions([{ id: nextId++, type: 'single', title: '', hint: '', options: ['Вариант 1', 'Вариант 2'], required: false }])
+  function newQuestionnaire() {
+    setCurrentId(null)
+    setQuestions([blankQuestion()])
     setFormTitle('Новый опрос')
     setFormDesc('')
     setStatus('draft')
   }
 
-  // Persists the builder to the backend: create questionnaire → add each (non-section)
-  // question → optionally open it. Each save creates a SEPARATE questionnaire, then the
-  // builder resets so the next one is independent.
+  // Load an existing questionnaire from the picker into the builder for editing.
+  async function loadQuestionnaire(id: number) {
+    try {
+      const q = await api.admin.questionnaires.get(id)
+      setCurrentId(q.id)
+      setFormTitle(q.title)
+      setFormDesc(q.description)
+      setStatus(q.status === 'draft' ? 'draft' : 'published')
+      setQuestions(
+        q.questions.map(qq => ({
+          id: nextId++,
+          type: qq.type,
+          title: qq.title,
+          hint: qq.hint ?? '',
+          options: qq.options ?? [],
+          required: true,
+        })),
+      )
+    } catch {
+      showToast('Не удалось загрузить опрос')
+    }
+  }
+
+  // Persist the builder. Creates the questionnaire on first save, then UPDATES the
+  // same one on later saves (no duplicates). Questions are replaced wholesale —
+  // fine for drafts; editing a survey with responses recreates its questions.
   async function saveQuestionnaire(publishIt: boolean) {
     const real = questions.filter(q => BACKEND_TYPE[q.type] !== null)
     if (!formTitle.trim()) { showToast('Укажите название опроса'); return }
     if (real.length === 0) { showToast('Добавьте хотя бы один вопрос'); return }
     setSaving(true)
     try {
-      const created = await api.admin.questionnaires.create({
-        department: 'core',
-        title: formTitle.trim(),
-        description: formDesc.trim(),
-        est_minutes: 2,
-      })
-      for (const q of real) {
-        await api.admin.questionnaires.addQuestion(created.id, mapQuestion(q))
+      let id = currentId
+      if (id === null) {
+        const created = await api.admin.questionnaires.create({
+          department: 'core', title: formTitle.trim(), description: formDesc.trim(), est_minutes: 2,
+        })
+        id = created.id
+        setCurrentId(id)
+      } else {
+        await api.admin.questionnaires.patch(id, { title: formTitle.trim(), description: formDesc.trim() })
+        // Replace existing questions.
+        const existing = await api.admin.questionnaires.get(id)
+        for (const q of existing.questions) await api.admin.questionnaires.removeQuestion(id, q.id)
       }
-      if (publishIt) await api.admin.questionnaires.setStatus(created.id, 'open')
-      showToast(publishIt ? 'Опрос опубликован — открыт в Questionnaires' : 'Черновик сохранён')
-      resetBuilder()
+      for (const q of real) await api.admin.questionnaires.addQuestion(id, mapQuestion(q))
+      if (publishIt) { await api.admin.questionnaires.setStatus(id, 'open'); setStatus('published') }
+      showToast(publishIt ? 'Опрос опубликован — открыт в Questionnaires' : 'Сохранено')
+      loadList()
     } catch {
       showToast('Не удалось сохранить опрос')
     } finally {
@@ -280,7 +311,6 @@ export default function FormBuilderPage() {
         <div className="title">
           <div className="row gap-2 mb-2">
             <span className={`tag ${status === 'published' ? 'blue' : 'green'}`}><span className="dot"></span>{status === 'published' ? 'Опубликован' : 'Черновик'}</span>
-            <span className="tag outline"><Icon id="i-clock" style={{ width: 11, height: 11 }} />автосохранение 12 сек назад</span>
           </div>
           <h1>Конструктор опроса</h1>
         </div>
@@ -289,16 +319,29 @@ export default function FormBuilderPage() {
             <Icon id="i-eye" style={{ width: 14, height: 14 }} />
             {preview ? 'Редактировать' : 'Preview'}
           </button>
-          <button className="btn ghost" disabled={saving} onClick={resetBuilder}><Icon id="i-plus" style={{ width: 14, height: 14 }} />Новый опрос</button>
-          <button className="btn secondary" disabled={saving} onClick={() => saveQuestionnaire(false)}>Сохранить как черновик</button>
-          <button className="btn primary" disabled={saving} onClick={() => saveQuestionnaire(true)}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />{saving ? 'Сохранение…' : 'Опубликовать'}</button>
+          <button className="btn secondary" disabled={saving} onClick={() => saveQuestionnaire(false)}>{saving ? 'Сохранение…' : currentId ? 'Сохранить' : 'Сохранить черновик'}</button>
+          <button className="btn primary" disabled={saving} onClick={() => saveQuestionnaire(true)}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />Опубликовать</button>
         </div>
       </div>
 
+      {/* Questionnaire picker: choose which one to edit, or start a new one. */}
       <div className="builder-toolbar">
+        <select
+          className="select"
+          style={{ width: 'auto', minWidth: 240, height: 32, fontSize: 13 }}
+          value={currentId ?? ''}
+          onChange={e => { const v = e.target.value; if (v === '') newQuestionnaire(); else loadQuestionnaire(Number(v)) }}
+        >
+          <option value="">＋ Новый опрос</option>
+          {list.map(q => (
+            <option key={q.id} value={q.id}>
+              {q.title} · {q.status === 'open' ? 'опубликован' : q.status === 'closed' ? 'закрыт' : 'черновик'} ({q.response_count})
+            </option>
+          ))}
+        </select>
+        <button className="btn ghost sm" disabled={saving} onClick={newQuestionnaire}><Icon id="i-plus" style={{ width: 12, height: 12 }} />Новый</button>
         <span className="stat-pill"><Icon id="i-clipboard" style={{ width: 12, height: 12 }} />{nonSectionCount} вопросов</span>
-        <span className="stat-pill"><Icon id="i-clock" style={{ width: 12, height: 12 }} />~ 2 мин</span>
-        <span className="stat-pill"><Icon id="i-users" style={{ width: 12, height: 12 }} />видит: All students</span>
+        <span className="stat-pill"><Icon id="i-users" style={{ width: 12, height: 12 }} />видит: все студенты</span>
       </div>
 
       <div className={`builder-layout${preview ? ' preview-on' : ''}`}>
@@ -332,7 +375,7 @@ export default function FormBuilderPage() {
           <header className="form-head">
             <div className="badge-row">
               <span className="tag green" style={{ height: 18, fontSize: 10, padding: '0 6px' }}>SU:Core</span>
-              <span>ОПРОС #025 · {status === 'published' ? 'ОПУБЛИКОВАН' : 'ЧЕРНОВИК'}</span>
+              <span>{currentId ? `ОПРОС #${currentId}` : 'НОВЫЙ ОПРОС'} · {status === 'published' ? 'ОПУБЛИКОВАН' : 'ЧЕРНОВИК'}</span>
             </div>
             <input
               className="form-title"
