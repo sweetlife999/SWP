@@ -118,6 +118,14 @@ async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut
         body.priority,
         next_order,
     )
+    if body.assignee:
+        # Deterministic green gradient so the avatar has a colour without a picker.
+        await pool.execute(
+            "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
+            new_id,
+            body.assignee[:3].upper(),
+            "linear-gradient(135deg,#a3e0ad,#32b247)",
+        )
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", new_id)
     return _row_to_card(row)
 

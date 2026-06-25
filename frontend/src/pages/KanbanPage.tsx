@@ -233,7 +233,7 @@ export default function KanbanPage() {
   // Off by default — otherwise newly-created low-priority cards are hidden on load.
   const [chipP01, setChipP01] = useState(false)
   const [chipOpenDay, setChipOpenDay] = useState(false)
-  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -302,14 +302,20 @@ export default function KanbanPage() {
   }
 
   function openNewTask(col: ColKey) {
-    setNewTask({ open: true, col, title: '' })
+    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignee: '' })
   }
 
   async function submitNewTask() {
     if (!newTask.title.trim()) return
     try {
-      await api.admin.kanban.create({ title: newTask.title.trim(), col: newTask.col })
-      setNewTask({ open: false, col: 'backlog', title: '' })
+      await api.admin.kanban.create({
+        title: newTask.title.trim(),
+        col: newTask.col,
+        desc: newTask.desc.trim() || undefined,
+        priority: newTask.priority,
+        assignee: newTask.assignee.trim() || undefined,
+      })
+      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
       retry()  // reload the board so the persisted card appears
       showToast('Задача создана')
     } catch {
@@ -539,13 +545,31 @@ export default function KanbanPage() {
             <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
                 <label>Title</label>
-                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
+                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
               </div>
               <div className="field">
-                <label>Column</label>
-                <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
-                  {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-                </select>
+                <label>Description</label>
+                <textarea className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
+              </div>
+              <div className="row gap-3">
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Column</label>
+                  <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                    {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Priority</label>
+                  <select className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
+                    <option value="p-high">P0 · Urgent</option>
+                    <option value="p-mid">P1 · High</option>
+                    <option value="p-low">P2 · Low</option>
+                  </select>
+                </div>
+              </div>
+              <div className="field">
+                <label>Assignee (инициалы)</label>
+                <input className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
