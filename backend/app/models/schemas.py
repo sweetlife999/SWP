@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, time
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -41,7 +41,8 @@ class EventCreate(BaseModel):
     date: date
     cover: str = ""
     tag: DepartmentOrLabel
-    time: str | None = None
+    # Parsed from an "HH:MM" string into a time so asyncpg can bind the TIME column.
+    time: time | None = None
     foot: str = ""
     footLabel: str | None = None
     featured: bool = False

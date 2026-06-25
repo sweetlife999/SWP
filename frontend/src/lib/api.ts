@@ -8,11 +8,21 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
   return res.json()
 }
 
+// For endpoints that return 204 No Content (e.g. DELETE) — calling res.json() on
+// an empty body throws, so skip parsing.
+async function reqVoid(path: string, init?: RequestInit): Promise<void> {
+  const res = await fetch(`${BASE}${path}`, init)
+  if (!res.ok) throw new Error(String(res.status))
+}
+
 function authHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }
 }
 
 // ── Types ─────────────────────────────────────────────────────────────────────
+
+// Lifecycle status from the backend; 'live'/'passed' are legacy display values still tolerated.
+export type EventStatus = 'draft' | 'published' | 'archived'
 
 export interface Event {
   id: number
@@ -21,7 +31,13 @@ export interface Event {
   cover: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
   featured?: boolean; past?: boolean
-  status?: 'live' | 'passed'; statusText?: string
+  status?: EventStatus | 'live' | 'passed'; statusText?: string
+}
+
+export interface EventPatch {
+  title?: string; desc?: string; date?: string; time?: string | null
+  tag?: string; cover?: string; foot?: string; footLabel?: string | null
+  featured?: boolean; status?: EventStatus; statusText?: string | null
 }
 
 export interface Member {
@@ -29,6 +45,11 @@ export interface Member {
   dep: 'core' | 'active' | 'media'
   tag: string; name: string; role: string; meta: string
   bio: string; recent: string[]
+}
+
+export interface MemberPatch {
+  dep?: Member['dep']; name?: string; role?: string
+  meta?: string; bio?: string; recent?: string[]
 }
 
 export type QStepType = 'single' | 'multi' | 'scale' | 'text'
@@ -65,13 +86,21 @@ export interface ContentBlock { html: string; updatedAt?: string; updatedBy?: st
 
 export const api = {
   events: {
-    list:   () => req<Event[]>('/events'),
-    get:    (id: number | string) => req<Event>(`/events/${id}`),
-    create: (e: Omit<Event, 'id'>) => req<Event>('/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+    list:      () => req<Event[]>('/events'),
+    // Admin listing returns every event regardless of status (drafts included).
+    adminList: () => req<Event[]>('/admin/events', { headers: authHeaders() }),
+    get:       (id: number | string) => req<Event>(`/events/${id}`),
+    // Admin create lives under /admin/events (require_admin); the public /events has no POST.
+    create:    (e: Omit<Event, 'id'>) => req<Event>('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
+    update:    (id: number | string, patch: EventPatch) => req<Event>(`/admin/events/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(patch) }),
+    remove:    (id: number | string) => reqVoid(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
   },
   members: {
-    list:   () => req<Member[]>('/members'),
-    create: (m: Omit<Member, 'id'>) => req<Member>('/members', { method: 'POST', headers: authHeaders(), body: JSON.stringify(m) }),
+    // dep is passed through to the API so the server returns only matching members (US-05 AC2).
+    list:   (dep?: Member['dep']) => req<Member[]>(`/members${dep ? `?dep=${dep}` : ''}`),
+    create: (m: Omit<Member, 'id'>) => req<Member>('/admin/members', { method: 'POST', headers: authHeaders(), body: JSON.stringify(m) }),
+    update: (id: number | string, patch: MemberPatch) => req<Member>(`/admin/members/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(patch) }),
+    remove: (id: number | string) => reqVoid(`/admin/members/${id}`, { method: 'DELETE', headers: authHeaders() }),
   },
   surveys: {
     list: () => req<Survey[]>('/surveys'),
