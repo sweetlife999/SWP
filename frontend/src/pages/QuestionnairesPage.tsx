@@ -14,12 +14,27 @@ export default function QuestionnairesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
+  // Ids the user already submitted (server also blocks re-submit via cookie, but the
+  // cookie is httponly so we track locally to hide answered surveys from the list).
+  const [answered, setAnswered] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('su_answered_surveys') ?? '[]') } catch { return [] }
+  })
 
   const { data: fetchedSurveys, loading, error, retry } = useFetch<Survey[]>('/api/questionnaires');
 
   const surveys = fetchedSurveys ?? []
-  const activeId = selectedId ?? surveys[0]?.id ?? null
+  // Hide already-answered surveys from the list and default selection.
+  const visibleSurveys = surveys.filter(q => !answered.includes(q.id))
+  const activeId = selectedId ?? visibleSurveys[0]?.id ?? null
   const active = surveys.find(q => q.id === activeId) ?? null
+
+  function markAnswered(id: string) {
+    setAnswered(prev => {
+      const next = [...new Set([...prev, id])]
+      localStorage.setItem('su_answered_surveys', JSON.stringify(next))
+      return next
+    })
+  }
 
   function selectQ(id: string) {
     if (id === activeId) return
@@ -55,6 +70,7 @@ export default function QuestionnairesPage() {
     try {
       await api.questionnaires.submit(active.id, payload)
       setSubmitted(true)
+      markAnswered(active.id)
     } catch (e) {
       // 409 = the one-response-per-student cookie guard already fired.
       setSubmitError(e instanceof Error && e.message === '409' ? 'Вы уже проходили этот опрос' : 'Не удалось отправить ответ')
@@ -131,14 +147,14 @@ export default function QuestionnairesPage() {
         <div className="q-layout">
           <section>
             <div className="row sb mb-4">
-              <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
+              <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{visibleSurveys.length}</span></h3>
             </div>
             {loading && (
               <div className="q-list">
                 <LoadingSkeleton type="questionnaire" count={4} />
               </div>
             )}
-            {!loading && surveys.length === 0 && (
+            {!loading && visibleSurveys.length === 0 && (
               <p className="text-muted" style={{ padding: '24px 0', fontSize: 14 }}>
                 Нет активных опросов
               </p>
@@ -166,11 +182,11 @@ export default function QuestionnairesPage() {
       <div className="q-layout">
         <section>
           <div className="row sb mb-4">
-            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
+            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{visibleSurveys.length}</span></h3>
           </div>
 
           <div className="q-list">
-            {surveys.map(q => (
+            {visibleSurveys.map(q => (
               <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
                 <div className="meta">
                   <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
@@ -295,7 +311,6 @@ export default function QuestionnairesPage() {
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
             </button>
             <div className="row gap-2">
-              <button className="btn secondary" onClick={() => { setStep(0); setAnswers({}) }}>Сохранить и выйти</button>
               {step < totalSteps - 1 ? (
                 <button className="btn primary" onClick={() => setStep(s => s + 1)}>Далее →</button>
               ) : submitted ? (
