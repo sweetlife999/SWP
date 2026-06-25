@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-import { useFetch } from '../hooks/useFetch'
+import { api } from '../lib/api'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
@@ -233,13 +233,28 @@ export default function KanbanPage() {
   const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
   const [toast, setToast] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  // Bumped to re-trigger the load effect on retry.
+  const [reloadKey, setReloadKey] = useState(0)
+  const retry = () => setReloadKey(k => k + 1)
 
+  // /admin/kanban needs the Bearer token, so we use api.admin.kanban.list() (which
+  // sends it) rather than useFetch. setState lives in async callbacks, not the
+  // effect body, to satisfy react-hooks/set-state-in-effect.
   useEffect(() => {
-    api.admin.kanban.list().then(data => {
-      setFetchedCards(data as CardData[])
-      setCardCols(Object.fromEntries(data.map(c => [c.id, c.col as ColKey])))
-    }).catch(() => { setToast('Не удалось загрузить доску'); setTimeout(() => setToast(''), 3000) })
-  }, [])
+    let cancelled = false
+    api.admin.kanban.list()
+      .then(data => {
+        if (cancelled) return
+        setFetchedCards(data as CardData[])
+        setCardCols(Object.fromEntries(data.map(c => [c.id, c.col as ColKey])))
+        setError(null)
+      })
+      .catch(() => { if (!cancelled) setError('Не удалось загрузить доску') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [reloadKey])
 
   const allCards = [...fetchedCards, ...extraCards]
 
@@ -383,23 +398,6 @@ export default function KanbanPage() {
     <>
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
-          {toast}
-        </div>
-      )}
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#EF4444',
-          color: '#fff',
-          padding: '12px 24px',
-          borderRadius: 10,
-          fontSize: 14,
-          fontWeight: 500,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-          zIndex: 2000,
-        }}>
           {toast}
         </div>
       )}

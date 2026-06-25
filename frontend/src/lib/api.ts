@@ -38,6 +38,12 @@ export interface Event {
   status?: 'draft' | 'published' | 'archived'; statusText?: string
 }
 
+export interface EventPatch {
+  title?: string; desc?: string; date?: string; time?: string | null
+  tag?: string; cover?: string; foot?: string; footLabel?: string | null
+  featured?: boolean; status?: EventStatus; statusText?: string | null
+}
+
 export interface Member {
   id: string
   dep: 'core' | 'active' | 'media'

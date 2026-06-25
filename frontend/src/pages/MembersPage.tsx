@@ -3,7 +3,6 @@ import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Member as ApiMember } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
-import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
@@ -47,6 +46,8 @@ export default function MembersPage() {
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const retry = () => { setError(false); setLoading(true); setReloadKey(k => k + 1) }
   const [roadmapHtml, setRoadmapHtml] = useState(DEFAULT_ROADMAP_HTML)
   const [historyHtml, setHistoryHtml] = useState(DEFAULT_HISTORY_HTML)
   const [addingMember, setAddingMember] = useState(false)
@@ -66,20 +67,12 @@ export default function MembersPage() {
       .catch(() => { if (!cancelled) setError(true) })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [depParam])
-  const { data: fetchedMembers, loading, error, retry } = useFetch<Member[]>('/api/members');
+  }, [depParam, reloadKey])
 
   useEffect(() => {
     api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
     api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (fetchedMembers) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMembers(fetchedMembers);
-    }
-  }, [fetchedMembers]);
 
   function showToast(msg: string) {
     setToast(msg)
@@ -197,59 +190,13 @@ export default function MembersPage() {
             <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
 
-          <div className="members-grid">
-            {visibleMembers.map((p, i) => (
-              <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
-                <div className="photo">
-                  <span className="dep-tag">{p.tag}</span>
-                  <div className="silhouette"></div>
-                </div>
-                <div className="body">
-                  <div className="name">{p.name}</div>
-                  <div className="role">{p.role}</div>
-                  <div className="meta">{p.meta}</div>
-                </div>
-              </article>
-            ))}
-            {visibleMembers.length === 0 && (
-              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
-                {error ? 'Не удалось загрузить участников' : loading ? 'Загрузка…' : 'Участники не найдены'}
-              </p>
-            )}
-          </div>
-          {error && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              width: '100%',
-              padding: '20px 0'
-            }}>
-              <div style={{ maxWidth: '650px', width: '100%' }}>
-                <ErrorBanner 
-                  message="Failed to load members. Please try again." 
-                  onRetry={retry}
-                  stack={error}
-                />
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="members-grid">
-              <LoadingSkeleton type="member" count={8} />
-            </div>
-          )}
-
-          {!loading && !error && members.length === 0 && (
-            <EmptyState
-              
-              title="No members"
-              description="The community is growing! Check back soon for new members."
-            />
-          )}
-
-          {!loading && !error && members.length > 0 && (
+          {error ? (
+            <ErrorBanner message="Не удалось загрузить участников." onRetry={retry} />
+          ) : loading ? (
+            <div className="members-grid"><LoadingSkeleton type="member" count={8} /></div>
+          ) : members.length === 0 ? (
+            <EmptyState title="Участников пока нет" description="Состав студсовета скоро появится здесь." />
+          ) : (
             <>
               <div className="members-grid">
                 {visibleMembers.map((p, i) => (
@@ -265,6 +212,9 @@ export default function MembersPage() {
                     </div>
                   </article>
                 ))}
+                {visibleMembers.length === 0 && (
+                  <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>Участники не найдены</p>
+                )}
               </div>
 
               {!showAll && filteredMembers.length > 8 && (
