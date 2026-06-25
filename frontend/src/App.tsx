@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Navigate, Routes, Route } from 'react-router-dom'
 import { AdminProvider } from './lib/AdminContext'
 import AppShell from './components/AppShell'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -11,9 +11,15 @@ import DonationsPage from './pages/DonationsPage'
 import KanbanPage from './pages/KanbanPage'
 import FormBuilderPage from './pages/FormBuilderPage'
 import FormsViewerPage from './pages/FormsViewerPage'
+import EventsManagementPage from './pages/EventsManagementPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminEventsPage from './pages/AdminEventsPage'
 import AdminMembersPage from './pages/AdminMembersPage'
+
+function AdminEntry() {
+  const token = localStorage.getItem('su_admin_token') ?? ''
+  return <Navigate to={token ? '/admin/events' : '/admin/login'} replace />
+}
 
 export default function App() {
   return (
@@ -24,6 +30,7 @@ export default function App() {
       <Routes>
         {/* Login sits outside AppShell — it has its own minimal layout */}
         <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin" element={<AdminEntry />} />
 
         <Route element={<AppShell />}>
           {/* Public routes — no auth required */}
@@ -39,6 +46,7 @@ export default function App() {
             <Route path="/admin/events" element={<AdminEventsPage />} />
             <Route path="/admin/events/new" element={<AdminEventsPage />} />
             <Route path="/admin/members" element={<AdminMembersPage />} />
+            <Route path="/admin/events" element={<EventsManagementPage />} />
             <Route path="/admin/kanban" element={<KanbanPage />} />
             <Route path="/admin/forms/builder" element={<FormBuilderPage />} />
             <Route path="/admin/forms/viewer" element={<FormsViewerPage />} />

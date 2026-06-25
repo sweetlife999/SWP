@@ -1,27 +1,41 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 
 export default function EventDetailPage() {
   const { id } = useParams()
+
+  return <EventDetailPageInner key={id} id={id} />
+}
+
+function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
+  const [event, setEvent] = useState<Event | null>(null)
   const [editingDesc, setEditingDesc] = useState(false)
-  const [descHtml, setDescHtml] = useState('')
-  const descRef = useRef<HTMLElement>(null)
+  const [descDraft, setDescDraft] = useState('')
 
   useEffect(() => {
     if (!id) return
-    api.content.get(`event-desc-${id}`).then(d => setDescHtml(d.html)).catch(() => {})
+    api.events.get(id)
+      .then(ev => {
+        setEvent(ev)
+        setDescDraft(ev.desc)
+      })
+      .catch(() => {
+        console.error('Failed to fetch event')
+        setEvent(null)
+      })
   }, [id])
 
   async function handleDescSave() {
-    const html = descRef.current?.innerHTML ?? descHtml
+    if (!id) return
     try {
-      await api.content.update(`event-desc-${id}`, html)
-      setDescHtml(html)
+      const updated = await api.admin.events.update(id, { desc: descDraft }) as Event
+      setEvent(updated)
+      setDescDraft(updated.desc)
       showToast('Сохранено')
     } catch {
       showToast('Ошибка сохранения')
@@ -35,11 +49,31 @@ export default function EventDetailPage() {
   }
 
   function handleCalendar() {
-    const ics = 'BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nSUMMARY:Hackathon Summer 24h\r\nDTSTART:20260620T100000\r\nDTEND:20260621T180000\r\nLOCATION:Sport Tower 519, Иннополис\r\nDESCRIPTION:24 часа открытого хакатона. SU:Core.\r\nEND:VEVENT\r\nEND:VCALENDAR'
+    const title = event?.title ?? ''
+    const datePart = (event?.date ?? '').replace(/-/g, '')
+    const startTime = (event?.time ?? '').replace(':', '')
+    const endDatePart = (event?.endDate ?? event?.date ?? '').replace(/-/g, '')
+    const endTime = (event?.endTime ?? event?.time ?? '').replace(':', '')
+
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `SUMMARY:${title}`,
+      `DTSTART:${datePart}T${startTime}`,
+      `DTEND:${endDatePart}T${endTime}`,
+      `LOCATION:${event?.footLabel ?? ''}`,
+      `DESCRIPTION:${event?.desc ?? ''}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n')
+
     const blob = new Blob([ics], { type: 'text/calendar' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
-    a.href = url; a.download = 'hackathon-summer-24h.ics'; a.click()
+    a.href = url
+    a.download = `${title.toLowerCase().replace(/\s+/g, '-') || 'event'}.ics`
+    a.click()
     URL.revokeObjectURL(url)
     showToast('Файл .ics скачан')
   }
@@ -56,15 +90,23 @@ export default function EventDetailPage() {
         <div className="banner-inner">
           <div>
             <div className="badges">
-              <span className="b">SU:Core · TOP</span>
-              <span className="b live">live</span>
+              <span className="b">{event?.tag ?? 'SU:Core'} · TOP</span>
+              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>
+                {event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}
+              </span>
             </div>
-            <h1>Hackathon Summer 24h</h1>
-            <p className="sub">24 часа открытого хакатона: любая идея, любой стек, любые команды. Финал — презентации в воскресенье вечером.</p>
+            <h1>{event?.title ?? ''}</h1>
+            <p className="sub">{event?.desc ?? ''}</p>
           </div>
           <div className="quick-meta">
-            <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">20–21 ИЮН</span></div>
-            <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">519 Sport Tower</span></div>
+            <div className="qm">
+              <span className="qm-label">КОГДА</span>
+              <span className="qm-value">{event ? `${event.dd} ${event.mm}` : ''}</span>
+            </div>
+            <div className="qm">
+              <span className="qm-label">ГДЕ</span>
+              <span className="qm-value">{event?.footLabel ?? ''}</span>
+            </div>
           </div>
         </div>
       </section>
@@ -75,36 +117,41 @@ export default function EventDetailPage() {
             <div className="row sb" style={{ marginBottom: 12 }}>
               <h2 style={{ marginBottom: 0 }}>О мероприятии</h2>
               {isAdmin && !editingDesc && (
-                <button className="btn ghost" style={{ fontSize: 12 }} onClick={() => setEditingDesc(true)}>
+                <button className="btn ghost" style={{ fontSize: 12 }} onClick={() => {
+                  setDescDraft(event?.desc ?? '')
+                  setEditingDesc(true)
+                }}>
                   <Icon id="i-edit" style={{ width: 12, height: 12 }} /> Редактировать
                 </button>
               )}
               {editingDesc && (
                 <div className="row gap-2">
-                  <button className="btn ghost" onClick={() => setEditingDesc(false)}>Отмена</button>
+                  <button className="btn ghost" onClick={() => {
+                    setDescDraft(event?.desc ?? '')
+                    setEditingDesc(false)
+                  }}>Отмена</button>
                   <button className="btn primary" style={{ fontSize: 12 }} onClick={handleDescSave}>
                     <Icon id="i-check" style={{ width: 12, height: 12 }} /> Сохранить
                   </button>
                 </div>
               )}
             </div>
-            <article
-              ref={descRef}
-              contentEditable={editingDesc}
-              suppressContentEditableWarning
-              style={editingDesc ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8 } : {}}
-              dangerouslySetInnerHTML={descHtml ? { __html: descHtml } : undefined}
-            >
-              {!descHtml && (
-                <>
-                  <p>Hackathon Summer 24h — открытый летний хакатон от SU:Core. За 24 часа команды до 5 человек проходят путь от идеи до прототипа: вечер пятницы → защита в воскресенье. Темы свободные, главное — собрать что-то работающее, показать видеодемо и получить фидбек от менторов.</p>
-                  <p>Мы намеренно не задаём строгие track-ограничения. Если ваша идея — про студенческую жизнь, образование, кампус, общение или просто весёлый side-project — это подходит. Цель — провести 24 часа, в которые не страшно собрать неидеальное MVP и научиться разрабатывать вместе.</p>
-                  <p><b>Что нужно взять с собой:</b> ноутбук, удлинитель, спальный мешок если планируете спать. Кофе, чай, печеньки, пиццу в субботу вечером и завтрак в воскресенье — обеспечивает SU.</p>
-                </>
-              )}
-            </article>
+            {editingDesc ? (
+              <textarea
+                className="textarea"
+                rows={10}
+                value={descDraft}
+                onChange={e => setDescDraft(e.target.value)}
+                style={{ width: '100%', minHeight: 240, resize: 'vertical' }}
+              />
+            ) : (
+              <article>
+                {event?.desc ? <p style={{ whiteSpace: 'pre-wrap' }}>{event.desc}</p> : <p style={{ whiteSpace: 'pre-wrap' }}>{descDraft}</p>}
+              </article>
+            )}
           </article>
 
+          {/* SCHEDULE BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <div className="row sb mb-4">
               <h2 style={{ marginBottom: 0 }}>Расписание</h2>
@@ -134,6 +181,7 @@ export default function EventDetailPage() {
             ))}
           </article>
 
+          {/* ORGANIZERS BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <h2>Кто за это отвечает</h2>
             <div className="org-list" style={{ marginTop: 8 }}>
@@ -151,22 +199,28 @@ export default function EventDetailPage() {
             </div>
           </article>
 
+          {/* LOCATION BLOCK (footLabel dynamic data where possible) */}
           <article className="content-block">
             <h2>Локация</h2>
             <div className="row gap-3 mb-4">
               <Icon id="i-pin" style={{ width: 18, height: 18, color: 'var(--accent)' }} />
               <div>
-                <div style={{ fontWeight: 500 }}>Sport Tower · 519 · open-space</div>
+                <div style={{ fontWeight: 500 }}>{event?.footLabel ?? ''}</div>
                 <div className="text-muted" style={{ fontSize: 13 }}>Университетская 1, Иннополис · 5 минут пешком от общежитий</div>
               </div>
             </div>
             <div className="map-card"></div>
             <div className="row gap-2 mt-4">
-              <a className="btn secondary" href="https://yandex.ru/maps/?text=Иннополис+Университет+519+Sport+Tower" target="_blank" rel="noopener noreferrer"><Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах</a>
-              <button className="btn ghost" onClick={() => navigator.clipboard.writeText('Университетская 1, Иннополис, Sport Tower 519')}><Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес</button>
+              <a className="btn secondary" href={`https://yandex.ru/maps/?text=${encodeURIComponent(`Иннополис Университет ${event?.footLabel ?? ''}`)}`} target="_blank" rel="noopener noreferrer">
+                <Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах
+              </a>
+              <button className="btn ghost" onClick={() => navigator.clipboard.writeText(`Иннополис, Университетская 1, ${event?.footLabel ?? ''}`)}>
+                <Icon id="i-copy" style={{ width: 14, height: 14 }} />Скопировать адрес
+              </button>
             </div>
           </article>
 
+          {/* RELATED EVENTS BLOCK (Remains Hardcoded bc there is no appropriate fields in the database) */}
           <article className="content-block">
             <h2>Похожие мероприятия</h2>
             <div className="related-grid">
@@ -186,6 +240,7 @@ export default function EventDetailPage() {
           </article>
         </div>
 
+        {/* SIDEBAR BLOCK (dynamic .foot and .tag fields, keeps hardcoded structures) */}
         <aside>
           <div className="reg-card">
             <div>
@@ -199,18 +254,14 @@ export default function EventDetailPage() {
               </div>
             </div>
             <div className="reg-status">
-              <span className="num">32 / 44</span>
-              <div className="progress" style={{ flex: 1 }}><div className="bar" style={{ width: '72%' }}></div></div>
+              <span className="num">{event?.foot ?? ''}</span>
             </div>
-            <span className="text-muted" style={{ fontSize: 12, marginTop: -8 }}>осталось 12 свободных мест</span>
             <button className="btn primary lg" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
-              <div className="row sb"><span className="lbl">Категория</span><span className="val">Hackathon</span></div>
-              <div className="row sb"><span className="lbl">Департамент</span><span className="val">SU:Core</span></div>
-              <div className="row sb"><span className="lbl">Длительность</span><span className="val">24 ч</span></div>
+              <div className="row sb"><span className="lbl">Категория</span><span className="val">Мероприятие</span></div>
+              <div className="row sb"><span className="lbl">Департамент</span><span className="val">{event?.tag ?? ''}</span></div>
               <div className="row sb"><span className="lbl">Формат</span><span className="val">Оффлайн</span></div>
               <div className="row sb"><span className="lbl">Возраст</span><span className="val">18+</span></div>
-              <div className="row sb"><span className="lbl">Команды</span><span className="val">до 5 чел</span></div>
             </div>
           </div>
         </aside>

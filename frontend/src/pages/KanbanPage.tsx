@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -17,7 +20,6 @@ interface CardData {
   priority: Priority; pLabel: string; assignees: Assignee[]
 }
 
-// Left-border urgency colors (from legacy theme)
 const PRIORITY_BORDER: Record<Priority, string> = {
   'p-high': '#EF4444',
   'p-mid':  '#F97316',
@@ -29,8 +31,6 @@ const PRIORITY_LABEL: Record<Priority, string> = {
   'p-low':  'Low',
 }
 
-
-// Column metadata with distinct colors (from legacy color scheme)
 const COLS: { key: ColKey; cls: string; label: string; color: string; eyeBtn?: boolean }[] = [
   { key: 'backlog', cls: 'c-backlog', label: 'Backlog',         color: '#9CA3AF' },
   { key: 'next',    cls: 'c-next',    label: 'Up next',         color: '#60A5FA' },
@@ -47,8 +47,6 @@ const FACES = [
   { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
 ]
 
-// ── Card Detail Panel ───────────────────────────────────────────────────────
-
 interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void }
 
 function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
@@ -57,7 +55,6 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
     <>
       <div className="kb-detail-backdrop" onClick={onClose} />
       <div className="kb-detail-panel">
-        {/* Header */}
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ width: 4, flexShrink: 0, borderRadius: 4, background: borderColor, alignSelf: 'stretch', minHeight: 52 }} />
           <div style={{ flex: 1 }}>
@@ -75,9 +72,7 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
           </button>
         </div>
 
-        {/* Body */}
         <div className="kb-detail-body">
-          {/* Priority + assignees row */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span className={`kbc-priority ${card.priority}`}>
               <span className="bar" /><span className="bar" /><span className="bar" />
@@ -92,18 +87,16 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
             </div>
           </div>
 
-          {/* Description */}
           {card.desc && (
             <div>
-              <div className="kb-detail-section-label">Описание</div>
+              <div className="kb-detail-section-label">Description</div>
               <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }}>{card.desc}</p>
             </div>
           )}
 
-          {/* Attachment */}
           {card.attachment && (
             <div>
-              <div className="kb-detail-section-label">Файл</div>
+              <div className="kb-detail-section-label">File</div>
               <div className="kbc-attachment">
                 <Icon id={card.attachment.icon} />
                 <span><b>{card.attachment.bold}</b>{card.attachment.rest}</span>
@@ -111,20 +104,18 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
             </div>
           )}
 
-          {/* Progress */}
           {card.progressPct !== undefined && (
             <div>
-              <div className="kb-detail-section-label">Прогресс — {card.progressLabel}</div>
+              <div className="kb-detail-section-label">Progress — {card.progressLabel}</div>
               <div className="progress" style={{ height: 8 }}>
                 <div className="bar" style={{ width: `${card.progressPct}%` }} />
               </div>
             </div>
           )}
 
-          {/* Meta */}
           {card.meta && card.meta.length > 0 && (
             <div>
-              <div className="kb-detail-section-label">Детали</div>
+              <div className="kb-detail-section-label">Details</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {card.meta.map((m, i) => (
                   <span key={i} className={`mi${m.urgent ? ' urgent' : m.soon ? ' soon' : ''}`} style={{ fontSize: 13 }}>
@@ -136,21 +127,18 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
           )}
         </div>
 
-        {/* Footer */}
         <div className="kb-detail-footer">
           <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
-            <Icon id="i-x" style={{ width: 14, height: 14 }} />Закрыть
+            <Icon id="i-x" style={{ width: 14, height: 14 }} />Close
           </button>
           <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
-            <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
+            <Icon id="i-check" style={{ width: 14, height: 14 }} />Done
           </button>
         </div>
       </div>
     </>
   )
 }
-
-// ── Kanban Card ─────────────────────────────────────────────────────────────
 
 interface KbCardProps {
   card: CardData
@@ -231,8 +219,6 @@ function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: 
     </article>
   )
 }
-
-// ── Page ────────────────────────────────────────────────────────────────────
 
 export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
@@ -322,6 +308,77 @@ export default function KanbanPage() {
     if (cardId) moveCard(cardId, col)
   }
 
+  if (error) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">SU:Core · Internal backlog</span>
+            <h1>Core board · Sprint 14</h1>
+          </div>
+        </div>
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'center', 
+          alignItems: 'center', 
+          minHeight: '300px',
+          width: '100%'
+        }}>
+          <div style={{ maxWidth: '650px', width: '100%' }}>
+            <ErrorBanner 
+              message="Failed to load board. Please try again." 
+              onRetry={retry}
+              stack={error}
+            />
+          </div>
+        </div>
+      </>
+    )
+  }
+
+  if (loading) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">SU:Core · Internal backlog</span>
+            <h1>Core board · Sprint 14</h1>
+          </div>
+        </div>
+        <div className="board">
+          {COLS.map(col => (
+            <div key={col.key} className={`kb-col ${col.cls}`}>
+              <header className="col-head">
+                <span className="marker" style={{ background: col.color }} />
+                <span className="title">{col.label}</span>
+              </header>
+              <div className="col-drop">
+                <LoadingSkeleton type="kanban" count={2} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </>
+    )
+  }
+
+  if (!loading && !error && allCards.length === 0) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">SU:Core · Internal backlog</span>
+            <h1>Core board · Sprint 14</h1>
+          </div>
+        </div>
+        <EmptyState
+          title="Board is empty"
+          description="No tasks on the board. Start by adding a new task!"
+        />
+      </>
+    )
+  }
+
   return (
     <>
       {toast && (
@@ -329,31 +386,48 @@ export default function KanbanPage() {
           {toast}
         </div>
       )}
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: '#EF4444',
+          color: '#fff',
+          padding: '12px 24px',
+          borderRadius: 10,
+          fontSize: 14,
+          fontWeight: 500,
+          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+          zIndex: 2000,
+        }}>
+          {toast}
+        </div>
+      )}
+
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">SU:Core · Internal backlog</span>
           <h1>Core board · Sprint 14</h1>
           <p className="text-muted" style={{ fontSize: 13, marginTop: 2 }}>
-            Только для команды SU:Core. Студенты эту страницу не видят.
+            Only for SU:Core team. Students do not see this page.
           </p>
         </div>
         <div className="row gap-2">
           <button className="btn secondary" onClick={exportCsv}>
-            <Icon id="i-download" style={{ width: 14, height: 14 }} />Экспорт CSV
+            <Icon id="i-download" style={{ width: 14, height: 14 }} />Export CSV
           </button>
           <button className="btn primary" onClick={() => openNewTask('backlog')}>
-            <Icon id="i-plus" style={{ width: 14, height: 14 }} />Новая задача
+            <Icon id="i-plus" style={{ width: 14, height: 14 }} />New task
           </button>
         </div>
       </div>
 
-      {/* Toolbar */}
       <section className="kb-toolbar">
         <label className="input-group" style={{ width: 260 }}>
           <Icon id="i-search" className="ic" />
           <input
             type="text"
-            placeholder="Найти задачу или ассайни…"
+            placeholder="Search task or assignee…"
             value={search}
             onChange={e => setSearch(e.target.value)}
           />
@@ -362,14 +436,14 @@ export default function KanbanPage() {
         <div className="row gap-2">
           <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Sprint</span>
           <select className="select" style={{ width: 'auto', minWidth: 180, height: 32, fontSize: 13, paddingRight: 28 }}>
-            <option>Sprint 14 · текущий</option>
+            <option>Sprint 14 · current</option>
             <option>Sprint 13</option>
             <option>Sprint 12</option>
-            <option>Backlog (без спринта)</option>
+            <option>Backlog (no sprint)</option>
           </select>
         </div>
         <span className="divider" />
-        <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Кто</span>
+        <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Who</span>
         <div className="kb-faces">
           {FACES.map(a => <div key={a.i} className="avatar" style={{ background: a.bg }}>{a.i}</div>)}
           <div className="more">+3</div>
@@ -390,7 +464,6 @@ export default function KanbanPage() {
         </div>
       </section>
 
-      {/* Board */}
       <div className="board-wrap">
         <div className="board">
           {COLS.map(col => {
@@ -404,7 +477,6 @@ export default function KanbanPage() {
                 onDragLeave={() => setDragOver(null)}
                 onDrop={e => handleDrop(e, col.key)}
               >
-                {/* Column header with legacy-style colored dot + count badge */}
                 <header className="col-head">
                   <span className="marker" style={{ background: col.color }} />
                   <span className="title">{col.label}</span>
@@ -444,13 +516,13 @@ export default function KanbanPage() {
                   ))}
                   {cards.length === 0 && !isOver && (
                     <div style={{ padding: '20px 10px', textAlign: 'center', color: 'var(--muted)', fontSize: 12.5 }}>
-                      Нет задач · перетащи сюда
+                      No tasks · drag here
                     </div>
                   )}
                 </div>
 
                 {col.key !== 'done' && (
-                  <button className="col-add-empty" onClick={() => openNewTask(col.key)}><Icon id="i-plus" />Добавить задачу</button>
+                  <button className="col-add-empty" onClick={() => openNewTask(col.key)}><Icon id="i-plus" />Add task</button>
                 )}
               </section>
             )
@@ -459,36 +531,34 @@ export default function KanbanPage() {
       </div>
 
       <footer className="text-muted" style={{ fontSize: 12, textAlign: 'center', padding: '18px 0 8px', marginTop: 8, borderTop: '1px solid var(--border)' }}>
-        Внутренний backlog · виден только команде SU:Core · <span className="text-mono">перетащи карточку ↔ чтобы изменить статус · нажми чтобы открыть детали</span>
+        Internal backlog · visible only to SU:Core team · <span className="text-mono">drag card ↔ to change status · click to open details</span>
       </footer>
 
-      {/* New task modal */}
       {newTask.open && (
         <div className="modal-overlay" onClick={() => setNewTask(t => ({ ...t, open: false }))}>
           <div className="dep-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
             <button className="modal-close" onClick={() => setNewTask(t => ({ ...t, open: false }))}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
-            <div className="dep-modal-header"><h2>Новая задача</h2></div>
+            <div className="dep-modal-header"><h2>New task</h2></div>
             <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
-                <label>Название</label>
-                <input className="input" autoFocus placeholder="Название задачи…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
+                <label>Title</label>
+                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
               </div>
               <div className="field">
-                <label>Колонка</label>
+                <label>Column</label>
                 <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
                   {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
-              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setNewTask(t => ({ ...t, open: false }))}>Отмена</button>
-              <button className="btn primary" style={{ flex: 1 }} onClick={submitNewTask} disabled={!newTask.title.trim()}>Создать</button>
+              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setNewTask(t => ({ ...t, open: false }))}>Cancel</button>
+              <button className="btn primary" style={{ flex: 1 }} onClick={submitNewTask} disabled={!newTask.title.trim()}>Create</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Task detail panel */}
       {selected && (
         <CardDetailPanel
           card={selected}

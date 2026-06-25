@@ -3,6 +3,10 @@ import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Member as ApiMember } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -25,7 +29,6 @@ const DEFAULT_ROADMAP_HTML = `<p style="font-size:17px;color:var(--muted);margin
 const DEFAULT_HISTORY_HTML = `<div class="meta-line">SU IU · оригинал — 2019 · последняя редакция: апрель 2026</div><h1 style="font-size:36px;letter-spacing:-0.025em;line-height:1.1;margin-bottom:12px">Шесть лет студенческого самоуправления.</h1><p class="lead" style="font-size:17px">Как студсовет Иннополиса вырос из чата в Telegram-беседе в три департамента с собственной кассой, ивентами, продакшеном и матрицей прав.</p><p class="lede">В сентябре 2019 года восемь человек собрались в комнате 320 и решили, что коммуникации между кампусом и Учёным советом нужен формат поудобнее, чем выходить лично в деканат. Тимур Каримов записал в Notion первые правила — три абзаца, без департаментов, без выборов. На следующей неделе к чату подключились ещё 12 человек.</p><p>За первый год SU занимался в основном переговорами: переноса дедлайнов из-за хакатонов, расписания душевых в общежитии, расширения окон столовой. Бюджета не было — его проводили через университетскую административку. Структуры тоже не было: один человек делал и фотки, и расписание, и говорил с проректором.</p><h2>2021 — раздел на департаменты</h2><p>Команда выросла до 23 человек. Главная боль: один и тот же человек разрывался между организацией Halloween-вечера и переговорами по новому корпусу. Решение пришло в феврале — разделить SU на три департамента с co-leads. Так появились SU:Core (стратегия + университет), SU:Active (события), SU:Media (контент).</p><p>Тогда же ввели первые открытые собрания и голосования за бюджет — раз в семестр выкладывали в общий чат, кто на что хочет потратить.</p><div class="history-photo"><div class="caption">Первое общее собрание после раздела на департаменты · март 2021 · фото SU:Media архив</div></div><h2>2023 — формат, который остался</h2><p>Утвердили роли, описали процессы, ввели Innopoints — внутреннюю систему за участие в активностях. Ввели регулярные открытые митинги раз в две недели и публичный backlog SU:Core.</p><p>С 2024 студсовет начал собирать донаты на конкретные цели — мерч, кофе на собраниях, спортинвентарь — с публичной отчётностью трат. К 2026-му через систему прошло чуть больше миллиона рублей.</p><h2>Ключевые вехи</h2><ul class="timeline"><li><b>сентябрь 2019</b>Восемь основателей. Чат, Notion-страница, никакой иерархии.</li><li><b>октябрь 2020</b>Первый формальный бюджет: ₽ 47,000 на Halloween и зимние посиделки.</li><li><b>февраль 2021</b>Раздел на три департамента, появление co-leads.</li><li><b>сентябрь 2022</b>Запуск Innopoints за участие.</li><li><b>март 2023</b>Открытый backlog SU:Core, публикация повестки и решений.</li><li><b>декабрь 2024</b>Первая прозрачная донат-кампания (₽ 320,000 на спортинвентарь).</li><li><b>апрель 2026</b>Запуск этого портала — единая точка входа во все модули SU.</li></ul><h2>Что осталось важно</h2><p>SU не парламент. Это рабочая команда студентов, которая закрывает три задачи: договариваться с университетом, организовывать жизнь кампуса и держать публичную ленту. Всё остальное — производное.</p>`
 
 const BLANK_MEMBER: Omit<Member, 'id'> = { dep: 'core', tag: '', name: '', role: '', meta: '', bio: '', recent: ['', '', ''] }
-
 
 export default function MembersPage() {
   const { isAdmin } = useAdmin()
@@ -64,11 +67,19 @@ export default function MembersPage() {
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [depParam])
+  const { data: fetchedMembers, loading, error, retry } = useFetch<Member[]>('/api/members');
 
   useEffect(() => {
     api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
     api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    if (fetchedMembers) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMembers(fetchedMembers);
+    }
+  }, [fetchedMembers]);
 
   function showToast(msg: string) {
     setToast(msg)
@@ -111,7 +122,6 @@ export default function MembersPage() {
       const created = await api.members.create(m)
       setMembers(prev => [...prev, created])
     } catch {
-      // optimistic: add with temp id
       setMembers(prev => [...prev, { ...m, id: `local-${Date.now()}` }])
     }
     setNewMember(BLANK_MEMBER)
@@ -143,6 +153,7 @@ export default function MembersPage() {
           {toast}
         </div>
       )}
+
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Команда и история</span>
@@ -163,7 +174,6 @@ export default function MembersPage() {
         ))}
       </div>
 
-      {/* Members pane */}
       {tab === 'members' && (
         <div>
           {isAdmin && (
@@ -173,6 +183,7 @@ export default function MembersPage() {
               </button>
             </div>
           )}
+
           <div className="members-filters-bar">
             <div className="seg">
               {['Все', 'SU:Core', 'SU:Active', 'SU:Media'].map((l, i) => (
@@ -206,16 +217,66 @@ export default function MembersPage() {
               </p>
             )}
           </div>
-
-          {!showAll && filteredMembers.length > 8 && (
-            <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
-              <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load members. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
             </div>
+          )}
+
+          {loading && (
+            <div className="members-grid">
+              <LoadingSkeleton type="member" count={8} />
+            </div>
+          )}
+
+          {!loading && !error && members.length === 0 && (
+            <EmptyState
+              
+              title="No members"
+              description="The community is growing! Check back soon for new members."
+            />
+          )}
+
+          {!loading && !error && members.length > 0 && (
+            <>
+              <div className="members-grid">
+                {visibleMembers.map((p, i) => (
+                  <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
+                    <div className="photo">
+                      <span className="dep-tag">{p.tag}</span>
+                      <div className="silhouette"></div>
+                    </div>
+                    <div className="body">
+                      <div className="name">{p.name}</div>
+                      <div className="role">{p.role}</div>
+                      <div className="meta">{p.meta}</div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+
+              {!showAll && filteredMembers.length > 8 && (
+                <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
+                  <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
 
-      {/* History pane */}
       {tab === 'history' && (
         <div>
           {isAdmin && (
@@ -241,7 +302,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Roadmap pane */}
       {tab === 'roadmap' && (
         <div>
           <div className="row sb mb-4">
@@ -293,7 +353,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Add member modal */}
       {addingMember && (
         <div className="modal-overlay" onClick={() => setAddingMember(false)}>
           <div className="member-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
@@ -347,7 +406,6 @@ export default function MembersPage() {
         </div>
       )}
 
-      {/* Member modal */}
       {selected && (
         <div className="modal-overlay" onClick={() => setSelected(null)}>
           <div className="member-modal" onClick={e => e.stopPropagation()}>

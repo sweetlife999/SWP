@@ -3,38 +3,96 @@ import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { useFetch } from '../hooks/useFetch'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
+import { EmptyState } from '../components/EmptyState'
 
-const BLANK_EVENT: Omit<Event, 'id'> = {
-  title: '', desc: '', date: '', dd: '', mm: '', cover: '',
-  tag: 'SU:Core', tagCls: 'green', time: '', foot: '', past: false,
+const BLANK_EVENT = {
+  title: '',
+  desc: '',
+  date: '',
+  dd: '',
+  mm: '',
+  cover: '',
+  tag: '',
+  tagCls: '',
+  time: '',
+  foot: '',
+  past: false,
 }
 
 function EventCard({ ev }: { ev: Event }) {
+  // cast ev locally, so compiler understands snake_case backend parameters
+  const dbEv = ev as Event & {
+    event_date?: string
+    cover_class?: string
+    department?: string
+    event_time?: string
+    description?: string
+    foot_text?: string
+    foot_label?: string
+  }
+
+  const label = statusLabel(ev)
+  
+  const isPast = dbEv.past ?? (dbEv.event_date ? new Date(dbEv.event_date) < new Date() : false)
+  const coverClass = dbEv.cover_class ?? dbEv.cover ?? ''
+  const tagText = dbEv.tag ?? (dbEv.department ? `SU:${dbEv.department}` : '')
+  const tagClass = dbEv.tagCls ?? 'green'
+  const timeText = dbEv.event_time ?? dbEv.time ?? ''
+  const description = dbEv.description ?? dbEv.desc ?? ''
+  const footerText = dbEv.foot_text ?? dbEv.foot ?? ''
+  const footerLabel = dbEv.foot_label ?? dbEv.footLabel ?? 'Подробнее'
+  
   return (
-    <Link className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
-      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
-        <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
-        {ev.statusText && (
-          <span className={`status-badge${ev.status === 'live' ? ' live' : ''}`}>{ev.statusText}</span>
+    <Link className={`event-card${dbEv.featured ? ' featured' : ''}${isPast ? ' passed' : ''}`} to={`/events/${dbEv.id}`}>
+      <div className={`ec-cover${coverClass ? ` ${coverClass}` : ''}${isPast ? ' passed-cover' : ''}`}>
+        <div className="date-badge">
+          <div className="d">{dbEv.dd}</div>
+          <div className="m">{dbEv.mm}</div>
+        </div>
+        {label && (
+          <span className={`status-badge${dbEv.status === 'published' ? ' live' : ''}`}>{label}</span>
         )}
       </div>
       <div className="ec-body">
         <div className="ec-meta">
-          <span className={`tag ${ev.tagCls}`}><span className="dot"></span>{ev.tag}</span>
-          {ev.time && <span>{ev.time}</span>}
+          <span className={`tag ${tagClass}`}>
+            <span className="dot"></span>
+            {tagText}
+          </span>
+          {timeText && <span>{timeText}</span>}
         </div>
-        <h3>{ev.title}</h3>
-        <p className="desc">{ev.desc}</p>
+        <h3>{dbEv.title}</h3>
+        <p className="desc">{description}</p>
         <div className="ec-foot">
-          <span>{ev.foot}</span>
-          <span className="open">{ev.footLabel ?? 'Подробнее'} <Icon id="i-arrow-r" style={{ width: 12, height: 12 }} /></span>
+          <span>{footerText}</span>
+          <span className="open">
+            {footerLabel}{' '}
+            <Icon id="i-arrow-r" style={{ width: 12, height: 12 }} />
+          </span>
         </div>
       </div>
     </Link>
   )
 }
 
-const MONTH_ABBR = ['ЯНВ','ФЕВ','МАР','АПР','МАЙ','ИЮН','ИЮЛ','АВГ','СЕН','ОКТ','НОЯ','ДЕК']
+function statusLabel(ev: Event & { status_text?: string }) {
+  if (ev.status_text ?? ev.statusText) return ev.status_text ?? ev.statusText
+  if (ev.status === 'published') return 'live'
+  return ev.status ?? ''
+}
+
+function sortEvents(list: Event[]) {
+  return [...list].sort((a, b) => {
+    const itemA = a as Event & { event_date?: string }
+    const itemB = b as Event & { event_date?: string }
+    const dateA = itemA.event_date ?? a.date ?? ''
+    const dateB = itemB.event_date ?? b.date ?? ''
+    return dateB.localeCompare(dateA) || b.id - a.id
+  })
+}
 
 export default function EventsPage() {
   const { isAdmin } = useAdmin()
@@ -51,12 +109,19 @@ export default function EventsPage() {
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
   const [toast, setToast] = useState('')
 
+  const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>('/api/events');
+
   useEffect(() => {
     api.events.list()
       .then(setEvents)
       .catch(() => setError(true))
       .finally(() => setLoading(false))
   }, [])
+    if (fetchedEvents) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setEvents(fetchedEvents);
+    }
+  }, [fetchedEvents]);
 
   function showToast(msg: string) {
     setToast(msg)
@@ -88,15 +153,22 @@ export default function EventsPage() {
 
   function applyFilter(list: Event[]) {
     return list.filter(ev => {
+      const item = ev as Event & { event_date?: string }
+      const evDate = item.event_date ?? ev.date ?? ''
       if (search && !ev.title.toLowerCase().includes(search.toLowerCase())) return false
-      if (dateFrom && ev.date < dateFrom) return false
-      if (dateTo && ev.date > dateTo) return false
+      if (dateFrom && evDate < dateFrom) return false
+      if (dateTo && evDate > dateTo) return false
       return true
     })
   }
 
-  const allCurrent = applyFilter(events.filter(ev => !ev.past))
-  const allPast    = applyFilter(events.filter(ev => !!ev.past))
+  const checkPastStatus = (ev: Event) => {
+    const item = ev as Event & { event_date?: string }
+    return !!(ev.past ?? (item.event_date ? new Date(item.event_date) < new Date() : false))
+  }
+
+  const allCurrent = applyFilter(events.filter(ev => !checkPastStatus(ev)))
+  const allPast    = applyFilter(events.filter(ev => checkPastStatus(ev)))
   const current    = allCurrent.slice(0, limit)
   const past       = allPast.slice(0, limit)
   const hasMore    = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit
@@ -131,7 +203,7 @@ export default function EventsPage() {
           </div>
           <button
             className={`btn secondary${showCal ? ' cal-active' : ''}`}
-            onClick={() => setShowCal(v => !v)}
+            onClick={() => setShowCal(!showCal)}
             style={showCal ? { background: 'var(--accent-50)', borderColor: 'var(--accent)', color: 'var(--accent-700)' } : {}}
           >
             <Icon id="i-calendar" style={{ width: 14, height: 14 }} />
@@ -176,7 +248,7 @@ export default function EventsPage() {
       {seg1 === 0 && (
         <>
           <div className="section-head-row">
-            <h3>Текущие <span className="count">{String(current.length).padStart(2, '0')}</span></h3>
+            <h3>Текущие <span className="count">{loading ? '--' : String(current.length).padStart(2, '0')}</span></h3>
           </div>
           <div className="events-grid">
             {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
@@ -186,6 +258,49 @@ export default function EventsPage() {
               </p>
             )}
           </div>
+
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load events. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="events-grid">
+              <LoadingSkeleton type="event" count={6} />
+            </div>
+          )}
+
+          {!loading && !error && events.length === 0 && (
+            <EmptyState
+              
+              title="No events"
+              description="There are no events scheduled at the moment. Check back later!"
+            />
+          )}
+
+          {!loading && !error && events.length > 0 && (
+            <div className="events-grid">
+              {current.map(ev => <EventCard key={ev.id} ev={ev} />)}
+              {current.length === 0 && (
+                <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                  Мероприятия не найдены
+                </p>
+              )}
+            </div>
+          )}
         </>
       )}
 
@@ -202,6 +317,49 @@ export default function EventsPage() {
               </p>
             )}
           </div>
+
+          {error && (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'center', 
+              alignItems: 'center', 
+              width: '100%',
+              padding: '20px 0'
+            }}>
+              <div style={{ maxWidth: '650px', width: '100%' }}>
+                <ErrorBanner 
+                  message="Failed to load events. Please try again." 
+                  onRetry={retry}
+                  stack={error}
+                />
+              </div>
+            </div>
+          )}
+
+          {loading && (
+            <div className="events-grid">
+              <LoadingSkeleton type="event" count={6} />
+            </div>
+          )}
+
+          {!loading && !error && events.length === 0 && (
+            <EmptyState
+              
+              title="No events"
+              description="There are no events scheduled at the moment. Check back later!"
+            />
+          )}
+
+          {!loading && !error && events.length > 0 && (
+            <div className="events-grid">
+              {past.map(ev => <EventCard key={ev.id} ev={ev} />)}
+              {past.length === 0 && (
+                <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                  Мероприятия не найдены
+                </p>
+              )}
+            </div>
+          )}
         </>
       )}
 
@@ -222,16 +380,16 @@ export default function EventsPage() {
               <div className="col gap-3">
                 <div className="field">
                   <label>Название</label>
-                  <input className="input" placeholder="Hackathon Summer 24h" value={newEvent.title} onChange={e => setNewEvent(v => ({ ...v, title: e.target.value }))} />
+                  <input className="input" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} />
                 </div>
                 <div className="field">
                   <label>Описание</label>
-                  <textarea className="textarea" rows={2} placeholder="Краткое описание…" value={newEvent.desc} onChange={e => setNewEvent(v => ({ ...v, desc: e.target.value }))} />
+                  <textarea className="textarea" rows={2} value={newEvent.desc} onChange={e => setNewEvent({ ...newEvent, desc: e.target.value })} />
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
                     <label>Дата</label>
-                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent(v => ({ ...v, date: e.target.value }))} />
+                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent({ ...newEvent, date: e.target.value })} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label>Время (опц.)</label>
@@ -243,24 +401,21 @@ export default function EventsPage() {
                     <label>Департамент</label>
                     <select className="input" value={newEvent.tag} onChange={e => {
                       const map: Record<string, string> = { 'SU:Core': 'green', 'SU:Active': 'blue', 'SU:Media': 'purple' }
-                      setNewEvent(v => ({ ...v, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' }))
+                      setNewEvent({ ...newEvent, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' })
                     }}>
-                      <option>SU:Core</option>
-                      <option>SU:Active</option>
-                      <option>SU:Media</option>
+                      <option value="SU:Core">SU:Core</option>
+                      <option value="SU:Active">SU:Active</option>
+                      <option value="SU:Media">SU:Media</option>
                     </select>
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Статус</label>
-                    <select className="input" value={newEvent.past ? 'past' : 'current'} onChange={e => setNewEvent(v => ({ ...v, past: e.target.value === 'past' }))}>
-                      <option value="current">Текущее</option>
-                      <option value="past">Прошедшее</option>
-                    </select>
+                    <label>Локация</label>
+                    <input className="input" value={newEvent.footLabel ?? ''} onChange={e => setNewEvent({ ...newEvent, footLabel: e.target.value })} />
                   </div>
                 </div>
                 <div className="field">
-                  <label>Доп. инфо (участники, места)</label>
-                  <input className="input" placeholder="32 участника" value={newEvent.foot} onChange={e => setNewEvent(v => ({ ...v, foot: e.target.value }))} />
+                  <label>Текст подвала</label>
+                  <input className="input" value={newEvent.foot} onChange={e => setNewEvent({ ...newEvent, foot: e.target.value })} />
                 </div>
                 <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
                   <button className="btn ghost" onClick={() => setAddingEvent(false)}>Отмена</button>
