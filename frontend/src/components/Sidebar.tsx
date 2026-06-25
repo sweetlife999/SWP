@@ -54,6 +54,14 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
 
         <div className="nav-section">Admin</div>
         <nav className="nav-list">
+          <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
+            <Icon id="i-calendar" className="ic" />
+            Events Manager
+          </NavLink>
+          <NavLink className="nav-item" to="/admin/members" onClick={onClose}>
+            <Icon id="i-users" className="ic" />
+            Members Manager
+          </NavLink>
           <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
             <Icon id="i-kanban" className="ic" />
             SU:Core Board

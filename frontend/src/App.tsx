@@ -12,6 +12,8 @@ import KanbanPage from './pages/KanbanPage'
 import FormBuilderPage from './pages/FormBuilderPage'
 import FormsViewerPage from './pages/FormsViewerPage'
 import AdminLoginPage from './pages/AdminLoginPage'
+import AdminEventsPage from './pages/AdminEventsPage'
+import AdminMembersPage from './pages/AdminMembersPage'
 
 export default function App() {
   return (
@@ -34,6 +36,9 @@ export default function App() {
 
           {/* Admin routes — ProtectedRoute redirects to /admin/login if not authenticated */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/admin/events" element={<AdminEventsPage />} />
+            <Route path="/admin/events/new" element={<AdminEventsPage />} />
+            <Route path="/admin/members" element={<AdminMembersPage />} />
             <Route path="/admin/kanban" element={<KanbanPage />} />
             <Route path="/admin/forms/builder" element={<FormBuilderPage />} />
             <Route path="/admin/forms/viewer" element={<FormsViewerPage />} />
