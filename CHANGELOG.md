@@ -16,7 +16,9 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Forms Builder now publishes real questionnaires: each save creates a separate questionnaire via the API, and published ones appear on the public Questionnaires page; a "Новый опрос" button starts a fresh one
 - Students can fill out and submit a questionnaire; responses are stored anonymously and show up in the Forms Viewer
 - Kanban board: create new cards (persisted) and delete cards; the SU:Core board and its columns are seeded so the board works on a fresh database
-- Member profiles support a photo (via URL), shown on the members grid and profile modal
+- Member photos: drag-and-drop / click upload from the admin's computer, stored on the server and served optimised via a Thumbor image service; shown on the members grid and profile modal
+- Event detail page is fully editable by admins: schedule, organizers, location address, format and age (inline "Редактировать детали" mode); "Похожие мероприятия" now lists real other events
+- Kanban cards are editable (title, rich-note description, priority, assignee, column) from the card panel
 - Admin event form has a Location field; event location now displays on the event page
 - Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
 - Events have editable Format and Age fields, shown on the event page (were hardcoded)
@@ -30,6 +32,8 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Admin "Add event" / "Add member" now reach the correct `/admin/*` endpoints — they were POSTing to the public routes and silently failing
 - Forms Builder "Publish" and the questionnaire "Submit" button were no-ops (local state only) — both are now wired to the backend
 - Newly-created kanban cards were hidden by the default priority filter — the filter now starts off
+- Submitting a questionnaire could blank the page (white screen) on a survey with no/edited questions — guarded against empty steps and removed a setState-during-render
+- Member cards rendered very tall/stretched with few members — fixed-width auto-fill columns and square photos
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 
