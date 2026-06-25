@@ -49,6 +49,7 @@ export default function EventsPage() {
   const [limit, setLimit] = useState(4)
   const [addingEvent, setAddingEvent] = useState(false)
   const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     api.events.list()
@@ -57,18 +58,29 @@ export default function EventsPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
   async function handleAddEvent() {
     const d = new Date(newEvent.date)
-    const ev = {
+    const ev: Omit<Event, 'id'> = {
       ...newEvent,
+      // Empty time would be sent as "" and rejected by the backend (TIME column) — omit it.
+      time: newEvent.time || undefined,
       dd: newEvent.date ? String(d.getDate()).padStart(2, '0') : '',
       mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
     }
     try {
       const created = await api.events.create(ev)
-      setEvents(prev => [...prev, created])
+      // Quick-add publishes immediately so it shows on /events; the admin panel
+      // (/admin/events) keeps the full draft → publish → archive workflow.
+      const published = await api.events.update(created.id, { status: 'published' })
+      setEvents(prev => [...prev, published])
+      showToast('Мероприятие добавлено')
     } catch {
-      setEvents(prev => [...prev, { ...ev, id: Date.now() }])
+      showToast('Не удалось добавить мероприятие')
     }
     setNewEvent(BLANK_EVENT)
     setAddingEvent(false)
@@ -92,6 +104,11 @@ export default function EventsPage() {
 
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Жизнь кампуса</span>
@@ -218,7 +235,7 @@ export default function EventsPage() {
                   </div>
                   <div className="field" style={{ flex: 1 }}>
                     <label>Время (опц.)</label>
-                    <input className="input" placeholder="19:00" value={newEvent.time ?? ''} onChange={e => setNewEvent(v => ({ ...v, time: e.target.value }))} />
+                    <input className="input" type="time" value={newEvent.time ?? ''} onChange={e => setNewEvent(v => ({ ...v, time: e.target.value }))} />
                   </div>
                 </div>
                 <div className="row gap-3">
