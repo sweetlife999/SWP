@@ -92,8 +92,9 @@ export default function AdminMembersPage() {
       </div>
 
       {error && (
-        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
-          Не удалось загрузить участников. Войдите как администратор и обновите страницу.
+        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span>Не удалось загрузить участников. Войдите как администратор и обновите страницу.</span>
+          <a className="btn secondary sm" href="#/admin/login">Войти</a>
         </div>
       )}
 
