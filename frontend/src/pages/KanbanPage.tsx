@@ -322,7 +322,7 @@ export default function KanbanPage() {
     // Locally-created tasks (kb-x…) have no backend row yet — skip persistence.
     if (cardId.startsWith('kb-x')) return
     try {
-      await api.admin.kanban.update(cardId, col)
+      await api.admin.kanban.patch(cardId, { col })
     } catch {
       setCardCols(p => ({ ...p, [cardId]: prev }))
       showToast('Не удалось переместить карточку')
