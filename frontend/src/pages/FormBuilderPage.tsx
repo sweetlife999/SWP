@@ -289,6 +289,7 @@ export default function FormBuilderPage() {
             <Icon id="i-eye" style={{ width: 14, height: 14 }} />
             {preview ? 'Редактировать' : 'Preview'}
           </button>
+          <button className="btn ghost" disabled={saving} onClick={resetBuilder}><Icon id="i-plus" style={{ width: 14, height: 14 }} />Новый опрос</button>
           <button className="btn secondary" disabled={saving} onClick={() => saveQuestionnaire(false)}>Сохранить как черновик</button>
           <button className="btn primary" disabled={saving} onClick={() => saveQuestionnaire(true)}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />{saving ? 'Сохранение…' : 'Опубликовать'}</button>
         </div>
