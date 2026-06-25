@@ -11,9 +11,5 @@ class Settings(BaseSettings):
     cors_origins: str = "http://localhost:3000,https://su.fblrkus.ru"
     debug: bool = False
 
-    @property
-    def cors_origins_list(self) -> list[str]:
-        return [o.strip() for o in self.cors_origins.split(",")]
-
 
 settings = Settings()
