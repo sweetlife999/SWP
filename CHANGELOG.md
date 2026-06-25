@@ -13,11 +13,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Events and Members pages now show explicit loading, empty, and error states instead of a blank screen
 - Members directory filters by department through the API (`GET /members?dep=`)
 - Kanban board persists card moves to the backend (`PATCH /admin/kanban/:id`) with optimistic update and rollback + toast on failure
+- Forms Builder now publishes real questionnaires: each save creates a separate questionnaire via the API, and published ones appear on the public Questionnaires page
+- Students can fill out and submit a questionnaire; responses are stored anonymously and show up in the Forms Viewer
 
 ### Fixed
 - Admin "Add event" / "Add member" now reach the correct `/admin/*` endpoints — they were POSTing to the public routes and silently failing
+- Forms Builder "Publish" and the questionnaire "Submit" button were no-ops (local state only) — both are now wired to the backend
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
-- API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port corrected (publishes `9999:8000`)
+- API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 
 ## [1.0.0] — 2026-06-20
 
