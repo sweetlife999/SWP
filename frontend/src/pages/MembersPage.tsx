@@ -267,19 +267,22 @@ export default function MembersPage() {
           </div>
 
           <section className={`roadmap-shell${editing ? ' editing' : ''}`}>
-            <div className="rm-toolbar">
-              <button className="tb-btn" title="Bold"><Icon id="i-bold" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Italic"><Icon id="i-italic" style={{ width: 14, height: 14 }} /></button>
-              <div className="tb-sep"></div>
-              <button className="tb-btn" title="Heading"><span style={{ fontWeight: 700, fontSize: 13 }}>H</span></button>
-              <button className="tb-btn" title="Paragraph"><Icon id="i-text" style={{ width: 14, height: 14 }} /></button>
-              <div className="tb-sep"></div>
-              <button className="tb-btn" title="List"><Icon id="i-list" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Link"><Icon id="i-link" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Divider"><span style={{ fontWeight: 600 }}>—</span></button>
-              <div className="tb-spacer"></div>
-              <div className="meta"><span className="text-mono">EDIT MODE</span> · автосохранение каждые 30 сек</div>
-            </div>
+            {/* Formatting toolbar is edit-only — only admins enter edit mode. */}
+            {editing && (
+              <div className="rm-toolbar">
+                <button className="tb-btn" title="Bold"><Icon id="i-bold" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Italic"><Icon id="i-italic" style={{ width: 14, height: 14 }} /></button>
+                <div className="tb-sep"></div>
+                <button className="tb-btn" title="Heading"><span style={{ fontWeight: 700, fontSize: 13 }}>H</span></button>
+                <button className="tb-btn" title="Paragraph"><Icon id="i-text" style={{ width: 14, height: 14 }} /></button>
+                <div className="tb-sep"></div>
+                <button className="tb-btn" title="List"><Icon id="i-list" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Link"><Icon id="i-link" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Divider"><span style={{ fontWeight: 600 }}>—</span></button>
+                <div className="tb-spacer"></div>
+                <div className="meta"><span className="text-mono">EDIT MODE</span></div>
+              </div>
+            )}
 
             <div
               ref={roadmapRef}
@@ -289,19 +292,22 @@ export default function MembersPage() {
               dangerouslySetInnerHTML={{ __html: roadmapHtml }}
             />
 
-            <div className="rm-foot">
-              <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
-              <button className="btn primary" onClick={handleRoadmapSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
-            </div>
+            {editing && (
+              <div className="rm-foot">
+                <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
+                <button className="btn primary" onClick={handleRoadmapSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
+              </div>
+            )}
           </section>
 
-          <div className="row sb mt-4">
-            <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
-            <div className={`row gap-2 read-actions${editing ? '' : ''}`}>
-              <button className="btn secondary" onClick={() => showToast('История правок: последнее изменение — Михаил Раянов, 4 июня 2026')}><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
-              {isAdmin && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
+          {isAdmin && (
+            <div className="row sb mt-4">
+              <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
+              <div className="row gap-2 read-actions">
+                {!editing && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
