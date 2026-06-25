@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Member as ApiMember } from '../lib/api'
+import { api, photoUrl, type Member as ApiMember } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -204,7 +204,7 @@ export default function MembersPage() {
                     <div className="photo">
                       <span className="dep-tag">{p.tag}</span>
                       {p.photo_url
-                        ? <img src={p.photo_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        ? <img src={photoUrl(p.photo_url, '300x300')} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                         : <div className="silhouette"></div>}
                     </div>
                     <div className="body">
@@ -373,7 +373,7 @@ export default function MembersPage() {
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>
               <span className="dep-tag">{selected.tag}</span>
               {selected.photo_url
-                ? <img src={selected.photo_url} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={photoUrl(selected.photo_url, '480x480')} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <div className="silhouette-lg"></div>}
             </div>
             <div className="member-modal-body">

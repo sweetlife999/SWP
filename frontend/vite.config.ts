@@ -11,6 +11,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': { target: apiTarget, changeOrigin: true },
+      '/thumbor': { target: process.env.VITE_THUMBOR_PROXY ?? 'http://localhost:8888', changeOrigin: true },
     },
   },
 })

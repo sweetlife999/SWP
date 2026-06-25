@@ -21,6 +21,14 @@ function authHeaders(): HeadersInit {
   return { 'Content-Type': 'application/json', Authorization: `Bearer ${token()}` }
 }
 
+// Build a Thumbor URL for an uploaded image path. Full http(s) URLs pass through
+// unchanged (back-compat with photos that were stored as external links).
+export function photoUrl(path: string | undefined, size = '320x320'): string {
+  if (!path) return ''
+  if (/^https?:\/\//.test(path)) return path
+  return `/thumbor/unsafe/${size}/${path}`
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 // Lifecycle status from the backend; 'live'/'passed' are legacy display values still tolerated.
@@ -115,6 +123,19 @@ export interface ContentBlock { html: string; updatedAt?: string; updatedBy?: st
 // ── Endpoints ────────────────────────────────────────────────────────────────
 
 export const api = {
+  // Uploads an image; returns its stored path (serve via photoUrl()). Multipart,
+  // so we set only the Authorization header and let the browser set the boundary.
+  upload: async (file: File): Promise<{ path: string }> => {
+    const body = new FormData()
+    body.append('file', file)
+    const res = await fetch(`${BASE}/admin/upload`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token()}` },
+      body,
+    })
+    if (!res.ok) throw new Error(String(res.status))
+    return res.json()
+  },
   events: {
     list:      () => req<Event[]>('/events'),
     // Admin listing returns every event regardless of status (drafts included).
