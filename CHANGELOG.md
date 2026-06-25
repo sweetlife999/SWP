@@ -13,12 +13,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Events and Members pages now show explicit loading, empty, and error states instead of a blank screen
 - Members directory filters by department through the API (`GET /members?dep=`)
 - Kanban board persists card moves to the backend (`PATCH /admin/kanban/:id`) with optimistic update and rollback + toast on failure
-- Forms Builder now publishes real questionnaires: each save creates a separate questionnaire via the API, and published ones appear on the public Questionnaires page
+- Forms Builder now publishes real questionnaires: each save creates a separate questionnaire via the API, and published ones appear on the public Questionnaires page; a "Новый опрос" button starts a fresh one
 - Students can fill out and submit a questionnaire; responses are stored anonymously and show up in the Forms Viewer
+- Kanban board: create new cards (persisted) and delete cards; the SU:Core board and its columns are seeded so the board works on a fresh database
+- Member profiles support a photo (via URL), shown on the members grid and profile modal
+- Admin event form has a Location field; event location now displays on the event page
+- Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
 
 ### Fixed
 - Admin "Add event" / "Add member" now reach the correct `/admin/*` endpoints — they were POSTing to the public routes and silently failing
 - Forms Builder "Publish" and the questionnaire "Submit" button were no-ops (local state only) — both are now wired to the backend
+- Newly-created kanban cards were hidden by the default priority filter — the filter now starts off
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 
