@@ -88,6 +88,22 @@ async def _build_admin_out(pool: asyncpg.Pool, survey_id: int) -> QuestionnaireA
 # ── Admin endpoints ───────────────────────────────────────────────────────────
 
 
+@admin_router.get("", response_model=list[QuestionnaireAdminOut])
+async def list_questionnaires_admin(request: Request) -> list[QuestionnaireAdminOut]:
+    """All questionnaires (drafts, open, closed) for the builder picker."""
+    pool: asyncpg.Pool = get_pool(request)
+    rows = await pool.fetch("SELECT id FROM surveys ORDER BY created_at DESC")
+    return [await _build_admin_out(pool, r["id"]) for r in rows]
+
+
+@admin_router.get("/{questionnaire_id}", response_model=QuestionnaireAdminOut)
+async def get_questionnaire_admin(questionnaire_id: int, request: Request) -> QuestionnaireAdminOut:
+    """A single questionnaire with its questions, for loading into the builder."""
+    pool: asyncpg.Pool = get_pool(request)
+    await _get_survey_or_404(pool, questionnaire_id)
+    return await _build_admin_out(pool, questionnaire_id)
+
+
 @admin_router.post("", response_model=QuestionnaireAdminOut, status_code=status.HTTP_201_CREATED)
 async def create_questionnaire(
     body: QuestionnaireCreate, request: Request

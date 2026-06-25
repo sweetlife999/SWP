@@ -36,12 +36,14 @@ export interface Event {
   endTime?: string
   featured?: boolean; past?: boolean
   status?: 'draft' | 'published' | 'archived'; statusText?: string
+  format?: string; age?: string
 }
 
 export interface EventPatch {
   title?: string; desc?: string; date?: string; time?: string | null
   tag?: string; cover?: string; foot?: string; footLabel?: string | null
   featured?: boolean; status?: EventStatus; statusText?: string | null
+  format?: string; age?: string
 }
 
 export interface Member {
@@ -74,6 +76,16 @@ export interface QuestionnaireCreate {
 export interface QuestionInput {
   type: QStepType; title: string; hint?: string
   options?: string[]; scale_low?: string; scale_high?: string; scale_mid?: number
+}
+
+export interface QuestionAdmin {
+  id: number; position: number; type: QStepType; title: string; hint: string
+  options?: string[]; scale_low?: string; scale_high?: string; scale_mid?: number
+}
+export interface QuestionnaireAdmin {
+  id: number; department: 'core' | 'active' | 'media'; title: string; description: string
+  status: 'draft' | 'open' | 'closed'; est_minutes: number; closes_at?: string
+  response_count: number; questions: QuestionAdmin[]
 }
 export interface Survey {
   id: string; tag: string; tagCls: string
@@ -157,7 +169,7 @@ export const api = {
     },
     kanban: {
       list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
-      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority }) =>
+      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignee?: string }) =>
         req<KanbanCard>('/admin/kanban', { method: 'POST', headers: authHeaders(), body: JSON.stringify(card) }),
       update: (id: string, col: ColKey) =>
         req<KanbanCard>(`/admin/kanban/${id}`, {
@@ -172,10 +184,16 @@ export const api = {
       responses: (id: string) => req<unknown[]>(`/admin/forms/${id}/responses`, { headers: authHeaders() }),
     },
     questionnaires: {
+      list:        () => req<QuestionnaireAdmin[]>('/admin/questionnaires', { headers: authHeaders() }),
+      get:         (id: number | string) => req<QuestionnaireAdmin>(`/admin/questionnaires/${id}`, { headers: authHeaders() }),
       create:      (q: QuestionnaireCreate) =>
-        req<{ id: number }>('/admin/questionnaires', { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
+        req<QuestionnaireAdmin>('/admin/questionnaires', { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
+      patch:       (id: number | string, body: Partial<QuestionnaireCreate>) =>
+        req<QuestionnaireAdmin>(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
       addQuestion: (id: number | string, q: QuestionInput) =>
         req<{ id: number }>(`/admin/questionnaires/${id}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
+      removeQuestion: (id: number | string, qid: number) =>
+        reqVoid(`/admin/questionnaires/${id}/questions/${qid}`, { method: 'DELETE', headers: authHeaders() }),
       // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
       setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
         req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),
