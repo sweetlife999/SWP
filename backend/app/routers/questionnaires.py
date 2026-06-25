@@ -13,6 +13,7 @@ router = APIRouter(prefix="/questionnaires", tags=["questionnaires"])
 
 def _question_to_step(row: asyncpg.Record) -> QStep:
     return QStep(
+        id=row["id"],
         type=row["type"],
         title=row["title"],
         hint=row["hint"] or "",
@@ -73,7 +74,7 @@ async def list_questionnaires(request: Request) -> list[QuestionnaireOut]:
     ids = [r["id"] for r in rows]
     q_rows = await pool.fetch(
         """
-        SELECT survey_id, type, title, hint, options, scale_low, scale_high, scale_mid
+        SELECT id, survey_id, type, title, hint, options, scale_low, scale_high, scale_mid
         FROM survey_questions
         WHERE survey_id = ANY($1) AND deleted_at IS NULL
         ORDER BY survey_id, position

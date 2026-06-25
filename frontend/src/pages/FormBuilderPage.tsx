@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
+import { api, type QStepType, type QuestionInput } from '../lib/api'
 
 type QType = 'scale' | 'multi' | 'single' | 'text' | 'short' | 'stars' | 'section'
+
+// The builder has 7 visual types; the backend stores 4. Sections are layout-only
+// and are skipped on save (null). short→text, stars→scale.
+const BACKEND_TYPE: Record<QType, QStepType | null> = {
+  single: 'single', multi: 'multi', scale: 'scale', text: 'text',
+  short: 'text', stars: 'scale', section: null,
+}
 
 interface LogicRule { optionIndex: number; jumpTo: number | 'end' }
 
@@ -190,12 +198,56 @@ export default function FormBuilderPage() {
   const [questions, setQuestions] = useState<Question[]>(INITIAL)
   const [status, setStatus] = useState<'draft' | 'published'>('draft')
   const [toast, setToast] = useState('')
+  const [saving, setSaving] = useState(false)
   const [formTitle, setFormTitle] = useState('Фидбек Welcome Week 2026')
   const [formDesc, setFormDesc] = useState('Помогите оценить программу Welcome Week и понять, что улучшить к следующему набору. Опрос анонимный, около 2 минут.')
 
   function showToast(msg: string) {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
+  }
+
+  function mapQuestion(q: Question): QuestionInput {
+    const type = BACKEND_TYPE[q.type] as QStepType
+    const input: QuestionInput = { type, title: q.title.trim() || '(без названия)', hint: q.hint }
+    if (type === 'single' || type === 'multi') input.options = q.options.filter(Boolean)
+    if (q.type === 'stars') { input.scale_low = '1'; input.scale_high = '5' }
+    return input
+  }
+
+  function resetBuilder() {
+    setQuestions([{ id: nextId++, type: 'single', title: '', hint: '', options: ['Вариант 1', 'Вариант 2'], required: false }])
+    setFormTitle('Новый опрос')
+    setFormDesc('')
+    setStatus('draft')
+  }
+
+  // Persists the builder to the backend: create questionnaire → add each (non-section)
+  // question → optionally open it. Each save creates a SEPARATE questionnaire, then the
+  // builder resets so the next one is independent.
+  async function saveQuestionnaire(publishIt: boolean) {
+    const real = questions.filter(q => BACKEND_TYPE[q.type] !== null)
+    if (!formTitle.trim()) { showToast('Укажите название опроса'); return }
+    if (real.length === 0) { showToast('Добавьте хотя бы один вопрос'); return }
+    setSaving(true)
+    try {
+      const created = await api.admin.questionnaires.create({
+        department: 'core',
+        title: formTitle.trim(),
+        description: formDesc.trim(),
+        est_minutes: 2,
+      })
+      for (const q of real) {
+        await api.admin.questionnaires.addQuestion(created.id, mapQuestion(q))
+      }
+      if (publishIt) await api.admin.questionnaires.setStatus(created.id, 'open')
+      showToast(publishIt ? 'Опрос опубликован — открыт в Questionnaires' : 'Черновик сохранён')
+      resetBuilder()
+    } catch {
+      showToast('Не удалось сохранить опрос')
+    } finally {
+      setSaving(false)
+    }
   }
 
   function exportCsv() {
@@ -237,8 +289,8 @@ export default function FormBuilderPage() {
             <Icon id="i-eye" style={{ width: 14, height: 14 }} />
             {preview ? 'Редактировать' : 'Preview'}
           </button>
-          <button className="btn secondary" onClick={() => showToast('Черновик сохранён')}>Сохранить как черновик</button>
-          <button className="btn primary" onClick={() => { setStatus('published'); showToast('Опрос опубликован!') }}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />Опубликовать</button>
+          <button className="btn secondary" disabled={saving} onClick={() => saveQuestionnaire(false)}>Сохранить как черновик</button>
+          <button className="btn primary" disabled={saving} onClick={() => saveQuestionnaire(true)}><Icon id="i-rocket" style={{ width: 14, height: 14 }} />{saving ? 'Сохранение…' : 'Опубликовать'}</button>
         </div>
       </div>
 

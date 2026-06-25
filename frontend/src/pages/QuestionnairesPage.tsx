@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
-import { type Survey, type QStep } from '../lib/api'
+import { api, type Survey, type QStep, type SurveyAnswer } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -11,6 +11,8 @@ export default function QuestionnairesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
 
   const { data: fetchedSurveys, loading, error, retry } = useFetch<Survey[]>('/api/questionnaires');
@@ -25,6 +27,40 @@ export default function QuestionnairesPage() {
     setStep(0)
     setAnswers({})
     setSubmitted(false)
+    setSubmitError('')
+  }
+
+  // Build the payload keyed by question id (the value shapes the stats views expect):
+  // single → option text, multi → array of option texts, scale → number, text → string.
+  async function handleSubmit() {
+    if (!active) return
+    const payload: Record<string, SurveyAnswer> = {}
+    active.steps.forEach((s, i) => {
+      const v = answers[i]
+      if (v === undefined) return
+      if (s.type === 'single' && Array.isArray(v) && s.options) {
+        const opt = s.options[v[0]]
+        if (opt !== undefined) payload[s.id] = opt
+      } else if (s.type === 'multi' && Array.isArray(v) && s.options) {
+        const picked = v.map(j => s.options![j]).filter(Boolean)
+        if (picked.length) payload[s.id] = picked
+      } else if (s.type === 'scale' && typeof v === 'number') {
+        payload[s.id] = v
+      } else if (s.type === 'text' && typeof v === 'string' && v.trim()) {
+        payload[s.id] = v.trim()
+      }
+    })
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      await api.questionnaires.submit(active.id, payload)
+      setSubmitted(true)
+    } catch (e) {
+      // 409 = the one-response-per-student cookie guard already fired.
+      setSubmitError(e instanceof Error && e.message === '409' ? 'Вы уже проходили этот опрос' : 'Не удалось отправить ответ')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function getSelected(i: number): number[] {
@@ -248,6 +284,12 @@ export default function QuestionnairesPage() {
             </div>
           </div>
 
+          {submitError && (
+            <div role="alert" style={{ margin: '0 16px', color: '#B91C1C', fontSize: 13 }}>{submitError}</div>
+          )}
+          {submitted && (
+            <div style={{ margin: '0 16px', color: '#15803D', fontSize: 13 }}>Спасибо! Ваш ответ записан.</div>
+          )}
           <div className="q-footer">
             <button className="btn ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
@@ -259,7 +301,7 @@ export default function QuestionnairesPage() {
               ) : submitted ? (
                 <button className="btn secondary" disabled><Icon id="i-check" style={{ width: 14, height: 14 }} />Ответ отправлен</button>
               ) : (
-                <button className="btn primary" onClick={() => setSubmitted(true)}><Icon id="i-check" style={{ width: 14, height: 14 }} />Отправить ответ</button>
+                <button className="btn primary" disabled={submitting} onClick={handleSubmit}><Icon id="i-check" style={{ width: 14, height: 14 }} />{submitting ? 'Отправка…' : 'Отправить ответ'}</button>
               )}
             </div>
           </div>

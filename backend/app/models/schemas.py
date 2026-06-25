@@ -113,6 +113,9 @@ class MemberReorderItem(BaseModel):
 
 
 class QStep(BaseModel):
+    # Question id — lets the client key submitted answers by question so the
+    # stats views (which read answers ->> question_id) aggregate correctly.
+    id: int
     type: str
     title: str
     hint: str

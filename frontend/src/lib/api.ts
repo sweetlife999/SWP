@@ -58,8 +58,21 @@ export interface MemberPatch {
 
 export type QStepType = 'single' | 'multi' | 'scale' | 'text'
 export interface QStep {
+  id: number
   type: QStepType; title: string; hint: string
   options?: string[]; low?: string; high?: string; median?: number
+}
+
+// What a student submits: answers keyed by question id.
+export type SurveyAnswer = string | number | string[]
+
+export interface QuestionnaireCreate {
+  department: 'core' | 'active' | 'media'
+  title: string; description?: string; flow_title?: string; eyebrow?: string; est_minutes?: number
+}
+export interface QuestionInput {
+  type: QStepType; title: string; hint?: string
+  options?: string[]; scale_low?: string; scale_high?: string; scale_mid?: number
 }
 export interface Survey {
   id: string; tag: string; tagCls: string
@@ -109,6 +122,16 @@ export const api = {
   surveys: {
     list: () => req<Survey[]>('/surveys'),
   },
+  // Public questionnaires: list open ones and submit a response (no account).
+  questionnaires: {
+    list:   () => req<Survey[]>('/questionnaires'),
+    submit: (id: string | number, answers: Record<string, SurveyAnswer>) =>
+      reqVoid(`/questionnaires/${id}/responses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ answers }),
+      }),
+  },
   content: {
     get:    (slug: string) => req<ContentBlock>(`/content/${slug}`),
     update: (slug: string, html: string) =>
@@ -143,6 +166,15 @@ export const api = {
     forms: {
       list:      () => req<Form[]>('/admin/forms', { headers: authHeaders() }),
       responses: (id: string) => req<unknown[]>(`/admin/forms/${id}/responses`, { headers: authHeaders() }),
+    },
+    questionnaires: {
+      create:      (q: QuestionnaireCreate) =>
+        req<{ id: number }>('/admin/questionnaires', { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
+      addQuestion: (id: number | string, q: QuestionInput) =>
+        req<{ id: number }>(`/admin/questionnaires/${id}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
+      // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
+      setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
+        req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),
     },
   },
 }
