@@ -19,8 +19,14 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Member profiles support a photo (via URL), shown on the members grid and profile modal
 - Admin event form has a Location field; event location now displays on the event page
 - Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
+- Events have editable Format and Age fields, shown on the event page (were hardcoded)
+- Forms Builder has a questionnaire picker: choose which questionnaire to edit; editing updates the same one instead of creating duplicates
+- Kanban "New task" supports description, priority and an assignee
+- Students no longer see questionnaires they have already completed
 
 ### Fixed
+- Multiple-choice questions in the Forms Builder could not be edited (option inputs were hidden by a CSS class collision)
+- Roadmap formatting toolbar and edit controls no longer show for non-admin visitors
 - Admin "Add event" / "Add member" now reach the correct `/admin/*` endpoints — they were POSTing to the public routes and silently failing
 - Forms Builder "Publish" and the questionnaire "Submit" button were no-ops (local state only) — both are now wired to the backend
 - Newly-created kanban cards were hidden by the default priority filter — the filter now starts off
