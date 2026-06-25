@@ -1,6 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
+
+// Plain-text snippet from a (possibly rich-HTML) description, for card previews.
+function stripHtml(html?: string): string {
+  if (!html) return ''
+  const el = document.createElement('div')
+  el.innerHTML = html
+  return el.textContent ?? ''
+}
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 
@@ -46,10 +54,42 @@ const FACES = [
   { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
 ]
 
-interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void; onDelete: () => void }
+interface CardPatch { title?: string; desc?: string; priority?: Priority; col?: ColKey; assignee?: string }
+interface CardDetailPanelProps {
+  card: CardData
+  col: ColKey
+  onClose: () => void
+  onMarkDone: () => void
+  onDelete: () => void
+  onSave: (patch: CardPatch) => Promise<void>
+}
 
-function CardDetailPanel({ card, onClose, onMarkDone, onDelete }: CardDetailPanelProps) {
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
+function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
+  const [editing, setEditing] = useState(false)
+  const [title, setTitle] = useState(card.title)
+  const [priority, setPriority] = useState<Priority>(card.priority)
+  const [colKey, setColKey] = useState<ColKey>(col)
+  const [assignee, setAssignee] = useState(card.assignees[0]?.initials ?? '')
+  const [busy, setBusy] = useState(false)
+  const descRef = useRef<HTMLDivElement>(null)
+  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
+
+  async function save() {
+    setBusy(true)
+    try {
+      await onSave({
+        title: title.trim() || card.title,
+        desc: descRef.current?.innerHTML ?? card.desc ?? '',
+        priority,
+        col: colKey,
+        assignee: assignee.trim(),
+      })
+      setEditing(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <>
       <div className="kb-detail-backdrop" onClick={onClose} />
@@ -64,7 +104,9 @@ function CardDetailPanel({ card, onClose, onMarkDone, onDelete }: CardDetailPane
                 </span>
               ))}
             </div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>
+            {editing
+              ? <input className="input" value={title} onChange={e => setTitle(e.target.value)} />
+              : <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>}
           </div>
           <button className="icon-btn" onClick={onClose} style={{ flexShrink: 0, marginTop: -2 }}>
             <Icon id="i-x" />
@@ -72,70 +114,77 @@ function CardDetailPanel({ card, onClose, onMarkDone, onDelete }: CardDetailPane
         </div>
 
         <div className="kb-detail-body">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className={`kbc-priority ${card.priority}`}>
-              <span className="bar" /><span className="bar" /><span className="bar" />
-              {card.pLabel} · {PRIORITY_LABEL[card.priority]}
-            </span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {card.assignees.map((a, i) => (
-                <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
-                  {a.initials}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            {editing ? (
+              <>
+                <select className="select" style={{ width: 'auto', height: 32 }} value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+                  <option value="p-high">P0 · Urgent</option>
+                  <option value="p-mid">P1 · High</option>
+                  <option value="p-low">P2 · Low</option>
+                </select>
+                <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
+                  {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+                <input className="input" style={{ width: 90 }} maxLength={3} placeholder="Assignee" value={assignee} onChange={e => setAssignee(e.target.value)} />
+              </>
+            ) : (
+              <>
+                <span className={`kbc-priority ${card.priority}`}>
+                  <span className="bar" /><span className="bar" /><span className="bar" />
+                  {card.pLabel} · {PRIORITY_LABEL[card.priority]}
+                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {card.assignees.map((a, i) => (
+                    <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
+                      {a.initials}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
 
-          {card.desc && (
-            <div>
-              <div className="kb-detail-section-label">Description</div>
-              <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }}>{card.desc}</p>
-            </div>
-          )}
-
-          {card.attachment && (
-            <div>
-              <div className="kb-detail-section-label">File</div>
-              <div className="kbc-attachment">
-                <Icon id={card.attachment.icon} />
-                <span><b>{card.attachment.bold}</b>{card.attachment.rest}</span>
-              </div>
-            </div>
-          )}
-
-          {card.progressPct !== undefined && (
-            <div>
-              <div className="kb-detail-section-label">Progress — {card.progressLabel}</div>
-              <div className="progress" style={{ height: 8 }}>
-                <div className="bar" style={{ width: `${card.progressPct}%` }} />
-              </div>
-            </div>
-          )}
-
-          {card.meta && card.meta.length > 0 && (
-            <div>
-              <div className="kb-detail-section-label">Details</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {card.meta.map((m, i) => (
-                  <span key={i} className={`mi${m.urgent ? ' urgent' : m.soon ? ' soon' : ''}`} style={{ fontSize: 13 }}>
-                    <Icon id={m.icon} /><span>{m.text}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div>
+            <div className="kb-detail-section-label">Описание</div>
+            {editing ? (
+              // "Block note": rich contentEditable, stored as HTML (the app's content-block pattern).
+              <div
+                ref={descRef}
+                className="rm-edit"
+                contentEditable
+                suppressContentEditableWarning
+                dangerouslySetInnerHTML={{ __html: card.desc ?? '' }}
+                style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
+              />
+            ) : card.desc ? (
+              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: card.desc }} />
+            ) : (
+              <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
+            )}
+          </div>
         </div>
 
         <div className="kb-detail-footer">
-          <button className="btn danger" onClick={() => { if (window.confirm(`Удалить задачу «${card.title}»?`)) onDelete() }}>
-            <Icon id="i-trash" style={{ width: 14, height: 14 }} />
-          </button>
-          <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
-            <Icon id="i-x" style={{ width: 14, height: 14 }} />Close
-          </button>
-          <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
-            <Icon id="i-check" style={{ width: 14, height: 14 }} />Done
-          </button>
+          {editing ? (
+            <>
+              <button className="btn ghost" disabled={busy} onClick={() => setEditing(false)}>Отмена</button>
+              <button className="btn primary" style={{ flex: 1 }} disabled={busy} onClick={save}>
+                <Icon id="i-check" style={{ width: 14, height: 14 }} />{busy ? 'Сохранение…' : 'Сохранить'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn danger" onClick={() => { if (window.confirm(`Удалить задачу «${card.title}»?`)) onDelete() }}>
+                <Icon id="i-trash" style={{ width: 14, height: 14 }} />
+              </button>
+              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setEditing(true)}>
+                <Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать
+              </button>
+              <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
+                <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -184,7 +233,7 @@ function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: 
       <h4 className="kbc-title" style={isDone ? { textDecoration: 'line-through' } : undefined}>
         {card.title}
       </h4>
-      {card.desc && <p className="kbc-desc">{card.desc}</p>}
+      {stripHtml(card.desc) && <p className="kbc-desc">{stripHtml(card.desc)}</p>}
       {card.attachment && (
         <div className="kbc-attachment">
           <Icon id={card.attachment.icon} />
@@ -583,9 +632,20 @@ export default function KanbanPage() {
       {selected && (
         <CardDetailPanel
           card={selected}
+          col={cardCols[selected.id] ?? selected.col}
           onClose={() => setSelected(null)}
           onMarkDone={() => moveCard(selected.id, 'done')}
           onDelete={() => deleteCard(selected.id)}
+          onSave={async patch => {
+            try {
+              await api.admin.kanban.patch(selected.id, patch)
+              setSelected(null)
+              retry()
+              showToast('Карточка сохранена')
+            } catch {
+              showToast('Не удалось сохранить карточку')
+            }
+          }}
         />
       )}
     </>

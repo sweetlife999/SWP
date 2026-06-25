@@ -141,34 +141,71 @@ async def delete_card(card_id: int, request: Request) -> None:
 
 @router.patch("/{card_id}", response_model=KanbanCardOut)
 async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> KanbanCardOut:
+    """Moves a card to another column and/or edits its fields (title/desc/priority/assignee)."""
     pool: asyncpg.Pool = get_pool(request)
+    provided = body.model_fields_set
 
-    # Resolve target column within the card's own project.
-    # Also fetch current column_id to detect a no-op move.
-    col_row = await pool.fetchrow(
-        """
-        SELECT col.id AS target_column_id, c.column_id AS current_column_id
-        FROM kanban_columns col
-        JOIN kanban_cards c ON c.project_id = col.project_id
-        WHERE c.id = $1 AND col.key = $2
-        """,
-        card_id,
-        body.col,
-    )
-    if col_row is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Card not found or column does not belong to its project",
-        )
+    exists = await pool.fetchval("SELECT 1 FROM kanban_cards WHERE id = $1", card_id)
+    if not exists:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
 
-    if col_row["target_column_id"] != col_row["current_column_id"]:
-        await pool.execute(
-            "UPDATE kanban_cards SET column_id = $1, updated_at = now() WHERE id = $2",
-            col_row["target_column_id"],
+    # Column move: resolve the target column within the card's own project.
+    if body.col is not None:
+        col_row = await pool.fetchrow(
+            """
+            SELECT col.id AS target_column_id, c.column_id AS current_column_id
+            FROM kanban_columns col
+            JOIN kanban_cards c ON c.project_id = col.project_id
+            WHERE c.id = $1 AND col.key = $2
+            """,
             card_id,
+            body.col,
         )
+        if col_row is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Column does not belong to the card's project",
+            )
+        if col_row["target_column_id"] != col_row["current_column_id"]:
+            await pool.execute(
+                "UPDATE kanban_cards SET column_id = $1, updated_at = now() WHERE id = $2",
+                col_row["target_column_id"],
+                card_id,
+            )
+
+    # Scalar field edits.
+    updates: list[str] = []
+    params: list = []
+    if "title" in provided and body.title is not None:
+        params.append(body.title)
+        updates.append(f"title = ${len(params)}")
+    if "desc" in provided:
+        params.append(body.desc)
+        updates.append(f"description = ${len(params)}")
+    if "priority" in provided and body.priority is not None:
+        params.append(body.priority)
+        updates.append(f"priority = ${len(params)}")
+    if "blocker" in provided and body.blocker is not None:
+        params.append(body.blocker)
+        updates.append(f"blocker = ${len(params)}")
+    if updates:
+        params.append(card_id)
+        await pool.execute(
+            f"UPDATE kanban_cards SET {', '.join(updates)}, updated_at = now() "
+            f"WHERE id = ${len(params)}",
+            *params,
+        )
+
+    # Assignee replacement.
+    if "assignee" in provided:
+        await pool.execute("DELETE FROM kanban_card_assignees WHERE card_id = $1", card_id)
+        if body.assignee:
+            await pool.execute(
+                "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
+                card_id,
+                body.assignee[:3].upper(),
+                "linear-gradient(135deg,#a3e0ad,#32b247)",
+            )
 
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", card_id)
-    if row is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
     return _row_to_card(row)

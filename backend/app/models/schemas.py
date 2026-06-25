@@ -344,7 +344,15 @@ class KanbanCardOut(BaseModel):
 
 
 class KanbanCardPatch(BaseModel):
-    col: Literal["backlog", "next", "doing", "review", "done"]
+    # All optional: a drag sends only col; the card editor may send any subset.
+    col: Literal["backlog", "next", "doing", "review", "done"] | None = None
+    title: str | None = None
+    desc: str | None = None
+    priority: Literal["p-low", "p-mid", "p-high"] | None = None
+    blocker: bool | None = None
+    # When provided, replaces the card's assignees with a single one (initials);
+    # empty string clears assignees.
+    assignee: str | None = None
 
 
 class KanbanCardCreate(BaseModel):

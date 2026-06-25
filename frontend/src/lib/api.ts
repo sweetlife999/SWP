@@ -203,6 +203,9 @@ export const api = {
           headers: authHeaders(),
           body: JSON.stringify({ col }),
         }),
+      // Edit any subset of a card's fields.
+      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignee?: string }) =>
+        req<KanbanCard>(`/admin/kanban/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
       remove: (id: string) => reqVoid(`/admin/kanban/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },
     forms: {
