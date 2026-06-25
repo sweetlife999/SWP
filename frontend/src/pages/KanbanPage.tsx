@@ -1,9 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Icon } from '../components/Icon'
-import { useFetch } from '../hooks/useFetch'
+import { api } from '../lib/api'
+
+// Plain-text snippet from a (possibly rich-HTML) description, for card previews.
+function stripHtml(html?: string): string {
+  if (!html) return ''
+  const el = document.createElement('div')
+  el.innerHTML = html
+  return el.textContent ?? ''
+}
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
-import { EmptyState } from '../components/EmptyState'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -47,10 +54,42 @@ const FACES = [
   { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
 ]
 
-interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void }
+interface CardPatch { title?: string; desc?: string; priority?: Priority; col?: ColKey; assignee?: string }
+interface CardDetailPanelProps {
+  card: CardData
+  col: ColKey
+  onClose: () => void
+  onMarkDone: () => void
+  onDelete: () => void
+  onSave: (patch: CardPatch) => Promise<void>
+}
 
-function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
+function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
+  const [editing, setEditing] = useState(false)
+  const [title, setTitle] = useState(card.title)
+  const [priority, setPriority] = useState<Priority>(card.priority)
+  const [colKey, setColKey] = useState<ColKey>(col)
+  const [assignee, setAssignee] = useState(card.assignees[0]?.initials ?? '')
+  const [busy, setBusy] = useState(false)
+  const descRef = useRef<HTMLDivElement>(null)
+  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
+
+  async function save() {
+    setBusy(true)
+    try {
+      await onSave({
+        title: title.trim() || card.title,
+        desc: descRef.current?.innerHTML ?? card.desc ?? '',
+        priority,
+        col: colKey,
+        assignee: assignee.trim(),
+      })
+      setEditing(false)
+    } finally {
+      setBusy(false)
+    }
+  }
+
   return (
     <>
       <div className="kb-detail-backdrop" onClick={onClose} />
@@ -65,7 +104,9 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
                 </span>
               ))}
             </div>
-            <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>
+            {editing
+              ? <input className="input" value={title} onChange={e => setTitle(e.target.value)} />
+              : <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>}
           </div>
           <button className="icon-btn" onClick={onClose} style={{ flexShrink: 0, marginTop: -2 }}>
             <Icon id="i-x" />
@@ -73,67 +114,77 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
         </div>
 
         <div className="kb-detail-body">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span className={`kbc-priority ${card.priority}`}>
-              <span className="bar" /><span className="bar" /><span className="bar" />
-              {card.pLabel} · {PRIORITY_LABEL[card.priority]}
-            </span>
-            <div style={{ display: 'flex', gap: 4 }}>
-              {card.assignees.map((a, i) => (
-                <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
-                  {a.initials}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+            {editing ? (
+              <>
+                <select className="select" style={{ width: 'auto', height: 32 }} value={priority} onChange={e => setPriority(e.target.value as Priority)}>
+                  <option value="p-high">P0 · Urgent</option>
+                  <option value="p-mid">P1 · High</option>
+                  <option value="p-low">P2 · Low</option>
+                </select>
+                <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
+                  {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                </select>
+                <input className="input" style={{ width: 90 }} maxLength={3} placeholder="Assignee" value={assignee} onChange={e => setAssignee(e.target.value)} />
+              </>
+            ) : (
+              <>
+                <span className={`kbc-priority ${card.priority}`}>
+                  <span className="bar" /><span className="bar" /><span className="bar" />
+                  {card.pLabel} · {PRIORITY_LABEL[card.priority]}
+                </span>
+                <div style={{ display: 'flex', gap: 4 }}>
+                  {card.assignees.map((a, i) => (
+                    <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
+                      {a.initials}
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
           </div>
 
-          {card.desc && (
-            <div>
-              <div className="kb-detail-section-label">Description</div>
-              <p style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }}>{card.desc}</p>
-            </div>
-          )}
-
-          {card.attachment && (
-            <div>
-              <div className="kb-detail-section-label">File</div>
-              <div className="kbc-attachment">
-                <Icon id={card.attachment.icon} />
-                <span><b>{card.attachment.bold}</b>{card.attachment.rest}</span>
-              </div>
-            </div>
-          )}
-
-          {card.progressPct !== undefined && (
-            <div>
-              <div className="kb-detail-section-label">Progress — {card.progressLabel}</div>
-              <div className="progress" style={{ height: 8 }}>
-                <div className="bar" style={{ width: `${card.progressPct}%` }} />
-              </div>
-            </div>
-          )}
-
-          {card.meta && card.meta.length > 0 && (
-            <div>
-              <div className="kb-detail-section-label">Details</div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                {card.meta.map((m, i) => (
-                  <span key={i} className={`mi${m.urgent ? ' urgent' : m.soon ? ' soon' : ''}`} style={{ fontSize: 13 }}>
-                    <Icon id={m.icon} /><span>{m.text}</span>
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+          <div>
+            <div className="kb-detail-section-label">Описание</div>
+            {editing ? (
+              // "Block note": rich contentEditable, stored as HTML (the app's content-block pattern).
+              <div
+                ref={descRef}
+                className="rm-edit"
+                contentEditable
+                suppressContentEditableWarning
+                dangerouslySetInnerHTML={{ __html: card.desc ?? '' }}
+                style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
+              />
+            ) : card.desc ? (
+              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: card.desc }} />
+            ) : (
+              <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
+            )}
+          </div>
         </div>
 
         <div className="kb-detail-footer">
-          <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
-            <Icon id="i-x" style={{ width: 14, height: 14 }} />Close
-          </button>
-          <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
-            <Icon id="i-check" style={{ width: 14, height: 14 }} />Done
-          </button>
+          {editing ? (
+            <>
+              <button className="btn ghost" disabled={busy} onClick={() => setEditing(false)}>Отмена</button>
+              <button className="btn primary" style={{ flex: 1 }} disabled={busy} onClick={save}>
+                <Icon id="i-check" style={{ width: 14, height: 14 }} />{busy ? 'Сохранение…' : 'Сохранить'}
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="btn danger" onClick={() => { if (window.confirm(`Удалить задачу «${card.title}»?`)) onDelete() }}>
+                <Icon id="i-trash" style={{ width: 14, height: 14 }} />
+              </button>
+              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setEditing(true)}>
+                <Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать
+              </button>
+              <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
+                <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
+              </button>
+            </>
+          )}
         </div>
       </div>
     </>
@@ -182,7 +233,7 @@ function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: 
       <h4 className="kbc-title" style={isDone ? { textDecoration: 'line-through' } : undefined}>
         {card.title}
       </h4>
-      {card.desc && <p className="kbc-desc">{card.desc}</p>}
+      {stripHtml(card.desc) && <p className="kbc-desc">{stripHtml(card.desc)}</p>}
       {card.attachment && (
         <div className="kbc-attachment">
           <Icon id={card.attachment.icon} />
@@ -224,34 +275,59 @@ export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
   const [search, setSearch] = useState('')
   const [fetchedCards, setFetchedCards] = useState<CardData[]>([])
-  const [extraCards, setExtraCards] = useState<CardData[]>([])
   const [cardCols, setCardCols] = useState<Record<string, ColKey>>({})
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<ColKey | null>(null)
   const [selected, setSelected] = useState<CardData | null>(null)
-  const [chipP01, setChipP01] = useState(true)
+  // Off by default — otherwise newly-created low-priority cards are hidden on load.
+  const [chipP01, setChipP01] = useState(false)
   const [chipOpenDay, setChipOpenDay] = useState(false)
-  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
-  const [toast, setToast] = useState<string | null>(null)
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  const [toast, setToast] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  // Bumped to re-trigger the load effect on retry.
+  const [reloadKey, setReloadKey] = useState(0)
+  const retry = () => setReloadKey(k => k + 1)
 
-  const { data: kanbanData, loading, error, retry } = useFetch<CardData[]>('/api/admin/kanban');
-
+  // /admin/kanban needs the Bearer token, so we use api.admin.kanban.list() (which
+  // sends it) rather than useFetch. setState lives in async callbacks, not the
+  // effect body, to satisfy react-hooks/set-state-in-effect.
   useEffect(() => {
-    if (kanbanData) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setFetchedCards(kanbanData);
-      setCardCols(Object.fromEntries(kanbanData.map(c => [c.id, c.col as ColKey])));
-    }
-  }, [kanbanData]);
+    let cancelled = false
+    api.admin.kanban.list()
+      .then(data => {
+        if (cancelled) return
+        setFetchedCards(data as CardData[])
+        setCardCols(Object.fromEntries(data.map(c => [c.id, c.col as ColKey])))
+        setError(null)
+      })
+      .catch(() => { if (!cancelled) setError('Не удалось загрузить доску') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [reloadKey])
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => setToast(null), 3000)
-      return () => clearTimeout(timer)
-    }
-  }, [toast])
+  const allCards = fetchedCards
 
-  const allCards = [...fetchedCards, ...extraCards]
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  // Optimistic move: update the UI immediately, persist via PATCH, roll back + toast on failure (US-10 AC2/AC3).
+  async function moveCard(cardId: string, col: ColKey) {
+    const prev = cardCols[cardId] ?? allCards.find(c => c.id === cardId)?.col
+    if (!prev || prev === col) return
+    setCardCols(p => ({ ...p, [cardId]: col }))
+    // Locally-created tasks (kb-x…) have no backend row yet — skip persistence.
+    if (cardId.startsWith('kb-x')) return
+    try {
+      await api.admin.kanban.update(cardId, col)
+    } catch {
+      setCardCols(p => ({ ...p, [cardId]: prev }))
+      showToast('Не удалось переместить карточку')
+    }
+  }
 
   function colCards(col: ColKey) {
     const q = search.trim().toLowerCase()
@@ -275,54 +351,44 @@ export default function KanbanPage() {
   }
 
   function openNewTask(col: ColKey) {
-    setNewTask({ open: true, col, title: '' })
+    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignee: '' })
   }
 
-  function submitNewTask() {
+  async function submitNewTask() {
     if (!newTask.title.trim()) return
-    const id = `kb-x${Date.now()}`
-    const card: CardData = {
-      id, col: newTask.col, tags: [], title: newTask.title.trim(),
-      priority: 'p-low', pLabel: 'P3', assignees: []
+    try {
+      await api.admin.kanban.create({
+        title: newTask.title.trim(),
+        col: newTask.col,
+        desc: newTask.desc.trim() || undefined,
+        priority: newTask.priority,
+        assignee: newTask.assignee.trim() || undefined,
+      })
+      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+      retry()  // reload the board so the persisted card appears
+      showToast('Задача создана')
+    } catch {
+      showToast('Не удалось создать задачу')
     }
-    setExtraCards(prev => [...prev, card])
-    setCardCols(prev => ({ ...prev, [id]: newTask.col }))
-    setNewTask({ open: false, col: 'backlog', title: '' })
+  }
+
+  async function deleteCard(id: string) {
+    try {
+      await api.admin.kanban.remove(id)
+      setSelected(null)
+      retry()
+      showToast('Задача удалена')
+    } catch {
+      showToast('Не удалось удалить задачу')
+    }
   }
 
   function handleDrop(e: React.DragEvent, col: ColKey) {
     e.preventDefault()
     const cardId = e.dataTransfer.getData('cardId') || dragging
-    if (!cardId) return
-
-    const prevCol = cardCols[cardId]
-    if (prevCol === col) {
-      setDragging(null)
-      setDragOver(null)
-      return
-    }
-
-    setCardCols(prev => ({ ...prev, [cardId]: col }))
-
-    const token = localStorage.getItem('token')
-    fetch(`/api/admin/kanban/${cardId}`, {
-      method: 'PATCH',
-      headers: { 
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({ col })
-    })
-    .then(res => {
-      if (!res.ok) throw new Error('Failed to update task')
-    })
-    .catch(() => {
-      setCardCols(prev => ({ ...prev, [cardId]: prevCol }))
-      setToast('Failed to move task. Please try again.')
-    })
-
     setDragging(null)
     setDragOver(null)
+    if (cardId) moveCard(cardId, col)
   }
 
   if (error) {
@@ -379,40 +445,13 @@ export default function KanbanPage() {
     )
   }
 
-  if (!loading && !error && allCards.length === 0) {
-    return (
-      <>
-        <div className="page-head">
-          <div className="title">
-            <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
-          </div>
-        </div>
-        <EmptyState
-          title="Board is empty"
-          description="No tasks on the board. Start by adding a new task!"
-        />
-      </>
-    )
-  }
+  // No empty-state early return: the board itself renders the "Новая задача"
+  // button and per-column add buttons, so an empty board is still actionable.
 
   return (
     <>
       {toast && (
-        <div style={{
-          position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: '#EF4444',
-          color: '#fff',
-          padding: '12px 24px',
-          borderRadius: 10,
-          fontSize: 14,
-          fontWeight: 500,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-          zIndex: 2000,
-        }}>
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
           {toast}
         </div>
       )}
@@ -555,13 +594,31 @@ export default function KanbanPage() {
             <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
                 <label>Title</label>
-                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} onKeyDown={e => e.key === 'Enter' && submitNewTask()} />
+                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
               </div>
               <div className="field">
-                <label>Column</label>
-                <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
-                  {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-                </select>
+                <label>Description</label>
+                <textarea className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
+              </div>
+              <div className="row gap-3">
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Column</label>
+                  <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                    {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div className="field" style={{ flex: 1 }}>
+                  <label>Priority</label>
+                  <select className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
+                    <option value="p-high">P0 · Urgent</option>
+                    <option value="p-mid">P1 · High</option>
+                    <option value="p-low">P2 · Low</option>
+                  </select>
+                </div>
+              </div>
+              <div className="field">
+                <label>Assignee (инициалы)</label>
+                <input className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
@@ -575,8 +632,20 @@ export default function KanbanPage() {
       {selected && (
         <CardDetailPanel
           card={selected}
+          col={cardCols[selected.id] ?? selected.col}
           onClose={() => setSelected(null)}
-          onMarkDone={() => setCardCols(prev => ({ ...prev, [selected.id]: 'done' }))}
+          onMarkDone={() => moveCard(selected.id, 'done')}
+          onDelete={() => deleteCard(selected.id)}
+          onSave={async patch => {
+            try {
+              await api.admin.kanban.patch(selected.id, patch)
+              setSelected(null)
+              retry()
+              showToast('Карточка сохранена')
+            } catch {
+              showToast('Не удалось сохранить карточку')
+            }
+          }}
         />
       )}
     </>

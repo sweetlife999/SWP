@@ -23,9 +23,16 @@ admin_router = APIRouter(
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status, status_text
+           cover_class, foot_text, foot_label, featured, status, status_text,
+           event_format, age_limit, location_address, schedule, organizers
     FROM events
 """
+
+_RETURNING = (
+    "id, title, description, event_date, event_time, department, "
+    "cover_class, foot_text, foot_label, featured, status, status_text, "
+    "event_format, age_limit, location_address, schedule, organizers"
+)
 
 
 def _row_to_event(row: asyncpg.Record) -> EventOut:
@@ -49,6 +56,11 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         past=past or None,
         status=row["status"],
         statusText=row["status_text"] or None,
+        format=row["event_format"],
+        age=row["age_limit"],
+        locationAddress=row["location_address"] or "",
+        schedule=list(row["schedule"] or []),
+        organizers=list(row["organizers"] or []),
     )
 
 
@@ -96,11 +108,11 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         """
         INSERT INTO events
           (title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status_text)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-        RETURNING id, title, description, event_date, event_time, department,
-                  cover_class, foot_text, foot_label, featured, status, status_text
-        """,
+           cover_class, foot_text, foot_label, featured, status_text,
+           event_format, age_limit, location_address, schedule, organizers)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        RETURNING """
+        + _RETURNING,
         body.title,
         body.desc,
         body.date,
@@ -111,6 +123,11 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.footLabel,
         body.featured,
         body.statusText,
+        body.format,
+        body.age,
+        body.locationAddress,
+        [s.model_dump() for s in body.schedule],
+        [o.model_dump() for o in body.organizers],
     )
     return _row_to_event(row)
 
@@ -204,6 +221,16 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("foot_label", body.footLabel)
     if "statusText" in provided:
         add("status_text", body.statusText)
+    if "format" in provided and body.format is not None:
+        add("event_format", body.format)
+    if "age" in provided and body.age is not None:
+        add("age_limit", body.age)
+    if "locationAddress" in provided and body.locationAddress is not None:
+        add("location_address", body.locationAddress)
+    if "schedule" in provided and body.schedule is not None:
+        add("schedule", [s.model_dump() for s in body.schedule])
+    if "organizers" in provided and body.organizers is not None:
+        add("organizers", [o.model_dump() for o in body.organizers])
 
     if not updates:
         raise HTTPException(
@@ -214,8 +241,7 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
     row = await pool.fetchrow(
         f"UPDATE events SET {', '.join(updates)}, updated_at = now() "
         f"WHERE id = ${len(params)} "
-        f"RETURNING id, title, description, event_date, event_time, department, "
-        f"cover_class, foot_text, foot_label, featured, status, status_text",
+        f"RETURNING {_RETURNING}",
         *params,
     )
     if row is None:

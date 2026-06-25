@@ -16,6 +16,7 @@ from app.routers import (
     members,
     questionnaires,
     surveys,
+    uploads,
 )
 
 
@@ -59,6 +60,7 @@ app.include_router(kanban.router, prefix="/api")
 app.include_router(questionnaires.router, prefix="/api")
 app.include_router(admin_questionnaires.admin_router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(uploads.router, prefix="/api")
 
 
 @app.get("/health")
