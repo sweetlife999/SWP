@@ -129,11 +129,6 @@ export default function QuestionnairesPage() {
     )
   }
 
-  // Если active есть, но step выходит за пределы - сбрасываем step
-  if (active && step >= active.steps.length) {
-    setStep(0)
-  }
-
   if (!active) {
     return (
       <>
@@ -166,8 +161,24 @@ export default function QuestionnairesPage() {
   }
 
   const totalSteps = active.steps.length
-  const progress = ((step + 1) / totalSteps) * 100
-  const currentStep = active.steps[step] as QStep
+  // Guard: a published survey could (briefly) have no questions — don't crash.
+  if (totalSteps === 0) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">Студсовет</span>
+            <h1>Questionnaires</h1>
+          </div>
+        </div>
+        <p className="text-muted" style={{ padding: '24px 0' }}>У этого опроса пока нет вопросов.</p>
+      </>
+    )
+  }
+  // Clamp the step so switching to a shorter survey never indexes out of range.
+  const stepIdx = step < totalSteps ? step : 0
+  const progress = ((stepIdx + 1) / totalSteps) * 100
+  const currentStep = active.steps[stepIdx] as QStep
 
   return (
     <>
