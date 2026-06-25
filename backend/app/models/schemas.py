@@ -1,4 +1,9 @@
-from datetime import date, datetime, time
+# Alias date/time types: fields named `date`/`time` shadow them under eager
+# annotation evaluation (Python <3.14), breaking `date | None` / `time | None`
+# at import time. Aliasing keeps the type names reachable.
+from datetime import date as dt_date
+from datetime import datetime
+from datetime import time as dt_time
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -38,11 +43,11 @@ class EventOut(BaseModel):
 class EventCreate(BaseModel):
     title: str
     desc: str
-    date: date
+    date: dt_date
     cover: str = ""
     tag: DepartmentOrLabel
     # Parsed from an "HH:MM" string into a time so asyncpg can bind the TIME column.
-    time: time | None = None
+    time: dt_time | None = None
     foot: str = ""
     footLabel: str | None = None
     featured: bool = False
@@ -52,9 +57,9 @@ class EventCreate(BaseModel):
 class EventPatch(BaseModel):
     title: str | None = None
     desc: str | None = None
-    date: date | None = None
+    date: dt_date | None = None
     # Nullable in DB — explicit null in request clears the field.
-    time: str | None = None
+    time: dt_time | None = None
     tag: DepartmentOrLabel | None = None
     cover: str | None = None
     foot: str | None = None

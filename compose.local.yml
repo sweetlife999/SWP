@@ -1,0 +1,21 @@
+# Local build override — verifies the stack from source instead of GHCR images.
+# Usage: docker compose -f compose.yml -f compose.local.yml up -d --build
+# Not used by deploy (deploy.yml copies only compose.yml to the VPS).
+services:
+  frontend:
+    build: ./frontend
+    image: swp-frontend-local
+
+  backend:
+    build: ./backend
+    image: swp-backend-local
+    # Known local-test values (override the real backend/.env for a clean dev DB).
+    environment:
+      DATABASE_URL: postgresql://su:su_dev_password@db:5432/su_portal
+      ADMIN_PASSWORD: local-admin-pw
+      JWT_SECRET: local-test-secret-not-for-production
+      DEBUG: "true"
+
+  db:
+    build: ./database
+    image: swp-db-local
