@@ -272,8 +272,8 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <div className="key-meta">
               <div className="row sb"><span className="lbl">Категория</span><span className="val">Мероприятие</span></div>
               <div className="row sb"><span className="lbl">Департамент</span><span className="val">{event?.tag ?? ''}</span></div>
-              <div className="row sb"><span className="lbl">Формат</span><span className="val">Оффлайн</span></div>
-              <div className="row sb"><span className="lbl">Возраст</span><span className="val">18+</span></div>
+              <div className="row sb"><span className="lbl">Формат</span><span className="val">{event?.format ?? 'Оффлайн'}</span></div>
+              <div className="row sb"><span className="lbl">Возраст</span><span className="val">{event?.age ?? '18+'}</span></div>
             </div>
           </div>
         </aside>

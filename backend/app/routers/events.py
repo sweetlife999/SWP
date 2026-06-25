@@ -23,7 +23,8 @@ admin_router = APIRouter(
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status, status_text
+           cover_class, foot_text, foot_label, featured, status, status_text,
+           event_format, age_limit
     FROM events
 """
 
@@ -49,6 +50,8 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         past=past or None,
         status=row["status"],
         statusText=row["status_text"] or None,
+        format=row["event_format"],
+        age=row["age_limit"],
     )
 
 
@@ -96,10 +99,12 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         """
         INSERT INTO events
           (title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status_text)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           cover_class, foot_text, foot_label, featured, status_text,
+           event_format, age_limit)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
         RETURNING id, title, description, event_date, event_time, department,
-                  cover_class, foot_text, foot_label, featured, status, status_text
+                  cover_class, foot_text, foot_label, featured, status, status_text,
+                  event_format, age_limit
         """,
         body.title,
         body.desc,
@@ -111,6 +116,8 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.footLabel,
         body.featured,
         body.statusText,
+        body.format,
+        body.age,
     )
     return _row_to_event(row)
 
@@ -204,6 +211,10 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("foot_label", body.footLabel)
     if "statusText" in provided:
         add("status_text", body.statusText)
+    if "format" in provided and body.format is not None:
+        add("event_format", body.format)
+    if "age" in provided and body.age is not None:
+        add("age_limit", body.age)
 
     if not updates:
         raise HTTPException(
@@ -215,7 +226,8 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         f"UPDATE events SET {', '.join(updates)}, updated_at = now() "
         f"WHERE id = ${len(params)} "
         f"RETURNING id, title, description, event_date, event_time, department, "
-        f"cover_class, foot_text, foot_label, featured, status, status_text",
+        f"cover_class, foot_text, foot_label, featured, status, status_text, "
+        f"event_format, age_limit",
         *params,
     )
     if row is None:

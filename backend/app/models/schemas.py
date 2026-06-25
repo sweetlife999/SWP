@@ -38,6 +38,8 @@ class EventOut(BaseModel):
     past: bool | None = None
     status: EventStatus
     statusText: str | None = None
+    format: str = "Оффлайн"
+    age: str = "18+"
 
 
 class EventCreate(BaseModel):
@@ -52,6 +54,8 @@ class EventCreate(BaseModel):
     footLabel: str | None = None
     featured: bool = False
     statusText: str | None = None
+    format: str = "Оффлайн"
+    age: str = "18+"
 
 
 class EventPatch(BaseModel):
@@ -67,6 +71,8 @@ class EventPatch(BaseModel):
     featured: bool | None = None
     status: EventStatus | None = None
     statusText: str | None = None
+    format: str | None = None
+    age: str | None = None
 
 
 # ── Members ───────────────────────────────────────────────────────────────────
@@ -325,6 +331,8 @@ class KanbanCardCreate(BaseModel):
     col: Literal["backlog", "next", "doing", "review", "done"] = "backlog"
     desc: str | None = None
     priority: Literal["p-low", "p-mid", "p-high"] = "p-low"
+    # Optional assignee initials (e.g. "МР"); stored in kanban_card_assignees.
+    assignee: str | None = None
 
 
 # ── Admin forms (survey list for admin) ──────────────────────────────────────

@@ -6,11 +6,16 @@ import { api, type Event, type EventPatch, type EventStatus } from '../lib/api'
 type EventForm = {
   title: string; desc: string; date: string; time: string
   tag: string; foot: string; footLabel: string; featured: boolean; statusText: string
+  format: string; age: string
 }
 
 const BLANK: EventForm = {
   title: '', desc: '', date: '', time: '', tag: 'SU:Core', foot: '', footLabel: '', featured: false, statusText: '',
+  format: 'Оффлайн', age: '18+',
 }
+
+const FORMAT_OPTIONS = ['Оффлайн', 'Онлайн', 'Гибрид']
+const AGE_OPTIONS = ['0+', '6+', '12+', '16+', '18+']
 
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   draft:     { label: 'Черновик',    bg: '#F3F4F6', fg: '#6B7280' },
@@ -25,6 +30,7 @@ function toForm(e: Event): EventForm {
     title: e.title, desc: e.desc, date: e.date, time: e.time ?? '',
     tag: DEPT_OPTIONS.includes(e.tag) ? e.tag : 'SU:Core',
     foot: e.foot, footLabel: e.footLabel ?? '', featured: !!e.featured, statusText: e.statusText ?? '',
+    format: e.format ?? 'Оффлайн', age: e.age ?? '18+',
   }
 }
 
@@ -66,6 +72,7 @@ export default function AdminEventsPage() {
           time: form.time || undefined, foot: form.foot,
           footLabel: form.footLabel || undefined, featured: form.featured,
           statusText: form.statusText || undefined,
+          format: form.format, age: form.age,
         })
         showToast('Черновик создан')
       } else if (editing) {
@@ -74,6 +81,7 @@ export default function AdminEventsPage() {
           time: form.time || null, tag: form.tag, foot: form.foot,
           footLabel: form.footLabel || null, featured: form.featured,
           statusText: form.statusText || null,
+          format: form.format, age: form.age,
         }
         await api.events.update(editing.id, patch)
         showToast('Сохранено')
@@ -220,6 +228,20 @@ export default function AdminEventsPage() {
                 <div className="field">
                   <label>Локация</label>
                   <input className="input" placeholder="Sport Tower, 519" value={form.footLabel} onChange={e => setForm(f => ({ ...f, footLabel: e.target.value }))} />
+                </div>
+                <div className="row gap-3">
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Формат</label>
+                    <select className="input" value={form.format} onChange={e => setForm(f => ({ ...f, format: e.target.value }))}>
+                      {FORMAT_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  </div>
+                  <div className="field" style={{ flex: 1 }}>
+                    <label>Возраст</label>
+                    <select className="input" value={form.age} onChange={e => setForm(f => ({ ...f, age: e.target.value }))}>
+                      {AGE_OPTIONS.map(o => <option key={o}>{o}</option>)}
+                    </select>
+                  </div>
                 </div>
                 <label className="row gap-2" style={{ alignItems: 'center', fontSize: 14 }}>
                   <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} />
