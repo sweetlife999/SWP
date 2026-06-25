@@ -3,13 +3,13 @@ import { Icon } from '../components/Icon'
 import { api, type Member, type MemberPatch } from '../lib/api'
 
 type Dep = Member['dep']
-type MemberForm = { dep: Dep; name: string; role: string; meta: string; bio: string; recent: string[] }
+type MemberForm = { dep: Dep; name: string; role: string; meta: string; bio: string; recent: string[]; photo_url: string }
 
-const BLANK: MemberForm = { dep: 'core', name: '', role: '', meta: '', bio: '', recent: ['', '', ''] }
+const BLANK: MemberForm = { dep: 'core', name: '', role: '', meta: '', bio: '', recent: ['', '', ''], photo_url: '' }
 const DEP_TAG: Record<Dep, string> = { core: 'SU:Core', active: 'SU:Active', media: 'SU:Media' }
 
 function toForm(m: Member): MemberForm {
-  return { dep: m.dep, name: m.name, role: m.role, meta: m.meta, bio: m.bio, recent: [...m.recent, '', '', ''].slice(0, 3) }
+  return { dep: m.dep, name: m.name, role: m.role, meta: m.meta, bio: m.bio, recent: [...m.recent, '', '', ''].slice(0, 3), photo_url: m.photo_url ?? '' }
 }
 
 export default function AdminMembersPage() {
@@ -42,10 +42,10 @@ export default function AdminMembersPage() {
     const recent = form.recent.filter(Boolean)
     try {
       if (creating) {
-        await api.members.create({ dep: form.dep, tag: DEP_TAG[form.dep], name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent })
+        await api.members.create({ dep: form.dep, tag: DEP_TAG[form.dep], name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent, photo_url: form.photo_url })
         showToast('Участник добавлен')
       } else if (editing) {
-        const patch: MemberPatch = { dep: form.dep, name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent }
+        const patch: MemberPatch = { dep: form.dep, name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent, photo_url: form.photo_url }
         await api.members.update(editing.id, patch)
         showToast('Сохранено')
       }
@@ -154,6 +154,13 @@ export default function AdminMembersPage() {
                 <div className="field">
                   <label>Bio</label>
                   <textarea className="textarea" rows={2} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} />
+                </div>
+                <div className="field">
+                  <label>Фото (URL)</label>
+                  <input className="input" placeholder="https://…/photo.jpg" value={form.photo_url} onChange={e => setForm(f => ({ ...f, photo_url: e.target.value }))} />
+                  {form.photo_url && (
+                    <img src={form.photo_url} alt="" style={{ marginTop: 8, width: 64, height: 64, objectFit: 'cover', borderRadius: 8 }} onError={e => { (e.currentTarget.style.display = 'none') }} />
+                  )}
                 </div>
                 <div className="field">
                   <label>Последние активности (до 3)</label>

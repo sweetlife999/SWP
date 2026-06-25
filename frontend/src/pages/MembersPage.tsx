@@ -203,7 +203,9 @@ export default function MembersPage() {
                   <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
                     <div className="photo">
                       <span className="dep-tag">{p.tag}</span>
-                      <div className="silhouette"></div>
+                      {p.photo_url
+                        ? <img src={p.photo_url} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div className="silhouette"></div>}
                     </div>
                     <div className="body">
                       <div className="name">{p.name}</div>
@@ -364,7 +366,9 @@ export default function MembersPage() {
             </button>
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>
               <span className="dep-tag">{selected.tag}</span>
-              <div className="silhouette-lg"></div>
+              {selected.photo_url
+                ? <img src={selected.photo_url} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div className="silhouette-lg"></div>}
             </div>
             <div className="member-modal-body">
               <div className="mm-name" style={{ marginTop: 16 }}>{selected.name}</div>
