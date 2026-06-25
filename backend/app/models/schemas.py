@@ -320,6 +320,13 @@ class KanbanCardPatch(BaseModel):
     col: Literal["backlog", "next", "doing", "review", "done"]
 
 
+class KanbanCardCreate(BaseModel):
+    title: str
+    col: Literal["backlog", "next", "doing", "review", "done"] = "backlog"
+    desc: str | None = None
+    priority: Literal["p-low", "p-mid", "p-high"] = "p-low"
+
+
 # ── Admin forms (survey list for admin) ──────────────────────────────────────
 
 

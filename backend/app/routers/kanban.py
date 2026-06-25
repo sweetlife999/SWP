@@ -7,6 +7,7 @@ from app.database import get_pool
 from app.models.schemas import (
     KanbanAssignee,
     KanbanAttachment,
+    KanbanCardCreate,
     KanbanCardOut,
     KanbanCardPatch,
     KanbanMeta,
@@ -86,6 +87,48 @@ async def list_cards(request: Request) -> list[KanbanCardOut]:
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(_CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id")
     return [_row_to_card(r) for r in rows]
+
+
+@router.post("", response_model=KanbanCardOut, status_code=status.HTTP_201_CREATED)
+async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut:
+    """Creates a card in the requested column of the (single) SU:Core board."""
+    pool: asyncpg.Pool = get_pool(request)
+    col_row = await pool.fetchrow(
+        "SELECT id, project_id FROM kanban_columns WHERE key = $1 ORDER BY project_id LIMIT 1",
+        body.col,
+    )
+    if col_row is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="No kanban board configured"
+        )
+    next_order = await pool.fetchval(
+        "SELECT COALESCE(MAX(order_index), 0) + 1 FROM kanban_cards WHERE column_id = $1",
+        col_row["id"],
+    )
+    new_id = await pool.fetchval(
+        """
+        INSERT INTO kanban_cards (project_id, column_id, title, description, priority, order_index)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        RETURNING id
+        """,
+        col_row["project_id"],
+        col_row["id"],
+        body.title,
+        body.desc,
+        body.priority,
+        next_order,
+    )
+    row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", new_id)
+    return _row_to_card(row)
+
+
+@router.delete("/{card_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_card(card_id: int, request: Request) -> None:
+    """Deletes a card; tags/assignees/meta cascade."""
+    pool: asyncpg.Pool = get_pool(request)
+    result = await pool.execute("DELETE FROM kanban_cards WHERE id = $1", card_id)
+    if result == "DELETE 0":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
 
 
 @router.patch("/{card_id}", response_model=KanbanCardOut)

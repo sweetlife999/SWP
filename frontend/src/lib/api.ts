@@ -49,11 +49,12 @@ export interface Member {
   dep: 'core' | 'active' | 'media'
   tag: string; name: string; role: string; meta: string
   bio: string; recent: string[]
+  photo_url?: string
 }
 
 export interface MemberPatch {
   dep?: Member['dep']; name?: string; role?: string
-  meta?: string; bio?: string; recent?: string[]
+  meta?: string; bio?: string; recent?: string[]; photo_url?: string
 }
 
 export type QStepType = 'single' | 'multi' | 'scale' | 'text'
@@ -156,12 +157,15 @@ export const api = {
     },
     kanban: {
       list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
+      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority }) =>
+        req<KanbanCard>('/admin/kanban', { method: 'POST', headers: authHeaders(), body: JSON.stringify(card) }),
       update: (id: string, col: ColKey) =>
         req<KanbanCard>(`/admin/kanban/${id}`, {
           method: 'PATCH',
           headers: authHeaders(),
           body: JSON.stringify({ col }),
         }),
+      remove: (id: string) => reqVoid(`/admin/kanban/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },
     forms: {
       list:      () => req<Form[]>('/admin/forms', { headers: authHeaders() }),

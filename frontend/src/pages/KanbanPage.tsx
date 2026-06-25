@@ -3,7 +3,6 @@ import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
-import { EmptyState } from '../components/EmptyState'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -47,9 +46,9 @@ const FACES = [
   { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
 ]
 
-interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void }
+interface CardDetailPanelProps { card: CardData; onClose: () => void; onMarkDone: () => void; onDelete: () => void }
 
-function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
+function CardDetailPanel({ card, onClose, onMarkDone, onDelete }: CardDetailPanelProps) {
   const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
   return (
     <>
@@ -128,6 +127,9 @@ function CardDetailPanel({ card, onClose, onMarkDone }: CardDetailPanelProps) {
         </div>
 
         <div className="kb-detail-footer">
+          <button className="btn danger" onClick={() => { if (window.confirm(`Удалить задачу «${card.title}»?`)) onDelete() }}>
+            <Icon id="i-trash" style={{ width: 14, height: 14 }} />
+          </button>
           <button className="btn secondary" style={{ flex: 1 }} onClick={onClose}>
             <Icon id="i-x" style={{ width: 14, height: 14 }} />Close
           </button>
@@ -224,12 +226,12 @@ export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
   const [search, setSearch] = useState('')
   const [fetchedCards, setFetchedCards] = useState<CardData[]>([])
-  const [extraCards, setExtraCards] = useState<CardData[]>([])
   const [cardCols, setCardCols] = useState<Record<string, ColKey>>({})
   const [dragging, setDragging] = useState<string | null>(null)
   const [dragOver, setDragOver] = useState<ColKey | null>(null)
   const [selected, setSelected] = useState<CardData | null>(null)
-  const [chipP01, setChipP01] = useState(true)
+  // Off by default — otherwise newly-created low-priority cards are hidden on load.
+  const [chipP01, setChipP01] = useState(false)
   const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
   const [toast, setToast] = useState('')
@@ -256,7 +258,7 @@ export default function KanbanPage() {
     return () => { cancelled = true }
   }, [reloadKey])
 
-  const allCards = [...fetchedCards, ...extraCards]
+  const allCards = fetchedCards
 
   function showToast(msg: string) {
     setToast(msg)
@@ -303,16 +305,27 @@ export default function KanbanPage() {
     setNewTask({ open: true, col, title: '' })
   }
 
-  function submitNewTask() {
+  async function submitNewTask() {
     if (!newTask.title.trim()) return
-    const id = `kb-x${Date.now()}`
-    const card: CardData = {
-      id, col: newTask.col, tags: [], title: newTask.title.trim(),
-      priority: 'p-low', pLabel: 'P3', assignees: []
+    try {
+      await api.admin.kanban.create({ title: newTask.title.trim(), col: newTask.col })
+      setNewTask({ open: false, col: 'backlog', title: '' })
+      retry()  // reload the board so the persisted card appears
+      showToast('Задача создана')
+    } catch {
+      showToast('Не удалось создать задачу')
     }
-    setExtraCards(prev => [...prev, card])
-    setCardCols(prev => ({ ...prev, [id]: newTask.col }))
-    setNewTask({ open: false, col: 'backlog', title: '' })
+  }
+
+  async function deleteCard(id: string) {
+    try {
+      await api.admin.kanban.remove(id)
+      setSelected(null)
+      retry()
+      showToast('Задача удалена')
+    } catch {
+      showToast('Не удалось удалить задачу')
+    }
   }
 
   function handleDrop(e: React.DragEvent, col: ColKey) {
@@ -377,22 +390,8 @@ export default function KanbanPage() {
     )
   }
 
-  if (!loading && !error && allCards.length === 0) {
-    return (
-      <>
-        <div className="page-head">
-          <div className="title">
-            <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
-          </div>
-        </div>
-        <EmptyState
-          title="Board is empty"
-          description="No tasks on the board. Start by adding a new task!"
-        />
-      </>
-    )
-  }
+  // No empty-state early return: the board itself renders the "Новая задача"
+  // button and per-column add buttons, so an empty board is still actionable.
 
   return (
     <>
@@ -562,6 +561,7 @@ export default function KanbanPage() {
           card={selected}
           onClose={() => setSelected(null)}
           onMarkDone={() => moveCard(selected.id, 'done')}
+          onDelete={() => deleteCard(selected.id)}
         />
       )}
     </>
