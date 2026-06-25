@@ -10,9 +10,9 @@ services:
   backend:
     image: ghcr.io/sweetlife999/swp-backend:latest
     restart: unless-stopped
-    # Container listens on 8000 (see backend/Dockerfile); publish it on host 9999.
+    # Backend listens on 9999 (8000 is taken on the VPS); see backend/Dockerfile.
     ports:
-      - "127.0.0.1:9999:8000"
+      - "127.0.0.1:9999:9999"
     env_file: ./backend/.env
     depends_on:
       db:
