@@ -217,6 +217,10 @@ export default function AdminEventsPage() {
                     <input className="input" placeholder="32 участника" value={form.foot} onChange={e => setForm(f => ({ ...f, foot: e.target.value }))} />
                   </div>
                 </div>
+                <div className="field">
+                  <label>Локация</label>
+                  <input className="input" placeholder="Sport Tower, 519" value={form.footLabel} onChange={e => setForm(f => ({ ...f, footLabel: e.target.value }))} />
+                </div>
                 <label className="row gap-2" style={{ alignItems: 'center', fontSize: 14 }}>
                   <input type="checkbox" checked={form.featured} onChange={e => setForm(f => ({ ...f, featured: e.target.checked }))} />
                   Закреплённое (featured)

@@ -49,26 +49,38 @@ function EventDetailPageInner({ id }: { id?: string }) {
   }
 
   function handleCalendar() {
-    const title = event?.title ?? ''
-    const datePart = (event?.date ?? '').replace(/-/g, '')
-    const startTime = (event?.time ?? '').replace(':', '')
-    const endDatePart = (event?.endDate ?? event?.date ?? '').replace(/-/g, '')
-    const endTime = (event?.endTime ?? event?.time ?? '').replace(':', '')
-
+    if (!event?.date) { showToast('У мероприятия не указана дата'); return }
+    const title = event.title ?? ''
+    const dateCompact = event.date.replace(/-/g, '')           // YYYYMMDD
+    const esc = (s: string) => s.replace(/([,;\\])/g, '\\$1').replace(/\n/g, '\\n')
+    // ICS rejects a bare "DTSTART:YYYYMMDDT" with no time — use a DATE value for
+    // all-day events, and a proper DTSTART/DTEND for timed ones.
+    let dtLines: string[]
+    if (event.time) {
+      const start = event.time.replace(':', '') + '00'         // HHMMSS
+      const [h, m] = event.time.split(':').map(Number)
+      const endH = String((h + 1) % 24).padStart(2, '0')        // default 1h duration
+      const end = `${endH}${String(m).padStart(2, '0')}00`
+      dtLines = [`DTSTART:${dateCompact}T${start}`, `DTEND:${dateCompact}T${end}`]
+    } else {
+      dtLines = [`DTSTART;VALUE=DATE:${dateCompact}`, `DTEND;VALUE=DATE:${dateCompact}`]
+    }
     const ics = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
+      'PRODID:-//SU Portal//Events//RU',
       'BEGIN:VEVENT',
-      `SUMMARY:${title}`,
-      `DTSTART:${datePart}T${startTime}`,
-      `DTEND:${endDatePart}T${endTime}`,
-      `LOCATION:${event?.footLabel ?? ''}`,
-      `DESCRIPTION:${event?.desc ?? ''}`,
+      `UID:su-event-${event.id}@su-portal`,
+      `DTSTAMP:${dateCompact}T000000Z`,
+      `SUMMARY:${esc(title)}`,
+      ...dtLines,
+      `LOCATION:${esc(event.footLabel ?? '')}`,
+      `DESCRIPTION:${esc(event.desc ?? '')}`,
       'END:VEVENT',
       'END:VCALENDAR',
     ].join('\r\n')
 
-    const blob = new Blob([ics], { type: 'text/calendar' })
+    const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
