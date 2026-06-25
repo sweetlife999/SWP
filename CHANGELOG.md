@@ -8,6 +8,17 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
+- Events and Members pages now show explicit loading, empty, and error states instead of a blank screen
+- Members directory filters by department through the API (`GET /members?dep=`)
+- Kanban board persists card moves to the backend (`PATCH /admin/kanban/:id`) with optimistic update and rollback + toast on failure
+
+### Fixed
+- Admin "Add event" / "Add member" now reach the correct `/admin/*` endpoints — they were POSTing to the public routes and silently failing
+- Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
+- API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port corrected (publishes `9999:8000`)
+
 ## [1.0.0] — 2026-06-20
 
 ### Added
