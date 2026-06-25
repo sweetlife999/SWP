@@ -42,6 +42,8 @@ export default function MembersPage() {
   const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
   const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [roadmapHtml, setRoadmapHtml] = useState(DEFAULT_ROADMAP_HTML)
   const [historyHtml, setHistoryHtml] = useState(DEFAULT_HISTORY_HTML)
   const [addingMember, setAddingMember] = useState(false)
@@ -49,8 +51,21 @@ export default function MembersPage() {
   const roadmapRef = useRef<HTMLDivElement>(null)
   const historyRef = useRef<HTMLElement>(null)
 
+  // Refetch from the API whenever the ?dep= filter changes — the server returns
+  // only matching members (US-05 AC2) rather than filtering client-side.
+  // setState lives in async callbacks (not the effect body) to satisfy
+  // react-hooks/set-state-in-effect; `cancelled` guards against a stale dep race.
   useEffect(() => {
-    api.members.list().then(setMembers).catch(() => {})
+    let cancelled = false
+    const apiDep = depParam && DEP_KEYS.includes(depParam) ? (depParam as Member['dep']) : undefined
+    api.members.list(apiDep)
+      .then(data => { if (!cancelled) { setMembers(data); setError(false) } })
+      .catch(() => { if (!cancelled) setError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [depParam])
+
+  useEffect(() => {
     api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
     api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
   }, [])
@@ -102,6 +117,19 @@ export default function MembersPage() {
     setNewMember(BLANK_MEMBER)
     setAddingMember(false)
     showToast('Участник добавлен')
+  }
+
+  async function handleDeleteMember(m: Member) {
+    // ponytail: native confirm() is the "confirmation dialog" — no modal lib needed (US-11 AC3)
+    if (!window.confirm(`Удалить участника «${m.name}»? Действие нельзя отменить.`)) return
+    try {
+      await api.members.remove(m.id)
+      setMembers(prev => prev.filter(x => x.id !== m.id))
+      setSelected(null)
+      showToast('Участник удалён')
+    } catch {
+      showToast('Не удалось удалить участника')
+    }
   }
 
   const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
@@ -172,6 +200,11 @@ export default function MembersPage() {
                 </div>
               </article>
             ))}
+            {visibleMembers.length === 0 && (
+              <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>
+                {error ? 'Не удалось загрузить участников' : loading ? 'Загрузка…' : 'Участники не найдены'}
+              </p>
+            )}
           </div>
 
           {!showAll && filteredMembers.length > 8 && (
@@ -333,6 +366,11 @@ export default function MembersPage() {
               <ul className="mm-recent-list">
                 {selected.recent.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
+              {isAdmin && (
+                <button className="btn ghost" style={{ marginTop: 16, color: '#B91C1C' }} onClick={() => handleDeleteMember(selected)}>
+                  <Icon id="i-trash" style={{ width: 14, height: 14 }} />Удалить участника
+                </button>
+              )}
             </div>
           </div>
         </div>
