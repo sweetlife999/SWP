@@ -246,15 +246,36 @@ export default function KanbanPage() {
   const [chipP01, setChipP01] = useState(true)
   const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string }>({ open: false, col: 'backlog', title: '' })
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     api.admin.kanban.list().then(data => {
       setFetchedCards(data as CardData[])
       setCardCols(Object.fromEntries(data.map(c => [c.id, c.col as ColKey])))
-    }).catch(() => {})
+    }).catch(() => { setToast('Не удалось загрузить доску'); setTimeout(() => setToast(''), 3000) })
   }, [])
 
   const allCards = [...fetchedCards, ...extraCards]
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(''), 3000)
+  }
+
+  // Optimistic move: update the UI immediately, persist via PATCH, roll back + toast on failure (US-10 AC2/AC3).
+  async function moveCard(cardId: string, col: ColKey) {
+    const prev = cardCols[cardId] ?? allCards.find(c => c.id === cardId)?.col
+    if (!prev || prev === col) return
+    setCardCols(p => ({ ...p, [cardId]: col }))
+    // Locally-created tasks (kb-x…) have no backend row yet — skip persistence.
+    if (cardId.startsWith('kb-x')) return
+    try {
+      await api.admin.kanban.update(cardId, col)
+    } catch {
+      setCardCols(p => ({ ...p, [cardId]: prev }))
+      showToast('Не удалось переместить карточку')
+    }
+  }
 
   function colCards(col: ColKey) {
     const q = search.trim().toLowerCase()
@@ -296,13 +317,18 @@ export default function KanbanPage() {
   function handleDrop(e: React.DragEvent, col: ColKey) {
     e.preventDefault()
     const cardId = e.dataTransfer.getData('cardId') || dragging
-    if (cardId) setCardCols(prev => ({ ...prev, [cardId]: col }))
     setDragging(null)
     setDragOver(null)
+    if (cardId) moveCard(cardId, col)
   }
 
   return (
     <>
+      {toast && (
+        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
+          {toast}
+        </div>
+      )}
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">SU:Core · Internal backlog</span>
@@ -467,7 +493,7 @@ export default function KanbanPage() {
         <CardDetailPanel
           card={selected}
           onClose={() => setSelected(null)}
-          onMarkDone={() => setCardCols(prev => ({ ...prev, [selected.id]: 'done' }))}
+          onMarkDone={() => moveCard(selected.id, 'done')}
         />
       )}
     </>
