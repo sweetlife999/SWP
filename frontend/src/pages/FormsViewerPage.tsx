@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { utils, writeFile } from 'xlsx'
 import { Icon } from '../components/Icon'
 import { api, type Form } from '../lib/api'
 
@@ -25,6 +26,14 @@ export default function FormsViewerPage() {
 
   const columns = responses.length > 0 ? Object.keys(responses[0]) : []
 
+  function exportXlsx() {
+    if (!responses.length) return
+    const ws = utils.json_to_sheet(responses)
+    const wb = utils.book_new()
+    utils.book_append_sheet(wb, ws, 'Responses')
+    writeFile(wb, `responses_form_${activeForm}.xlsx`)
+  }
+
   function exportCsv() {
     if (!responses.length) return
     const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`
@@ -44,9 +53,13 @@ export default function FormsViewerPage() {
           <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Все полученные ответы по опросам студсовета.</p>
         </div>
         <div className="row gap-2">
-          <button className="btn primary" onClick={exportCsv} disabled={!responses.length}>
+          <button className="btn secondary" onClick={exportCsv} disabled={!responses.length}>
             <Icon id="i-download" style={{ width: 14, height: 14 }} />
-            Export as CSV
+            Экспорт в .csv
+          </button>
+          <button className="btn primary" onClick={exportXlsx} disabled={!responses.length}>
+            <Icon id="i-download" style={{ width: 14, height: 14 }} />
+            Экспорт в .xlsx
           </button>
         </div>
       </div>
