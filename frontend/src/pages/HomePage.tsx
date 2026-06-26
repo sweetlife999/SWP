@@ -227,9 +227,10 @@ export default function HomePage() {
         </div>
 
         {newsError && (
-          <ErrorBanner 
-            message="Failed to load news. Please try again." 
-            onRetry={newsRetry} 
+          <ErrorBanner
+            message="Failed to load news. Please try again."
+            onRetry={newsRetry}
+            stack={newsError}
           />
         )}
 
