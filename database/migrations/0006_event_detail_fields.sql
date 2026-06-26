@@ -6,10 +6,8 @@
 -- arrays of small objects; location_address is the free-text address line.
 -- ============================================================================
 
-BEGIN;
 
 ALTER TABLE events ADD COLUMN IF NOT EXISTS schedule         JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS organizers       JSONB NOT NULL DEFAULT '[]'::jsonb;
 ALTER TABLE events ADD COLUMN IF NOT EXISTS location_address TEXT  NOT NULL DEFAULT '';
 
-COMMIT;

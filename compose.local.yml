@@ -19,3 +19,8 @@ services:
   db:
     build: ./database
     image: swp-db-local
+
+  # Same locally-built db image (it bundles the migrations + runner).
+  migrate:
+    build: ./database
+    image: swp-db-local

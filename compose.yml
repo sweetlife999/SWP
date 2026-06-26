@@ -7,6 +7,22 @@ services:
     depends_on:
       - backend
 
+  # One-shot migration runner: applies any not-yet-applied SQL migration on every
+  # `up`, then exits. The backend waits for it to finish, so the schema is always
+  # current — even when deploying onto an existing volume.
+  migrate:
+    image: ghcr.io/sweetlife999/swp-db:latest
+    entrypoint: ["/usr/local/bin/run-migrations.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-su}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-su_dev_password}
+      PGDATABASE: ${POSTGRES_DB:-su_portal}
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+
   backend:
     image: ghcr.io/sweetlife999/swp-backend:latest
     restart: unless-stopped
@@ -19,6 +35,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
   # Image optimizer: serves resized/optimized versions of uploaded photos.
   # Config is a mounted file (this image ignores loader env vars); deploy.yml

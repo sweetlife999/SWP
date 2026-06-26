@@ -11,7 +11,6 @@
 -- See database/README.md for the full column<->API field mapping.
 -- ============================================================================
 
-BEGIN;
 
 -- ── Extensions ──────────────────────────────────────────────────────────────
 -- pgcrypto: gen_random_uuid(), digest() for hashing admin tokens server-side.
@@ -252,4 +251,3 @@ CREATE TABLE admin_sessions (
 
 CREATE INDEX idx_sessions_expiry ON admin_sessions (expires_at);
 
-COMMIT;
