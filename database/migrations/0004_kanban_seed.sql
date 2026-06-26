@@ -7,7 +7,6 @@
 -- Idempotent so re-running is safe.
 -- ============================================================================
 
-BEGIN;
 
 INSERT INTO kanban_projects (name, slug, color)
 VALUES ('SU:Core Board', 'su-core', '#22C55E')
@@ -26,4 +25,3 @@ CROSS JOIN (VALUES
 WHERE p.slug = 'su-core'
 ON CONFLICT (project_id, key) DO NOTHING;
 
-COMMIT;
