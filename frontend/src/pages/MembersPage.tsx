@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Member as ApiMember } from '../lib/api'
+import { api, photoUrl, type Member as ApiMember } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
-import { useFetch } from '../hooks/useFetch'
+import { PhotoUpload } from '../components/PhotoUpload'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
@@ -28,7 +28,7 @@ const DEFAULT_ROADMAP_HTML = `<p style="font-size:17px;color:var(--muted);margin
 
 const DEFAULT_HISTORY_HTML = `<div class="meta-line">SU IU · оригинал — 2019 · последняя редакция: апрель 2026</div><h1 style="font-size:36px;letter-spacing:-0.025em;line-height:1.1;margin-bottom:12px">Шесть лет студенческого самоуправления.</h1><p class="lead" style="font-size:17px">Как студсовет Иннополиса вырос из чата в Telegram-беседе в три департамента с собственной кассой, ивентами, продакшеном и матрицей прав.</p><p class="lede">В сентябре 2019 года восемь человек собрались в комнате 320 и решили, что коммуникации между кампусом и Учёным советом нужен формат поудобнее, чем выходить лично в деканат. Тимур Каримов записал в Notion первые правила — три абзаца, без департаментов, без выборов. На следующей неделе к чату подключились ещё 12 человек.</p><p>За первый год SU занимался в основном переговорами: переноса дедлайнов из-за хакатонов, расписания душевых в общежитии, расширения окон столовой. Бюджета не было — его проводили через университетскую административку. Структуры тоже не было: один человек делал и фотки, и расписание, и говорил с проректором.</p><h2>2021 — раздел на департаменты</h2><p>Команда выросла до 23 человек. Главная боль: один и тот же человек разрывался между организацией Halloween-вечера и переговорами по новому корпусу. Решение пришло в феврале — разделить SU на три департамента с co-leads. Так появились SU:Core (стратегия + университет), SU:Active (события), SU:Media (контент).</p><p>Тогда же ввели первые открытые собрания и голосования за бюджет — раз в семестр выкладывали в общий чат, кто на что хочет потратить.</p><div class="history-photo"><div class="caption">Первое общее собрание после раздела на департаменты · март 2021 · фото SU:Media архив</div></div><h2>2023 — формат, который остался</h2><p>Утвердили роли, описали процессы, ввели Innopoints — внутреннюю систему за участие в активностях. Ввели регулярные открытые митинги раз в две недели и публичный backlog SU:Core.</p><p>С 2024 студсовет начал собирать донаты на конкретные цели — мерч, кофе на собраниях, спортинвентарь — с публичной отчётностью трат. К 2026-му через систему прошло чуть больше миллиона рублей.</p><h2>Ключевые вехи</h2><ul class="timeline"><li><b>сентябрь 2019</b>Восемь основателей. Чат, Notion-страница, никакой иерархии.</li><li><b>октябрь 2020</b>Первый формальный бюджет: ₽ 47,000 на Halloween и зимние посиделки.</li><li><b>февраль 2021</b>Раздел на три департамента, появление co-leads.</li><li><b>сентябрь 2022</b>Запуск Innopoints за участие.</li><li><b>март 2023</b>Открытый backlog SU:Core, публикация повестки и решений.</li><li><b>декабрь 2024</b>Первая прозрачная донат-кампания (₽ 320,000 на спортинвентарь).</li><li><b>апрель 2026</b>Запуск этого портала — единая точка входа во все модули SU.</li></ul><h2>Что осталось важно</h2><p>SU не парламент. Это рабочая команда студентов, которая закрывает три задачи: договариваться с университетом, организовывать жизнь кампуса и держать публичную ленту. Всё остальное — производное.</p>`
 
-const BLANK_MEMBER: Omit<Member, 'id'> = { dep: 'core', tag: '', name: '', role: '', meta: '', bio: '', recent: ['', '', ''] }
+const BLANK_MEMBER: Omit<Member, 'id'> = { dep: 'core', tag: '', name: '', role: '', meta: '', bio: '', recent: ['', '', ''], photo_url: '' }
 
 export default function MembersPage() {
   const { isAdmin } = useAdmin()
@@ -45,6 +45,10 @@ export default function MembersPage() {
   const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
   const [members, setMembers] = useState<Member[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
+  const retry = () => { setError(false); setLoading(true); setReloadKey(k => k + 1) }
   const [roadmapHtml, setRoadmapHtml] = useState(DEFAULT_ROADMAP_HTML)
   const [historyHtml, setHistoryHtml] = useState(DEFAULT_HISTORY_HTML)
   const [addingMember, setAddingMember] = useState(false)
@@ -52,19 +56,24 @@ export default function MembersPage() {
   const roadmapRef = useRef<HTMLDivElement>(null)
   const historyRef = useRef<HTMLElement>(null)
 
-  const { data: fetchedMembers, loading, error, retry } = useFetch<Member[]>('/api/members');
+  // Refetch from the API whenever the ?dep= filter changes — the server returns
+  // only matching members (US-05 AC2) rather than filtering client-side.
+  // setState lives in async callbacks (not the effect body) to satisfy
+  // react-hooks/set-state-in-effect; `cancelled` guards against a stale dep race.
+  useEffect(() => {
+    let cancelled = false
+    const apiDep = depParam && DEP_KEYS.includes(depParam) ? (depParam as Member['dep']) : undefined
+    api.members.list(apiDep)
+      .then(data => { if (!cancelled) { setMembers(data); setError(false) } })
+      .catch(() => { if (!cancelled) setError(true) })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
+  }, [depParam, reloadKey])
 
   useEffect(() => {
     api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
     api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
   }, [])
-
-  useEffect(() => {
-    if (fetchedMembers) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setMembers(fetchedMembers);
-    }
-  }, [fetchedMembers]);
 
   function showToast(msg: string) {
     setToast(msg)
@@ -112,6 +121,19 @@ export default function MembersPage() {
     setNewMember(BLANK_MEMBER)
     setAddingMember(false)
     showToast('Участник добавлен')
+  }
+
+  async function handleDeleteMember(m: Member) {
+    // ponytail: native confirm() is the "confirmation dialog" — no modal lib needed (US-11 AC3)
+    if (!window.confirm(`Удалить участника «${m.name}»? Действие нельзя отменить.`)) return
+    try {
+      await api.members.remove(m.id)
+      setMembers(prev => prev.filter(x => x.id !== m.id))
+      setSelected(null)
+      showToast('Участник удалён')
+    } catch {
+      showToast('Не удалось удалить участника')
+    }
   }
 
   const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
@@ -169,46 +191,22 @@ export default function MembersPage() {
             <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
 
-          {error && (
-            <div style={{ 
-              display: 'flex', 
-              justifyContent: 'center', 
-              alignItems: 'center', 
-              width: '100%',
-              padding: '20px 0'
-            }}>
-              <div style={{ maxWidth: '650px', width: '100%' }}>
-                <ErrorBanner 
-                  message="Failed to load members. Please try again." 
-                  onRetry={retry}
-                  stack={error}
-                />
-              </div>
-            </div>
-          )}
-
-          {loading && (
-            <div className="members-grid">
-              <LoadingSkeleton type="member" count={8} />
-            </div>
-          )}
-
-          {!loading && !error && members.length === 0 && (
-            <EmptyState
-              
-              title="No members"
-              description="The community is growing! Check back soon for new members."
-            />
-          )}
-
-          {!loading && !error && members.length > 0 && (
+          {error ? (
+            <ErrorBanner message="Не удалось загрузить участников." onRetry={retry} />
+          ) : loading ? (
+            <div className="members-grid"><LoadingSkeleton type="member" count={8} /></div>
+          ) : members.length === 0 ? (
+            <EmptyState title="Участников пока нет" description="Состав студсовета скоро появится здесь." />
+          ) : (
             <>
               <div className="members-grid">
                 {visibleMembers.map((p, i) => (
                   <article key={i} className={`person dep-${p.dep}`} style={{ cursor: 'pointer' }} onClick={() => setSelected(p)}>
                     <div className="photo">
                       <span className="dep-tag">{p.tag}</span>
-                      <div className="silhouette"></div>
+                      {p.photo_url
+                        ? <img src={photoUrl(p.photo_url, '300x300')} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        : <div className="silhouette"></div>}
                     </div>
                     <div className="body">
                       <div className="name">{p.name}</div>
@@ -217,6 +215,9 @@ export default function MembersPage() {
                     </div>
                   </article>
                 ))}
+                {visibleMembers.length === 0 && (
+                  <p className="text-muted" style={{ gridColumn: '1/-1', padding: '24px 0' }}>Участники не найдены</p>
+                )}
               </div>
 
               {!showAll && filteredMembers.length > 8 && (
@@ -267,19 +268,22 @@ export default function MembersPage() {
           </div>
 
           <section className={`roadmap-shell${editing ? ' editing' : ''}`}>
-            <div className="rm-toolbar">
-              <button className="tb-btn" title="Bold"><Icon id="i-bold" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Italic"><Icon id="i-italic" style={{ width: 14, height: 14 }} /></button>
-              <div className="tb-sep"></div>
-              <button className="tb-btn" title="Heading"><span style={{ fontWeight: 700, fontSize: 13 }}>H</span></button>
-              <button className="tb-btn" title="Paragraph"><Icon id="i-text" style={{ width: 14, height: 14 }} /></button>
-              <div className="tb-sep"></div>
-              <button className="tb-btn" title="List"><Icon id="i-list" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Link"><Icon id="i-link" style={{ width: 14, height: 14 }} /></button>
-              <button className="tb-btn" title="Divider"><span style={{ fontWeight: 600 }}>—</span></button>
-              <div className="tb-spacer"></div>
-              <div className="meta"><span className="text-mono">EDIT MODE</span> · автосохранение каждые 30 сек</div>
-            </div>
+            {/* Formatting toolbar is edit-only — only admins enter edit mode. */}
+            {editing && (
+              <div className="rm-toolbar">
+                <button className="tb-btn" title="Bold"><Icon id="i-bold" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Italic"><Icon id="i-italic" style={{ width: 14, height: 14 }} /></button>
+                <div className="tb-sep"></div>
+                <button className="tb-btn" title="Heading"><span style={{ fontWeight: 700, fontSize: 13 }}>H</span></button>
+                <button className="tb-btn" title="Paragraph"><Icon id="i-text" style={{ width: 14, height: 14 }} /></button>
+                <div className="tb-sep"></div>
+                <button className="tb-btn" title="List"><Icon id="i-list" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Link"><Icon id="i-link" style={{ width: 14, height: 14 }} /></button>
+                <button className="tb-btn" title="Divider"><span style={{ fontWeight: 600 }}>—</span></button>
+                <div className="tb-spacer"></div>
+                <div className="meta"><span className="text-mono">EDIT MODE</span></div>
+              </div>
+            )}
 
             <div
               ref={roadmapRef}
@@ -289,19 +293,22 @@ export default function MembersPage() {
               dangerouslySetInnerHTML={{ __html: roadmapHtml }}
             />
 
-            <div className="rm-foot">
-              <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
-              <button className="btn primary" onClick={handleRoadmapSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
-            </div>
+            {editing && (
+              <div className="rm-foot">
+                <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
+                <button className="btn primary" onClick={handleRoadmapSave}><Icon id="i-check" style={{ width: 14, height: 14 }} />Сохранить изменения</button>
+              </div>
+            )}
           </section>
 
-          <div className="row sb mt-4">
-            <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
-            <div className={`row gap-2 read-actions${editing ? '' : ''}`}>
-              <button className="btn secondary" onClick={() => showToast('История правок: последнее изменение — Михаил Раянов, 4 июня 2026')}><Icon id="i-eye" style={{ width: 14, height: 14 }} />История правок</button>
-              {isAdmin && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
+          {isAdmin && (
+            <div className="row sb mt-4">
+              <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
+              <div className="row gap-2 read-actions">
+                {!editing && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       )}
 
@@ -343,6 +350,10 @@ export default function MembersPage() {
                   <textarea className="textarea" rows={2} placeholder="Чем занимается…" value={newMember.bio} onChange={e => setNewMember(m => ({ ...m, bio: e.target.value }))} />
                 </div>
                 <div className="field">
+                  <label>Фото</label>
+                  <PhotoUpload value={newMember.photo_url ?? ''} onChange={v => setNewMember(m => ({ ...m, photo_url: v }))} onError={showToast} />
+                </div>
+                <div className="field">
                   <label>Последние активности (до 3)</label>
                   {[0, 1, 2].map(i => (
                     <input key={i} className="input" style={{ marginBottom: 6 }} placeholder={`Активность ${i + 1}…`} value={newMember.recent[i] ?? ''} onChange={e => setNewMember(m => { const r = [...m.recent]; r[i] = e.target.value; return { ...m, recent: r } })} />
@@ -366,7 +377,9 @@ export default function MembersPage() {
             </button>
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>
               <span className="dep-tag">{selected.tag}</span>
-              <div className="silhouette-lg"></div>
+              {selected.photo_url
+                ? <img src={photoUrl(selected.photo_url, '480x480')} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div className="silhouette-lg"></div>}
             </div>
             <div className="member-modal-body">
               <div className="mm-name" style={{ marginTop: 16 }}>{selected.name}</div>
@@ -376,6 +389,11 @@ export default function MembersPage() {
               <ul className="mm-recent-list">
                 {selected.recent.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
+              {isAdmin && (
+                <button className="btn ghost" style={{ marginTop: 16, color: '#B91C1C' }} onClick={() => handleDeleteMember(selected)}>
+                  <Icon id="i-trash" style={{ width: 14, height: 14 }} />Удалить участника
+                </button>
+              )}
             </div>
           </div>
         </div>

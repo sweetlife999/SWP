@@ -4,16 +4,52 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:3000:80"
+    depends_on:
+      - backend
+
+  # One-shot migration runner: applies any not-yet-applied SQL migration on every
+  # `up`, then exits. The backend waits for it to finish, so the schema is always
+  # current — even when deploying onto an existing volume.
+  migrate:
+    image: ghcr.io/sweetlife999/swp-db:latest
+    entrypoint: ["/usr/local/bin/run-migrations.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-su}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-su_dev_password}
+      PGDATABASE: ${POSTGRES_DB:-su_portal}
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
 
   backend:
     image: ghcr.io/sweetlife999/swp-backend:latest
     restart: unless-stopped
+    # Backend listens on 9999 (8000 is taken on the VPS); see backend/Dockerfile.
     ports:
       - "127.0.0.1:9999:9999"
     env_file: ./backend/.env
+    volumes:
+      - uploads:/data/uploads          # uploaded images, served via Thumbor
     depends_on:
       db:
         condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # Image optimizer: serves resized/optimized versions of uploaded photos.
+  # Config is a mounted file (this image ignores loader env vars); deploy.yml
+  # copies deploy/thumbor.conf to the VPS alongside compose.yml.
+  thumbor:
+    image: ghcr.io/thumbor/thumbor:latest
+    restart: unless-stopped
+    command: ["-c", "/etc/thumbor/thumbor.conf"]
+    volumes:
+      - uploads:/data/uploads:ro
+      - ./thumbor.conf:/etc/thumbor/thumbor.conf:ro
+    expose:
+      - "8888"
 
   db:
     image: ghcr.io/sweetlife999/swp-db:latest
@@ -34,3 +70,4 @@ services:
 
 volumes:
   pgdata:
+  uploads:

@@ -1,4 +1,9 @@
-from datetime import date, datetime
+# Alias date/time types: fields named `date`/`time` shadow them under eager
+# annotation evaluation (Python <3.14), breaking `date | None` / `time | None`
+# at import time. Aliasing keeps the type names reachable.
+from datetime import date as dt_date
+from datetime import datetime
+from datetime import time as dt_time
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -14,6 +19,18 @@ DepartmentOrLabel = Literal["SU:Core", "SU:Active", "SU:Media", "core", "active"
 # ── Events ────────────────────────────────────────────────────────────────────
 
 EventStatus = Literal["draft", "published", "archived"]
+
+
+class ScheduleItem(BaseModel):
+    time: str = ""
+    title: str = ""
+    where: str = ""
+
+
+class OrganizerItem(BaseModel):
+    initials: str = ""
+    name: str = ""
+    role: str = ""
 
 
 class EventOut(BaseModel):
@@ -33,27 +50,38 @@ class EventOut(BaseModel):
     past: bool | None = None
     status: EventStatus
     statusText: str | None = None
+    format: str = "Оффлайн"
+    age: str = "18+"
+    locationAddress: str = ""
+    schedule: list[ScheduleItem] = []
+    organizers: list[OrganizerItem] = []
 
 
 class EventCreate(BaseModel):
     title: str
     desc: str
-    date: date
+    date: dt_date
     cover: str = ""
     tag: DepartmentOrLabel
-    time: str | None = None
+    # Parsed from an "HH:MM" string into a time so asyncpg can bind the TIME column.
+    time: dt_time | None = None
     foot: str = ""
     footLabel: str | None = None
     featured: bool = False
     statusText: str | None = None
+    format: str = "Оффлайн"
+    age: str = "18+"
+    locationAddress: str = ""
+    schedule: list[ScheduleItem] = []
+    organizers: list[OrganizerItem] = []
 
 
 class EventPatch(BaseModel):
     title: str | None = None
     desc: str | None = None
-    date: date | None = None
+    date: dt_date | None = None
     # Nullable in DB — explicit null in request clears the field.
-    time: str | None = None
+    time: dt_time | None = None
     tag: DepartmentOrLabel | None = None
     cover: str | None = None
     foot: str | None = None
@@ -61,6 +89,11 @@ class EventPatch(BaseModel):
     featured: bool | None = None
     status: EventStatus | None = None
     statusText: str | None = None
+    format: str | None = None
+    age: str | None = None
+    locationAddress: str | None = None
+    schedule: list[ScheduleItem] | None = None
+    organizers: list[OrganizerItem] | None = None
 
 
 # ── Members ───────────────────────────────────────────────────────────────────
@@ -107,6 +140,9 @@ class MemberReorderItem(BaseModel):
 
 
 class QStep(BaseModel):
+    # Question id — lets the client key submitted answers by question so the
+    # stats views (which read answers ->> question_id) aggregate correctly.
+    id: int
     type: str
     title: str
     hint: str
@@ -308,7 +344,24 @@ class KanbanCardOut(BaseModel):
 
 
 class KanbanCardPatch(BaseModel):
-    col: Literal["backlog", "next", "doing", "review", "done"]
+    # All optional: a drag sends only col; the card editor may send any subset.
+    col: Literal["backlog", "next", "doing", "review", "done"] | None = None
+    title: str | None = None
+    desc: str | None = None
+    priority: Literal["p-low", "p-mid", "p-high"] | None = None
+    blocker: bool | None = None
+    # When provided, replaces the card's assignees with a single one (initials);
+    # empty string clears assignees.
+    assignee: str | None = None
+
+
+class KanbanCardCreate(BaseModel):
+    title: str
+    col: Literal["backlog", "next", "doing", "review", "done"] = "backlog"
+    desc: str | None = None
+    priority: Literal["p-low", "p-mid", "p-high"] = "p-low"
+    # Optional assignee initials (e.g. "МР"); stored in kanban_card_assignees.
+    assignee: str | None = None
 
 
 # ── Admin forms (survey list for admin) ──────────────────────────────────────

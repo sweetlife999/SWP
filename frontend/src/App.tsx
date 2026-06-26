@@ -13,6 +13,8 @@ import FormBuilderPage from './pages/FormBuilderPage'
 import FormsViewerPage from './pages/FormsViewerPage'
 import EventsManagementPage from './pages/EventsManagementPage'
 import AdminLoginPage from './pages/AdminLoginPage'
+import AdminEventsPage from './pages/AdminEventsPage'
+import AdminMembersPage from './pages/AdminMembersPage'
 
 function AdminEntry() {
   const token = localStorage.getItem('su_admin_token') ?? ''
@@ -41,6 +43,9 @@ export default function App() {
 
           {/* Admin routes — ProtectedRoute redirects to /admin/login if not authenticated */}
           <Route element={<ProtectedRoute />}>
+            <Route path="/admin/events" element={<AdminEventsPage />} />
+            <Route path="/admin/events/new" element={<AdminEventsPage />} />
+            <Route path="/admin/members" element={<AdminMembersPage />} />
             <Route path="/admin/events" element={<EventsManagementPage />} />
             <Route path="/admin/kanban" element={<KanbanPage />} />
             <Route path="/admin/forms/builder" element={<FormBuilderPage />} />

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Icon } from '../components/Icon'
-import { type Survey, type QStep } from '../lib/api'
+import { api, type Survey, type QStep, type SurveyAnswer } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -11,13 +11,30 @@ export default function QuestionnairesPage() {
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [step, setStep] = useState(0)
   const [submitted, setSubmitted] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const [answers, setAnswers] = useState<Record<number, number[] | number | string>>({})
+  // Ids the user already submitted (server also blocks re-submit via cookie, but the
+  // cookie is httponly so we track locally to hide answered surveys from the list).
+  const [answered, setAnswered] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem('su_answered_surveys') ?? '[]') } catch { return [] }
+  })
 
   const { data: fetchedSurveys, loading, error, retry } = useFetch<Survey[]>('/api/questionnaires');
 
   const surveys = fetchedSurveys ?? []
-  const activeId = selectedId ?? surveys[0]?.id ?? null
+  // Hide already-answered surveys from the list and default selection.
+  const visibleSurveys = surveys.filter(q => !answered.includes(q.id))
+  const activeId = selectedId ?? visibleSurveys[0]?.id ?? null
   const active = surveys.find(q => q.id === activeId) ?? null
+
+  function markAnswered(id: string) {
+    setAnswered(prev => {
+      const next = [...new Set([...prev, id])]
+      localStorage.setItem('su_answered_surveys', JSON.stringify(next))
+      return next
+    })
+  }
 
   function selectQ(id: string) {
     if (id === activeId) return
@@ -25,6 +42,41 @@ export default function QuestionnairesPage() {
     setStep(0)
     setAnswers({})
     setSubmitted(false)
+    setSubmitError('')
+  }
+
+  // Build the payload keyed by question id (the value shapes the stats views expect):
+  // single → option text, multi → array of option texts, scale → number, text → string.
+  async function handleSubmit() {
+    if (!active) return
+    const payload: Record<string, SurveyAnswer> = {}
+    active.steps.forEach((s, i) => {
+      const v = answers[i]
+      if (v === undefined) return
+      if (s.type === 'single' && Array.isArray(v) && s.options) {
+        const opt = s.options[v[0]]
+        if (opt !== undefined) payload[s.id] = opt
+      } else if (s.type === 'multi' && Array.isArray(v) && s.options) {
+        const picked = v.map(j => s.options![j]).filter(Boolean)
+        if (picked.length) payload[s.id] = picked
+      } else if (s.type === 'scale' && typeof v === 'number') {
+        payload[s.id] = v
+      } else if (s.type === 'text' && typeof v === 'string' && v.trim()) {
+        payload[s.id] = v.trim()
+      }
+    })
+    setSubmitting(true)
+    setSubmitError('')
+    try {
+      await api.questionnaires.submit(active.id, payload)
+      setSubmitted(true)
+      markAnswered(active.id)
+    } catch (e) {
+      // 409 = the one-response-per-student cookie guard already fired.
+      setSubmitError(e instanceof Error && e.message === '409' ? 'Вы уже проходили этот опрос' : 'Не удалось отправить ответ')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   function getSelected(i: number): number[] {
@@ -77,11 +129,6 @@ export default function QuestionnairesPage() {
     )
   }
 
-  // Если active есть, но step выходит за пределы - сбрасываем step
-  if (active && step >= active.steps.length) {
-    setStep(0)
-  }
-
   if (!active) {
     return (
       <>
@@ -95,14 +142,14 @@ export default function QuestionnairesPage() {
         <div className="q-layout">
           <section>
             <div className="row sb mb-4">
-              <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
+              <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{visibleSurveys.length}</span></h3>
             </div>
             {loading && (
               <div className="q-list">
                 <LoadingSkeleton type="questionnaire" count={4} />
               </div>
             )}
-            {!loading && surveys.length === 0 && (
+            {!loading && visibleSurveys.length === 0 && (
               <p className="text-muted" style={{ padding: '24px 0', fontSize: 14 }}>
                 Нет активных опросов
               </p>
@@ -114,8 +161,24 @@ export default function QuestionnairesPage() {
   }
 
   const totalSteps = active.steps.length
-  const progress = ((step + 1) / totalSteps) * 100
-  const currentStep = active.steps[step] as QStep
+  // Guard: a published survey could (briefly) have no questions — don't crash.
+  if (totalSteps === 0) {
+    return (
+      <>
+        <div className="page-head">
+          <div className="title">
+            <span className="eyebrow">Студсовет</span>
+            <h1>Questionnaires</h1>
+          </div>
+        </div>
+        <p className="text-muted" style={{ padding: '24px 0' }}>У этого опроса пока нет вопросов.</p>
+      </>
+    )
+  }
+  // Clamp the step so switching to a shorter survey never indexes out of range.
+  const stepIdx = step < totalSteps ? step : 0
+  const progress = ((stepIdx + 1) / totalSteps) * 100
+  const currentStep = active.steps[stepIdx] as QStep
 
   return (
     <>
@@ -130,11 +193,11 @@ export default function QuestionnairesPage() {
       <div className="q-layout">
         <section>
           <div className="row sb mb-4">
-            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{surveys.length}</span></h3>
+            <h3 style={{ fontSize: 14 }}>Открыто <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{visibleSurveys.length}</span></h3>
           </div>
 
           <div className="q-list">
-            {surveys.map(q => (
+            {visibleSurveys.map(q => (
               <div key={q.id} className={`q-list-card${q.id === activeId ? ' active' : ''}`} style={{ cursor: 'pointer' }} onClick={() => selectQ(q.id)}>
                 <div className="meta">
                   <span className={`tag ${q.tagCls}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{q.tag}</span>
@@ -248,18 +311,23 @@ export default function QuestionnairesPage() {
             </div>
           </div>
 
+          {submitError && (
+            <div role="alert" style={{ margin: '0 16px', color: '#B91C1C', fontSize: 13 }}>{submitError}</div>
+          )}
+          {submitted && (
+            <div style={{ margin: '0 16px', color: '#15803D', fontSize: 13 }}>Спасибо! Ваш ответ записан.</div>
+          )}
           <div className="q-footer">
             <button className="btn ghost" onClick={() => setStep(s => Math.max(0, s - 1))} disabled={step === 0}>
               <Icon id="i-chevron-l" style={{ width: 14, height: 14 }} />Назад
             </button>
             <div className="row gap-2">
-              <button className="btn secondary" onClick={() => { setStep(0); setAnswers({}) }}>Сохранить и выйти</button>
               {step < totalSteps - 1 ? (
                 <button className="btn primary" onClick={() => setStep(s => s + 1)}>Далее →</button>
               ) : submitted ? (
                 <button className="btn secondary" disabled><Icon id="i-check" style={{ width: 14, height: 14 }} />Ответ отправлен</button>
               ) : (
-                <button className="btn primary" onClick={() => setSubmitted(true)}><Icon id="i-check" style={{ width: 14, height: 14 }} />Отправить ответ</button>
+                <button className="btn primary" disabled={submitting} onClick={handleSubmit}><Icon id="i-check" style={{ width: 14, height: 14 }} />{submitting ? 'Отправка…' : 'Отправить ответ'}</button>
               )}
             </div>
           </div>

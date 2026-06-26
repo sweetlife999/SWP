@@ -69,10 +69,12 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_deploy
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: Copy compose file
+      - name: Copy compose file and thumbor config
         run: |
           scp -i ~/.ssh/id_deploy compose.yml \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/swp/compose.yml
+          scp -i ~/.ssh/id_deploy thumbor.conf \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/swp/thumbor.conf
 
       - name: Write backend .env
         run: |

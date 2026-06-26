@@ -7,7 +7,6 @@
 -- materialised variant at the bottom and REFRESH it on a schedule.
 -- ============================================================================
 
-BEGIN;
 
 -- ── single / scale questions: one row per (question, answer) with counts ────
 -- Reads answers keyed by question id (answers ? question_id::text).
@@ -51,7 +50,6 @@ WHERE sq.type = 'multi'
   AND sq.deleted_at IS NULL
 GROUP BY sq.survey_id, sq.id, sq.position, sq.title, elem.value;
 
-COMMIT;
 
 -- ── Scale-up option (only if a survey gets very large) ──────────────────────
 -- Replace survey_answer_stats with a materialised view and refresh on a
