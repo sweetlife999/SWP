@@ -11,7 +11,7 @@ type EventForm = {
 
 const BLANK: EventForm = {
   title: '', desc: '', date: '', time: '', tag: 'SU:Core', foot: '', footLabel: '', featured: false, statusText: '',
-  format: 'Оффлайн', age: '18+',
+  format: 'Оффлайн', age: '0+',
 }
 
 const FORMAT_OPTIONS = ['Оффлайн', 'Онлайн', 'Гибрид']
@@ -30,7 +30,7 @@ function toForm(e: Event): EventForm {
     title: e.title, desc: e.desc, date: e.date, time: e.time ?? '',
     tag: DEPT_OPTIONS.includes(e.tag) ? e.tag : 'SU:Core',
     foot: e.foot, footLabel: e.footLabel ?? '', featured: !!e.featured, statusText: e.statusText ?? '',
-    format: e.format ?? 'Оффлайн', age: e.age ?? '18+',
+    format: e.format ?? 'Оффлайн', age: e.age ?? '0+',
   }
 }
 
@@ -141,8 +141,9 @@ export default function AdminEventsPage() {
       </div>
 
       {error && (
-        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
-          Не удалось загрузить мероприятия. Войдите как администратор и обновите страницу.
+        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <span>Не удалось загрузить мероприятия. Войдите как администратор и обновите страницу.</span>
+          <a className="btn secondary sm" href="#/admin/login">Войти</a>
         </div>
       )}
 

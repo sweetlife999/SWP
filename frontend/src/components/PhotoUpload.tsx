@@ -37,7 +37,7 @@ export function PhotoUpload({ value, onChange, onError }: { value: string; onCha
           ? <img src={photoUrl(value, '120x120')} alt="" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 8 }} />
           : 'Перетащите фото сюда или нажмите, чтобы выбрать'}
       </div>
-      <input ref={inputRef} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) upload(f) }} />
+      <input ref={inputRef} type="file" accept="image/*" hidden onChange={e => { const f = e.target.files?.[0]; if (f) upload(f); e.target.value = '' }} />
       {value && (
         <button className="btn ghost sm" style={{ marginTop: 6 }} onClick={() => onChange('')}>
           <Icon id="i-x" style={{ width: 12, height: 12 }} />Убрать фото

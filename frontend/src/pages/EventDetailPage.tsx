@@ -27,7 +27,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
   const [descDraft, setDescDraft] = useState('')
   // Single edit mode for the structured detail blocks (admin only).
   const [editingDetails, setEditingDetails] = useState(false)
-  const [draft, setDraft] = useState<Details>({ format: 'Оффлайн', age: '18+', locationAddress: '', schedule: [], organizers: [] })
+  const [draft, setDraft] = useState<Details>({ format: 'Оффлайн', age: '0+', locationAddress: '', schedule: [], organizers: [] })
 
   useEffect(() => {
     if (!id) return
@@ -59,7 +59,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
     if (!event) return
     setDraft({
       format: event.format ?? 'Оффлайн',
-      age: event.age ?? '18+',
+      age: event.age ?? '0+',
       locationAddress: event.locationAddress ?? '',
       schedule: event.schedule ? event.schedule.map(s => ({ ...s })) : [],
       organizers: event.organizers ? event.organizers.map(o => ({ ...o })) : [],
@@ -297,7 +297,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
                 <span className="lbl">Возраст</span>
                 {editingDetails
                   ? <select className="input" style={{ width: 'auto', height: 30 }} value={draft.age} onChange={e => setDraft(d => ({ ...d, age: e.target.value }))}>{AGE_OPTIONS.map(o => <option key={o}>{o}</option>)}</select>
-                  : <span className="val">{event?.age ?? '18+'}</span>}
+                  : <span className="val">{event?.age ?? '0+'}</span>}
               </div>
             </div>
           </div>

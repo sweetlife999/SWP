@@ -51,7 +51,7 @@ class EventOut(BaseModel):
     status: EventStatus
     statusText: str | None = None
     format: str = "Оффлайн"
-    age: str = "18+"
+    age: str = "0+"
     locationAddress: str = ""
     schedule: list[ScheduleItem] = []
     organizers: list[OrganizerItem] = []
@@ -70,7 +70,7 @@ class EventCreate(BaseModel):
     featured: bool = False
     statusText: str | None = None
     format: str = "Оффлайн"
-    age: str = "18+"
+    age: str = "0+"
     locationAddress: str = ""
     schedule: list[ScheduleItem] = []
     organizers: list[OrganizerItem] = []
