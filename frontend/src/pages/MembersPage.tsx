@@ -46,9 +46,9 @@ export default function MembersPage() {
   const [toast, setToast] = useState('')
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const [reloadKey, setReloadKey] = useState(0)
-  const retry = () => { setError(false); setLoading(true); setReloadKey(k => k + 1) }
+  const retry = () => { setError(null); setLoading(true); setReloadKey(k => k + 1) }
   const [roadmapHtml, setRoadmapHtml] = useState(DEFAULT_ROADMAP_HTML)
   const [historyHtml, setHistoryHtml] = useState(DEFAULT_HISTORY_HTML)
   const [addingMember, setAddingMember] = useState(false)
@@ -64,8 +64,8 @@ export default function MembersPage() {
     let cancelled = false
     const apiDep = depParam && DEP_KEYS.includes(depParam) ? (depParam as Member['dep']) : undefined
     api.members.list(apiDep)
-      .then(data => { if (!cancelled) { setMembers(data); setError(false) } })
-      .catch(() => { if (!cancelled) setError(true) })
+      .then(data => { if (!cancelled) { setMembers(data); setError(null) } })
+      .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load members') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
   }, [depParam, reloadKey])
@@ -192,7 +192,7 @@ export default function MembersPage() {
           </div>
 
           {error ? (
-            <ErrorBanner message="Не удалось загрузить участников." onRetry={retry} />
+            <ErrorBanner message="Не удалось загрузить участников." onRetry={retry} stack={error} />
           ) : loading ? (
             <div className="members-grid"><LoadingSkeleton type="member" count={8} /></div>
           ) : members.length === 0 ? (

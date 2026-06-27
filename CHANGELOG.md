@@ -36,6 +36,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Member cards rendered very tall/stretched with few members — fixed-width auto-fill columns and square photos
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
+- Error banners now show a button with error message on every page
 
 ## [1.0.0] — 2026-06-20
 
