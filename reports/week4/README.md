@@ -32,7 +32,7 @@
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
 | SemVer release | _TODO_ link to `v0.2.0` (or chosen tag) release |
-| Public demo video (<2 min) |  |
+| Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing) |
 | Customer review summary | [`customer-review-summary.md`](customer-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
 | Retrospective | [`retrospective.md`](retrospective.md) |
@@ -63,7 +63,7 @@ PostgreSQL backend, deployed via Docker on a VPS.
 - **Scope summary:** frontend↔backend integration (events, members, kanban, admin,
   questionnaires), production reliability (Python 3.12 startup fix, automatic
   migrations), and the Assignment 4 quality/automation work.
-- **Total Sprint size (Story Points):** _TODO_ (sum from the Sprint 4 milestone board)
+- **Total Sprint size (Story Points):** 101.
 
 ## 7. Delivered product changes
 
@@ -186,7 +186,7 @@ one-time submission evidence.
 - **Public UAT results summary:** see [`customer-review-summary.md`](customer-review-summary.md)
   (UAT results table) and [`docs/user-acceptance-tests.md`](../../docs/user-acceptance-tests.md)
   execution history. _Results to be recorded after the customer session._
-- **Customer review transcript / notes:** [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing)
+- **Customer review transcript / notes:** _TODO_
   Moodle only, or provide `customer-review-notes.md` if recording was refused.
 - **Customer review summary:** [`customer-review-summary.md`](customer-review-summary.md)
 
