@@ -4,11 +4,6 @@
 **Team:** Team 2
 **License:** [LICENSE](../../LICENSE)
 
-> Placeholders marked `_TODO_` depend on actions outside the repository (the
-> recorded customer session, the SemVer release/tag, CI-run permalinks, branch
-> protection and screenshot capture). Fill them before submission. Private links
-> (recordings, credentials) go to the Moodle PDF only — never to this public repo.
-
 ---
 
 ## Quick links
@@ -63,7 +58,7 @@ PostgreSQL backend, deployed via Docker on a VPS.
 - **Scope summary:** frontend↔backend integration (events, members, kanban, admin,
   questionnaires), production reliability (Python 3.12 startup fix, automatic
   migrations), and the Assignment 4 quality/automation work.
-- **Total Sprint size (Story Points):** 101.
+- **Total Sprint size (Story Points):** 121.
 
 ## 7. Delivered product changes
 
