@@ -39,6 +39,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Error banners now show a button with error message on every page
 - Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
 - Department avatars on the home page now show actual member photos
+- "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
 
 ## [1.0.0] — 2026-06-20
 

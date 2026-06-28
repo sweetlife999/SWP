@@ -64,7 +64,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </NavLink>
           <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
             <Icon id="i-kanban" className="ic" />
-            SU:Core Board
+            Kanban
           </NavLink>
           <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
             <Icon id="i-calendar" className="ic" />
