@@ -38,7 +38,7 @@ correct title, date, and department tag; the draft was hidden until published.
 
 | Date | Sprint | Result | Notes |
 |------|--------|--------|-------|
-| 2026-06-27 | Sprint 4 | ✅ Passed | Admin created and published an event; it appeared on the public page. Customer confirmed events work. |
+| 2026-06-27 | Sprint 4 | Passed | Admin created and published an event; it appeared on the public page. Customer confirmed events work. |
 
 **Evidence from Sprint Review:**
 > *"Yes."* — Valerii (Customer), confirming the events section works as expected.
