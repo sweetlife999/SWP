@@ -14,6 +14,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Forms viewer now displays submission time in a coherent format
 - Removed a possibility to remove a member from the members page, it is now only possible to remove a member directly from a db
 - Removed an option to create a new event from the events page, it is now only possible to create a new event from the admin panel
+- Donations page now first displays where the money goes, and then the QR code centered below it
 
 ### Added
 - Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
