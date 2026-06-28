@@ -60,7 +60,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </NavLink>
           <NavLink className="nav-item" to="/admin/members" onClick={onClose}>
             <Icon id="i-users" className="ic" />
-            Members Manager
+            Manage members
           </NavLink>
           <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
             <Icon id="i-kanban" className="ic" />

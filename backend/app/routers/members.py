@@ -19,7 +19,7 @@ admin_router = APIRouter(
 )
 
 _SELECT = """
-    SELECT id, name, department, role, meta, bio, photo_url, recent
+    SELECT id, name, department, role, meta, bio, photo_url, recent, is_active
     FROM members
 """
 
@@ -35,6 +35,7 @@ def _row_to_member(row: asyncpg.Record) -> MemberOut:
         bio=row["bio"] or "",
         photo_url=row["photo_url"] or "",
         recent=list(row["recent"] or []),
+        is_active=row["is_active"],
     )
 
 
@@ -95,7 +96,7 @@ async def create_member(body: MemberCreate, request: Request) -> MemberOut:
         """
         INSERT INTO members (name, department, role, meta, bio, photo_url, recent)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
-        RETURNING id, name, department, role, meta, bio, photo_url, recent
+        RETURNING id, name, department, role, meta, bio, photo_url, recent, is_active
         """,
         body.name,
         body.dep,
@@ -153,6 +154,8 @@ async def patch_member(member_id: int, body: MemberPatch, request: Request) -> M
         add("photo_url", body.photo_url or "")
     if "recent" in provided:
         add("recent", list(body.recent) if body.recent is not None else [])
+    if "is_active" in provided and body.is_active is not None:
+        add("is_active", body.is_active)
 
     if not updates:
         raise HTTPException(
@@ -164,7 +167,7 @@ async def patch_member(member_id: int, body: MemberPatch, request: Request) -> M
     row = await pool.fetchrow(
         f"UPDATE members SET {', '.join(updates)} "
         f"WHERE id = ${len(params)} AND active = TRUE "
-        f"RETURNING id, name, department, role, meta, bio, photo_url, recent",
+        f"RETURNING id, name, department, role, meta, bio, photo_url, recent, is_active",
         *params,
     )
     if row is None:

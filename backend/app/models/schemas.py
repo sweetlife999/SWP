@@ -115,6 +115,7 @@ class MemberOut(BaseModel):
     bio: str
     photo_url: str
     recent: list[str]
+    is_active: bool = True
 
 
 class MemberCreate(BaseModel):
@@ -135,6 +136,7 @@ class MemberPatch(BaseModel):
     bio: str | None = None
     photo_url: str | None = None
     recent: list[str] | None = None
+    is_active: bool | None = None
 
 
 class MemberReorderItem(BaseModel):

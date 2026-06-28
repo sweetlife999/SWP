@@ -16,6 +16,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Removed an option to create a new event from the events page, it is now only possible to create a new event from the admin panel
 - Donations page now first displays where the money goes, and then the QR code centered below it
 - Removed location, format, and age from the event card on the events page
+- Moved "Create a member" to the admin panel; added a boolean "is_active" field to the member model, so that members can be archived instead of deleted
 
 ### Added
 - Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
