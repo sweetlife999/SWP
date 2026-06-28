@@ -13,6 +13,7 @@ async def get_news(request: Request) -> list[EventOut]:
     """Returns the 4 most recent published or archived events."""
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(
-        _SELECT + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC LIMIT 4"
+        _SELECT
+        + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC LIMIT 4"
     )
     return [_row_to_event(r) for r in rows]
