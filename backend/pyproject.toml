@@ -20,6 +20,7 @@ known-first-party = ["app"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["."]  # make the `app` package importable under a plain `pytest` run (CI)
 asyncio_mode = "auto"
 # DB-backed integration tests are marked; they're skipped unless DATABASE_URL is set.
 markers = [
