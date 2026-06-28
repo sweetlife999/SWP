@@ -37,6 +37,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 - Error banners now show a button with error message on every page
+- Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
 
 ## [1.0.0] — 2026-06-20
 
