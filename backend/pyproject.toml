@@ -27,6 +27,11 @@ markers = [
     "integration: requires a Postgres database (DATABASE_URL)",
 ]
 
+[tool.mypy]
+python_version = "3.12"
+files = ["app"]
+ignore_missing_imports = true  # asyncpg ships no type stubs / py.typed marker
+
 [tool.coverage.run]
 source = ["app"]
 omit = ["app/main.py"]
