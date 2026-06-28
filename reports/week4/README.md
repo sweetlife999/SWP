@@ -209,13 +209,13 @@ one-time submission evidence.
 
 | Member | GitHub | Contribution this Sprint |
 |--------|--------|--------------------------|
-| Dmitrii Malofeev | @FblRKUS | Frontend↔backend integration (#40, #39, #46, #44, #26); production incident fix + migration runner; quality requirements, QRTs, backend test suite, CI test job + `pip-audit`; Week 4 docs/reports |
-| Iaroslav Moskvin | @sweetlife999 | _TODO_ — backlog/board, reviews, _[…]_ |
-| Zakhar Gurtovoi | @Meduzium | backend, reviews, documentation  |
-| Olga Frolovskaia | @Kkoi33 | _TODO_ — frontend, _[…]_ |
-| Alisa Kondakova | @AlisaKondakova | _TODO_ — frontend, _[…]_ |
+| Dmitrii Malofeev | @FblRKUS | Frontend↔backend integration ([#40](https://github.com/sweetlife999/SWP/issues/40), [#39](https://github.com/sweetlife999/SWP/issues/39), [#46](https://github.com/sweetlife999/SWP/issues/46), [#44](https://github.com/sweetlife999/SWP/issues/44), [#26](https://github.com/sweetlife999/SWP/issues/26)) via [PR#66](https://github.com/sweetlife999/SWP/pull/66)/[#68](https://github.com/sweetlife999/SWP/pull/68); production incident fix + migration runner ([PR#69](https://github.com/sweetlife999/SWP/pull/69)); quality requirements, QRTs, backend test suite, CI tests + coverage + mypy + `pip-audit`; Week 4 docs/reports ([PR#72](https://github.com/sweetlife999/SWP/pull/72)); reviewed [#71](https://github.com/sweetlife999/SWP/pull/71), [#73](https://github.com/sweetlife999/SWP/pull/73) |
+| Iaroslav Moskvin (Team Lead) | @sweetlife999 | Home-page endpoint ([PR#73](https://github.com/sweetlife999/SWP/pull/73)), error/skeleton states everywhere ([PR#71](https://github.com/sweetlife999/SWP/pull/71)), XLSX export ([#56](https://github.com/sweetlife999/SWP/issues/56)/[PR#65](https://github.com/sweetlife999/SWP/pull/65)), inline content editing ([#32](https://github.com/sweetlife999/SWP/issues/32)), CORS startup fix ([PR#67](https://github.com/sweetlife999/SWP/pull/67)); co-implementer on the integration issues; backlog/milestone/board management; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66), [#68](https://github.com/sweetlife999/SWP/pull/68), [#69](https://github.com/sweetlife999/SWP/pull/69), [#72](https://github.com/sweetlife999/SWP/pull/72) |
+| Zakhar Gurtovoi | @Meduzium | Admin events management interface ([PR#52](https://github.com/sweetlife999/SWP/pull/52)), Process Requirements documentation ([PR#64](https://github.com/sweetlife999/SWP/pull/64)), backend work; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
+| Olga Frolovskaia | @Kkoi33 | Responsive layout — mobile/tablet breakpoints ([#38](https://github.com/sweetlife999/SWP/issues/38)/[PR#59](https://github.com/sweetlife999/SWP/pull/59)) carried into the increment; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
+| Alisa Kondakova | @AlisaKondakova | Error banners & empty states ([#49](https://github.com/sweetlife999/SWP/issues/49)/[PR#60](https://github.com/sweetlife999/SWP/pull/60)); reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
 
-> Confirm each row with the team before submission; link specific issues/PRs/reviews.
+> Contribution rows are derived from issues, PRs, and review activity; confirm with the team before submission.
 
 ## 41–42. Screenshots
 
