@@ -28,6 +28,7 @@
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
 | SemVer release | [MVP v2 — `v2.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.0.0) |
 | Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing) |
+| Presentation (public copy) | [`presentation.pdf`](presentation.pdf) |
 | Customer review summary | [`customer-review-summary.md`](customer-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
 | Retrospective | [`retrospective.md`](retrospective.md) |
@@ -172,15 +173,16 @@ one-time submission evidence.
 
 ## 31. Presentation (optional public copy)
 
-- _TODO_ optional `presentation.pdf`
+- [`presentation.pdf`](presentation.pdf) — sanitized public copy of the Assignment 4 slide deck.
 
 ## 32–34. UAT & customer review
 
 - **Public UAT results summary:** see [`customer-review-summary.md`](customer-review-summary.md)
   (UAT results table) and [`docs/user-acceptance-tests.md`](../../docs/user-acceptance-tests.md)
-  execution history. _Results to be recorded after the customer session._
-- **Customer review transcript / notes:** [`customer-review-transcript.md`](customer-review-transcript.md)
-  Moodle only, or provide `customer-review-notes.md` if recording was refused.
+  execution history.
+- **Customer review transcript:** [`customer-review-transcript.md`](customer-review-transcript.md)
+  — published in the repository with the customer's permission (recording, private
+  instructor sharing, and repository publication all permitted).
 - **Customer review summary:** [`customer-review-summary.md`](customer-review-summary.md)
 
 ## 35–37. Other reports
@@ -207,8 +209,6 @@ one-time submission evidence.
 | Zakhar Gurtovoi | @Meduzium | GitHub/assignment process work — Process Requirements ([PR#64](https://github.com/sweetlife999/SWP/pull/64)); admin events management interface ([PR#52](https://github.com/sweetlife999/SWP/pull/52)); reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
 | Olga Frolovskaia | @Kkoi33 | Recorded the customer review / UAT meeting audio; responsive layout — mobile/tablet breakpoints ([#38](https://github.com/sweetlife999/SWP/issues/38)/[PR#59](https://github.com/sweetlife999/SWP/pull/59)) in the increment; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
 | Alisa Kondakova | @AlisaKondakova | Assignment 4 presentation / slide deck; error banners & empty states ([#49](https://github.com/sweetlife999/SWP/issues/49)/[PR#60](https://github.com/sweetlife999/SWP/pull/60)); reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
-
-> Contribution rows are derived from issues, PRs, and review activity; confirm with the team before submission.
 
 ## 41–42. Screenshots
 

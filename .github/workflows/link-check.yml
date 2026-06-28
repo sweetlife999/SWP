@@ -34,6 +34,7 @@ jobs:
             --exclude '^https?://127\.'
             --exclude 'figma\.com'
             --exclude 'moodle\.'
+            --exclude 'iso25000\.com'
             --exclude 'github\.com/users/[^/]+/projects'
             --exclude 'github\.com/[^/]+/[^/]+/compare/'
             --exclude 'github\.com/[^/]+/[^/]+/releases/tag/'
