@@ -8,6 +8,10 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] — 2026-06-28
+
+MVP v2 — Sprint 4 increment: live frontend↔backend integration plus quality automation (tests, QRTs, coverage, CI gates).
+
 ### Added
 - Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
 - Events and Members pages now show explicit loading, empty, and error states instead of a blank screen

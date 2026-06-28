@@ -10,6 +10,7 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 | Assignment | Report |
 |------------|--------|
+| Assignment 4 (Sprint 4 — Integration, Quality & Automation) | [reports/week4/README.md](reports/week4/README.md) |
 | Assignment 3 (Sprint 3 — MVP v1) | [reports/week3/README.md](reports/week3/README.md) |
 | Assignment 2 (Sprint 2 — MVP v0) | [reports/week2/README.md](reports/week2/README.md) |
 
@@ -86,12 +87,13 @@ The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every pus
 frontend/          — React + TypeScript + Vite
 backend/           — FastAPI + asyncpg + Alembic
 database/          — PostgreSQL migrations
-docs/              — user-stories.md, roadmap.md, definition-of-done.md
+docs/              — user-stories, roadmap, definition-of-done, quality-requirements, quality-requirement-tests, testing, user-acceptance-tests
 reports/
   week2/           — Assignment 2 reports
   week3/           — Assignment 3 reports (Sprint 3 — MVP v1)
+  week4/           — Assignment 4 reports (Sprint 4 — Integration, Quality & Automation)
 .github/
-  workflows/       — CI: frontend lint, backend lint, link-check, deploy
+  workflows/       — CI: frontend lint, backend lint (ruff + mypy), backend tests + coverage, pip-audit, link-check, deploy
   ISSUE_TEMPLATE/
   pull_request_template.md
 CHANGELOG.md

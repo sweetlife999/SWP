@@ -31,7 +31,7 @@
 | CI: backend tests + coverage | [`backend-tests.yml`](../../.github/workflows/backend-tests.yml) |
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
-| SemVer release | _TODO_ link to `v0.2.0` (or chosen tag) release |
+| SemVer release | [MVP v2 — `v2.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.0.0) |
 | Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing) |
 | Customer review summary | [`customer-review-summary.md`](customer-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
@@ -157,9 +157,9 @@ Global repository coverage ~56% (lower by design — see [`docs/testing.md`](../
 - **Additional QA check:** `pip-audit` dependency vulnerability scan (the `audit` job
   in `backend-tests.yml`) — distinct from lint/format/type/build/test/coverage/QRT/
   link-check. Rationale in [`docs/testing.md`](../../docs/testing.md#additional-qa-check-dependency-vulnerability-scan).
-- **Latest protected-branch CI run:** _TODO_ permalink
-- **Branch protection evidence:** _TODO_ screenshot (`images/branch-protection.png`)
-- **Lint / coverage / tests / QA screenshots:** _TODO_ (`images/`)
+- **Latest protected-branch CI run:** [Actions → Backend tests on `main`](https://github.com/sweetlife999/SWP/actions/workflows/backend-tests.yml?query=branch%3Amain)
+- **Branch protection evidence:** `images/branch-protection.png` (embedded in §41)
+- **Lint / coverage / tests / QA screenshots:** `images/` — `ci_run.png`, `coverage.png`, `pip_audit.png` (embedded in §41)
 
 ## 27. How the gates continue to govern later work
 
@@ -171,10 +171,8 @@ one-time submission evidence.
 
 ## 28–30. Release & demo
 
-- **SemVer release (Assignment 4 increment):** _TODO_ (e.g. `v0.2.0`, tag on `main`,
-  linked to the Sprint 4 milestone, run instructions, and the demo video)
-- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — move `[Unreleased]` into the dated
-  release section at tag time
+- **SemVer release (Assignment 4 increment):** [MVP v2 — `v2.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.0.0) — tag on `main`, mapping to the Sprint 4 increment, with links to the Sprint 4 milestone, run instructions, and the demo video.
+- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.0.0] — 2026-06-28` section.
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing)
 
 ## 31. Presentation (optional public copy)
@@ -209,23 +207,29 @@ one-time submission evidence.
 
 | Member | GitHub | Contribution this Sprint |
 |--------|--------|--------------------------|
-| Dmitrii Malofeev | @FblRKUS | Frontend↔backend integration (#40, #39, #46, #44, #26); production incident fix + migration runner; quality requirements, QRTs, backend test suite, CI test job + `pip-audit`; Week 4 docs/reports |
-| Iaroslav Moskvin | @sweetlife999 | _TODO_ — backlog/board, reviews, _[…]_ |
-| Zakhar Gurtovoi | @Meduzium | backend, reviews, documentation  |
-| Olga Frolovskaia | @Kkoi33 | _TODO_ — frontend, _[…]_ |
-| Alisa Kondakova | @AlisaKondakova | _TODO_ — frontend, _[…]_ |
+| Dmitrii Malofeev | @FblRKUS | Frontend↔backend integration ([#40](https://github.com/sweetlife999/SWP/issues/40), [#39](https://github.com/sweetlife999/SWP/issues/39), [#46](https://github.com/sweetlife999/SWP/issues/46), [#44](https://github.com/sweetlife999/SWP/issues/44), [#26](https://github.com/sweetlife999/SWP/issues/26)) via [PR#66](https://github.com/sweetlife999/SWP/pull/66)/[#68](https://github.com/sweetlife999/SWP/pull/68); production incident fix + migration runner ([PR#69](https://github.com/sweetlife999/SWP/pull/69)); quality requirements, QRTs, backend test suite, CI tests + coverage + mypy + `pip-audit`; Week 4 docs/reports ([PR#72](https://github.com/sweetlife999/SWP/pull/72)); reviewed [#71](https://github.com/sweetlife999/SWP/pull/71), [#73](https://github.com/sweetlife999/SWP/pull/73) |
+| Iaroslav Moskvin (Team Lead) | @sweetlife999 | Frontend error/empty/skeleton states ([PR#71](https://github.com/sweetlife999/SWP/pull/71)) and questionnaire **XLSX export** ([#56](https://github.com/sweetlife999/SWP/issues/56)/[PR#65](https://github.com/sweetlife999/SWP/pull/65)); home-page endpoint ([PR#73](https://github.com/sweetlife999/SWP/pull/73)), inline content editing ([#32](https://github.com/sweetlife999/SWP/issues/32)), CORS startup fix ([PR#67](https://github.com/sweetlife999/SWP/pull/67)); co-implementer on the integration issues; backlog/milestone/board management; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66), [#68](https://github.com/sweetlife999/SWP/pull/68), [#69](https://github.com/sweetlife999/SWP/pull/69), [#72](https://github.com/sweetlife999/SWP/pull/72) |
+| Zakhar Gurtovoi | @Meduzium | GitHub/assignment process work — Process Requirements ([PR#64](https://github.com/sweetlife999/SWP/pull/64)); admin events management interface ([PR#52](https://github.com/sweetlife999/SWP/pull/52)); reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
+| Olga Frolovskaia | @Kkoi33 | Recorded the customer review / UAT meeting audio; responsive layout — mobile/tablet breakpoints ([#38](https://github.com/sweetlife999/SWP/issues/38)/[PR#59](https://github.com/sweetlife999/SWP/pull/59)) in the increment; reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
+| Alisa Kondakova | @AlisaKondakova | Assignment 4 presentation / slide deck; error banners & empty states ([#49](https://github.com/sweetlife999/SWP/issues/49)/[PR#60](https://github.com/sweetlife999/SWP/pull/60)); reviewed [#66](https://github.com/sweetlife999/SWP/pull/66) |
 
-> Confirm each row with the team before submission; link specific issues/PRs/reviews.
+> Contribution rows are derived from issues, PRs, and review activity; confirm with the team before submission.
 
 ## 41–42. Screenshots
 
 Place in [`images/`](images/) and embed before submission:
 
-- [ ] Sprint 4 milestone — `images/sprint_milestone.png`
-- [ ] Latest protected-branch CI run — `images/ci_run.png`
-- [ ] Branch protection / rules — `images/branch-protection.png`
-- [ ] Coverage / test report — `images/coverage.png`
-- [ ] Additional QA check (`pip-audit`) result — `images/pip_audit.png`
-- [ ] SemVer release — `images/release.png`
-- [ ] Example reviewed issue-linked PR — `images/reviewed_pr.png`
-- [ ] (Optional) Product/Sprint board & deployed product where public links may not be inspectable
+- [x] Sprint 4 milestone — `images/sprint_milestone.png`
+![Sprint 4 milestone](images/sprint_milestone.png)
+- [x] Latest protected-branch CI run — `images/ci_run.png`
+![Latest protected-branch CI run](images/ci_run.png)
+- [x] Branch protection / rules — `images/branch-protection.png`
+![Branch protection / rules](images/branch-protection.png)
+- [x] Coverage / test report — `images/coverage.png`
+![Coverage / test report](images/coverage.png)
+- [x] Additional QA check (`pip-audit`) result — `images/pip_audit.png`
+![Additional QA check (`pip-audit`) result](images/pip_audit.png)
+- [x] SemVer release — `images/release.png`
+![SemVer release](images/release.png)
+- [x] Example reviewed issue-linked PR — `images/reviewed_pr.png`
+![Example reviewed issue-linked PR](images/reviewed_pr.png)
