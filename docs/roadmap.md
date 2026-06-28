@@ -46,13 +46,36 @@
 
 ---
 
-## Sprint 4 — Backend Integration
+## Sprint 4 — Integration, Quality & Automation
 
 **Dates:** 2026-06-22 – 2026-06-28
-**Goal:** Connect FastAPI to the frontend — replace API stubs with live endpoints, implement auth middleware and admin JWT.
+**Milestone:** [Sprint 4 - Refining product](https://github.com/sweetlife999/SWP/milestone/3)
+**Goal:** Make the increment *reliable and verifiable*: connect the frontend to the
+live FastAPI backend, respond to customer feedback, and put measurable quality
+gates (automated tests, quality requirement tests, coverage, dependency audit) in
+CI so quality is enforced, not assumed.
 
-- FastAPI base: auth middleware, admin JWT
-- Responsive layout: mobile and tablet breakpoints (#38)
+**Product integration**
+- Events page → live API with loading/error/empty states (US-01, #40)
+- Members directory → live API with department filter and photos via Thumbor (US-05, #39)
+- Kanban board → persisted moves/edits with optimistic update + rollback (US-10, #46)
+- Admin panel: events & members management, fixed admin endpoints (US-11, #44)
+- Questionnaires: build → publish → fill → view results / export (US-13, US-14, #26)
+- Editable event detail (schedule, organizers, location, format, age)
+
+**Reliability / ops**
+- Fix backend startup under Python 3.12 and restore `/api` in production
+- Automatic database migrations on every deploy (migration runner)
+
+**Quality & automation (maintained gates)**
+- Quality requirements: [`docs/quality-requirements.md`](quality-requirements.md) — QR-SEC, QR-REL, QR-PERF
+- Automated QRTs: [`docs/quality-requirement-tests.md`](quality-requirement-tests.md)
+- Backend unit + integration tests, critical-module coverage ≥ 30% ([`docs/testing.md`](testing.md))
+- CI: `backend-tests.yml` (pytest + coverage + Postgres) and `pip-audit` dependency scan
+- Updated [Definition of Done](definition-of-done.md) requiring tests, QRTs, coverage, and test evidence
+
+> These quality gates are **maintained assets**: every later Sprint must keep them
+> passing or replace them with documented equivalent-or-stronger coverage.
 
 ---
 

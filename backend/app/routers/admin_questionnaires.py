@@ -13,6 +13,7 @@ from app.models.schemas import (
     QuestionnaireCreate,
     QuestionnairePatch,
     QuestionnaireResults,
+    QuestionnaireStatus,
     QuestionOut,
     QuestionPatch,
     QuestionResults,
@@ -29,7 +30,7 @@ admin_router = APIRouter(
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 
-def _compute_status(published: bool, closes_at) -> str:
+def _compute_status(published: bool, closes_at) -> QuestionnaireStatus:
     if not published:
         return "draft"
     if closes_at is None:
