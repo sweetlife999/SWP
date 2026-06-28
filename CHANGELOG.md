@@ -7,6 +7,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 ---
 
 ## [Unreleased]
+- Department avatars on the home page now show actual member photos
+- "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
+- Removed redundant information from forms page
+- Forms viewer and forms builder pages on admin panel now merged into one manage questionnaires page, with a list of all questionnaires and a "Create a questionnaire" button
+- Forms viewer now displays submission time in a coherent format
+- Removed a possibility to remove a member from the members page, it is now only possible to remove a member directly from a db
 
 ### Added
 - Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
@@ -38,12 +44,6 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 - Error banners now show a button with error message on every page
 - Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
-- Department avatars on the home page now show actual member photos
-- "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
-- Removed redundant information from forms page
-- Forms viewer and forms builder pages on admin panel now merged into one manage questionnaires page, with a list of all questionnaires and a "Create a questionnaire" button
-- Forms viewer now displays submission time in a coherent format
-- Removed a possibility to remove a member from the members page, it is now only possible to remove a member directly from a db
 
 ## [1.0.0] — 2026-06-20
 
