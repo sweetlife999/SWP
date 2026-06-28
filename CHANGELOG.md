@@ -42,6 +42,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
 - Removed redundant information from forms page
 - Forms viewer and forms builder pages on admin panel now merged into one manage questionnaires page, with a list of all questionnaires and a "Create a questionnaire" button
+- Forms viewer now displays submission time in a coherent format
 
 ## [1.0.0] — 2026-06-20
 

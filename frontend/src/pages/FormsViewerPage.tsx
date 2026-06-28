@@ -26,6 +26,19 @@ export default function FormsViewerPage() {
 
   const columns = responses.length > 0 ? Object.keys(responses[0]) : []
 
+  function colLabel(key: string): string {
+    return key === '_submitted_at' ? 'Submitted at' : key
+  }
+
+  function cellValue(col: string, val: unknown): string {
+    if (col === '_submitted_at' && val) {
+      const d = new Date(String(val))
+      if (!isNaN(d.getTime()))
+        return d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    }
+    return String(val ?? '')
+  }
+
   function exportXlsx() {
     if (!responses.length) return
     const ws = utils.json_to_sheet(responses)
@@ -109,12 +122,12 @@ export default function FormsViewerPage() {
             ) : (
               <table className="table">
                 <thead>
-                  <tr>{columns.map(c => <th key={c}>{c}</th>)}</tr>
+                  <tr>{columns.map(c => <th key={c}>{colLabel(c)}</th>)}</tr>
                 </thead>
                 <tbody>
                   {responses.map((r, i) => (
                     <tr key={i}>
-                      {columns.map(c => <td key={c}>{String(r[c] ?? '')}</td>)}
+                      {columns.map(c => <td key={c}>{cellValue(c, r[c])}</td>)}
                     </tr>
                   ))}
                 </tbody>
