@@ -43,6 +43,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Removed redundant information from forms page
 - Forms viewer and forms builder pages on admin panel now merged into one manage questionnaires page, with a list of all questionnaires and a "Create a questionnaire" button
 - Forms viewer now displays submission time in a coherent format
+- Removed a possibility to remove a member from the members page, it is now only possible to remove a member directly from a db
 
 ## [1.0.0] — 2026-06-20
 

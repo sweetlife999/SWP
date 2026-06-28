@@ -123,19 +123,6 @@ export default function MembersPage() {
     showToast('Участник добавлен')
   }
 
-  async function handleDeleteMember(m: Member) {
-    // ponytail: native confirm() is the "confirmation dialog" — no modal lib needed (US-11 AC3)
-    if (!window.confirm(`Удалить участника «${m.name}»? Действие нельзя отменить.`)) return
-    try {
-      await api.members.remove(m.id)
-      setMembers(prev => prev.filter(x => x.id !== m.id))
-      setSelected(null)
-      showToast('Участник удалён')
-    } catch {
-      showToast('Не удалось удалить участника')
-    }
-  }
-
   const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
     .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.role.toLowerCase().includes(search.toLowerCase()))
   const visibleMembers = showAll ? filteredMembers : filteredMembers.slice(0, 8)
@@ -389,11 +376,6 @@ export default function MembersPage() {
               <ul className="mm-recent-list">
                 {selected.recent.map((r, i) => <li key={i}>{r}</li>)}
               </ul>
-              {isAdmin && (
-                <button className="btn ghost" style={{ marginTop: 16, color: '#B91C1C' }} onClick={() => handleDeleteMember(selected)}>
-                  <Icon id="i-trash" style={{ width: 14, height: 14 }} />Удалить участника
-                </button>
-              )}
             </div>
           </div>
         </div>
