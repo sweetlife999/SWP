@@ -186,7 +186,7 @@ one-time submission evidence.
 - **Public UAT results summary:** see [`customer-review-summary.md`](customer-review-summary.md)
   (UAT results table) and [`docs/user-acceptance-tests.md`](../../docs/user-acceptance-tests.md)
   execution history. _Results to be recorded after the customer session._
-- **Customer review transcript / notes:** _TODO_
+- **Customer review transcript / notes:** [`customer-review-transcript.md`](customer-review-transcript.md)
   Moodle only, or provide `customer-review-notes.md` if recording was refused.
 - **Customer review summary:** [`customer-review-summary.md`](customer-review-summary.md)
 
