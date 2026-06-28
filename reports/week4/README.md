@@ -1,4 +1,4 @@
-# Week 4 Report — Student Union Portal
+<img width="1206" height="1206" alt="изображение" src="https://github.com/user-attachments/assets/c37479b3-7f95-4838-ae06-fecfa0ed7bcf" /># Week 4 Report — Student Union Portal
 
 **Project:** Student Union Portal — Innopolis University
 **Team:** Team 2
@@ -32,7 +32,7 @@
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
 | SemVer release | _TODO_ link to `v0.2.0` (or chosen tag) release |
-| Public demo video (<2 min) | _TODO_ |
+| Public demo video (<2 min) |  |
 | Customer review summary | [`customer-review-summary.md`](customer-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
 | Retrospective | [`retrospective.md`](retrospective.md) |
@@ -175,7 +175,7 @@ one-time submission evidence.
   linked to the Sprint 4 milestone, run instructions, and the demo video)
 - **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — move `[Unreleased]` into the dated
   release section at tag time
-- **Public sanitized demo video (<2 min):** _TODO_
+- **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing)
 
 ## 31. Presentation (optional public copy)
 
@@ -186,8 +186,7 @@ one-time submission evidence.
 - **Public UAT results summary:** see [`customer-review-summary.md`](customer-review-summary.md)
   (UAT results table) and [`docs/user-acceptance-tests.md`](../../docs/user-acceptance-tests.md)
   execution history. _Results to be recorded after the customer session._
-- **Customer review transcript / notes:** _TODO_ — publish a sanitized transcript if
-  the customer permits public publication; otherwise state that it is shared via
+- **Customer review transcript / notes:** [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing)
   Moodle only, or provide `customer-review-notes.md` if recording was refused.
 - **Customer review summary:** [`customer-review-summary.md`](customer-review-summary.md)
 
@@ -212,7 +211,7 @@ one-time submission evidence.
 |--------|--------|--------------------------|
 | Dmitrii Malofeev | @FblRKUS | Frontend↔backend integration (#40, #39, #46, #44, #26); production incident fix + migration runner; quality requirements, QRTs, backend test suite, CI test job + `pip-audit`; Week 4 docs/reports |
 | Iaroslav Moskvin | @sweetlife999 | _TODO_ — backlog/board, reviews, _[…]_ |
-| Zakhar Gurtovoi | @Meduzium | _TODO_ — backend, _[…]_ |
+| Zakhar Gurtovoi | @Meduzium | backend, reviews, documentation  |
 | Olga Frolovskaia | @Kkoi33 | _TODO_ — frontend, _[…]_ |
 | Alisa Kondakova | @AlisaKondakova | _TODO_ — frontend, _[…]_ |
 
