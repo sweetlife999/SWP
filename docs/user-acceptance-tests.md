@@ -12,9 +12,9 @@ expected result, a current status, and an execution history.
 
 | ID | Scenario | Role | Status |
 |----|----------|------|--------|
-| [UAT-01](#uat-01--publish-an-event) | Publish an event and see it appear publicly | Admin → student | Active |
-| [UAT-02](#uat-02--add-a-team-member-with-a-photo) | Add a team member with a photo | Admin → student | Active |
-| [UAT-03](#uat-03--create-publish-and-fill-a-questionnaire) | Create, publish, and fill a questionnaire | Admin → student | Active |
+| [UAT-01](#uat-01--publish-an-event) | Publish an event and see it appear publicly | Admin → student | Passed |
+| [UAT-02](#uat-02--add-a-team-member-with-a-photo) | Add a team member with a photo | Admin → student | Passed |
+| [UAT-03](#uat-03--create-publish-and-fill-a-questionnaire) | Create, publish, and fill a questionnaire | Admin → student | Passed |
 
 ---
 
@@ -38,7 +38,10 @@ correct title, date, and department tag; the draft was hidden until published.
 
 | Date | Sprint | Result | Notes |
 |------|--------|--------|-------|
-| _TBD_ | Sprint 4 | _Pending — to be executed by the customer in the Sprint 4 review/UAT session_ | |
+| 2026-06-27 | Sprint 4 | Passed | Admin created and published an event; it appeared on the public page. Customer confirmed events work. |
+
+**Evidence from Sprint Review:**
+> *"Yes."* — Valerii (Customer), confirming the events section works as expected.
 
 ---
 
@@ -63,7 +66,12 @@ sized, not stretched.
 
 | Date | Sprint | Result | Notes |
 |------|--------|--------|-------|
-| _TBD_ | Sprint 4 | _Pending — to be executed by the customer in the Sprint 4 review/UAT session_ | |
+| 2026-06-27 | Sprint 4 | Passed | Admin can add members. Feedback: replace delete button with edit. |
+
+**Evidence from Sprint Review:**
+> *"I would replace delete with edit, so you can change a member's information if needed."* — Anya (Customer)
+>
+> *"Yes, yes, yes."* — Valerii (Customer)
 
 ---
 
@@ -88,7 +96,37 @@ completed survey is no longer offered to the same student.
 
 | Date | Sprint | Result | Notes |
 |------|--------|--------|-------|
-| _TBD_ | Sprint 4 | _Pending — to be executed by the customer in the Sprint 4 review/UAT session_ | |
+| 2026-06-27 | Sprint 4 | Passed | Admin created and published a questionnaire; student can fill it; CSV and Excel export work. Customer confirmed. |
+
+**Evidence from Sprint Review:**
+> *"For the forms there are different question types. There is CSV export. You can publish a form."* — Iaroslav (Team)
+>
+> *"Yes, cool."* — Valerii (Customer)
+
+---
+
+## UAT Summary — Sprint 4
+
+| UAT ID | Scenario | Status |
+|--------|----------|--------|
+| UAT-01 | Publish an event | Passed |
+| UAT-02 | Add a team member with a photo | Passed (with feedback — replace delete with edit) |
+| UAT-03 | Create, publish, and fill a questionnaire | Passed |
+
+---
+
+## Key Feedback from UAT Session (Sprint 4)
+
+| Feedback | Resulting action |
+|----------|------------------|
+| Remove age, format, location fields from events | Will be removed |
+| Replace delete with edit on Members page | Will be implemented |
+| QR code should be large and centered on Donations page | Will be fixed |
+| Last 4 events should appear in the updates section on main page | Will be implemented |
+| Rename/merge admin tabs (Forms + Responses → Manage Questionnaires) | Will be done |
+| Add banner/description on main page | Will be added |
+| Keep only one Kanban board (SU Core) | Confirmed, no change needed |
+| Don't track completed questionnaires (stay anonymous) | Confirmed, no change needed |
 
 ---
 
