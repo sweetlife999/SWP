@@ -70,13 +70,9 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <Icon id="i-calendar" className="ic" />
             Events Manager
           </NavLink>
-          <NavLink className="nav-item" to="/admin/forms/builder" onClick={onClose}>
-            <Icon id="i-edit" className="ic" />
-            Forms Builder
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/forms/viewer" onClick={onClose}>
+          <NavLink className="nav-item" to="/admin/forms" onClick={onClose}>
             <Icon id="i-clipboard" className="ic" />
-            Forms Viewer
+            Manage questionnaires
           </NavLink>
         </nav>
 
