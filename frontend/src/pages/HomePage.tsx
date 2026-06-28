@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Member } from '../lib/api'
+import { api, photoUrl, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
@@ -28,7 +28,8 @@ export default function HomePage() {
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
   const introRef = useRef<HTMLElement>(null)
-  const { data: fetchedMembers } = useFetch<Member[]>('/api/members');
+  const { data: fetchedMembers } = useFetch<Member[]>('/api/members')
+  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>('/api/members/avatars')
   const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
 
   useEffect(() => {
@@ -109,11 +110,14 @@ export default function HomePage() {
               <span><b>2</b> co-leads</span>
             </div>
             <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a3e0ad,#32b247)' }}>МР</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }}>ДА</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }}>ЕВ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8dba8,#3da152)' }}>ТК</div>
-              {depCounts.core > 4 && <div className="more">+{depCounts.core - 4}</div>}
+              {(avatars?.core ?? []).map((url, i) => (
+                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+              {depCounts.core > (avatars?.core?.length ?? 0) && (
+                <div className="more">+{depCounts.core - (avatars?.core?.length ?? 0)}</div>
+              )}
             </div>
             <div className="open-row">
               <span>Подробнее о департаменте</span>
@@ -133,11 +137,14 @@ export default function HomePage() {
               <span><b>3</b> co-leads</span>
             </div>
             <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }}>АГ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }}>КЛ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }}>ИС</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#9eb6db,#2c5ba8)' }}>МЯ</div>
-              {depCounts.active > 4 && <div className="more">+{depCounts.active - 4}</div>}
+              {(avatars?.active ?? []).map((url, i) => (
+                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+              {depCounts.active > (avatars?.active?.length ?? 0) && (
+                <div className="more">+{depCounts.active - (avatars?.active?.length ?? 0)}</div>
+              )}
             </div>
             <div className="open-row">
               <span>Подробнее о департаменте</span>
@@ -157,11 +164,14 @@ export default function HomePage() {
               <span><b>1</b> co-lead</span>
             </div>
             <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e0a8c8,#c93f8b)' }}>АЛ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e6b9d3,#d65fa3)' }}>ПК</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#dbb3d8,#b85eb0)' }}>ОН</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e8c5db,#dc7eb3)' }}>СВ</div>
-              {depCounts.media > 4 && <div className="more">+{depCounts.media - 4}</div>}
+              {(avatars?.media ?? []).map((url, i) => (
+                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                </div>
+              ))}
+              {depCounts.media > (avatars?.media?.length ?? 0) && (
+                <div className="more">+{depCounts.media - (avatars?.media?.length ?? 0)}</div>
+              )}
             </div>
             <div className="open-row">
               <span>Подробнее о департаменте</span>

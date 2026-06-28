@@ -6,6 +6,7 @@ from app.computed import dept_tag
 from app.database import get_pool
 from app.models.schemas import (
     Department,
+    DeptAvatars,
     MemberCreate,
     MemberOut,
     MemberPatch,
@@ -55,6 +56,23 @@ async def list_members(
     else:
         rows = await pool.fetch(_SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id")
     return [_row_to_member(r) for r in rows]
+
+
+@router.get("/avatars", response_model=DeptAvatars)
+async def member_avatars(request: Request) -> DeptAvatars:
+    """Returns up to 5 photo paths per department for avatar strips on the home page."""
+    pool: asyncpg.Pool = get_pool(request)
+    rows = await pool.fetch(
+        "SELECT department, photo_url FROM members "
+        "WHERE active = TRUE AND photo_url != '' "
+        "ORDER BY sort_order, id"
+    )
+    buckets: dict[str, list[str]] = {"core": [], "active": [], "media": []}
+    for r in rows:
+        dep = r["department"]
+        if dep in buckets and len(buckets[dep]) < 5:
+            buckets[dep].append(r["photo_url"])
+    return DeptAvatars(**buckets)
 
 
 @router.get("/{member_id}", response_model=MemberOut)

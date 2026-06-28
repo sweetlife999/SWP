@@ -99,6 +99,12 @@ class EventPatch(BaseModel):
 # ── Members ───────────────────────────────────────────────────────────────────
 
 
+class DeptAvatars(BaseModel):
+    core: list[str]
+    active: list[str]
+    media: list[str]
+
+
 class MemberOut(BaseModel):
     id: str
     dep: str

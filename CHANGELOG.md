@@ -38,6 +38,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 - Error banners now show a button with error message on every page
 - Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
+- Department avatars on the home page now show actual member photos
 
 ## [1.0.0] — 2026-06-20
 
