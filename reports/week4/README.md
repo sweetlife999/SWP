@@ -31,7 +31,7 @@
 | CI: backend tests + coverage | [`backend-tests.yml`](../../.github/workflows/backend-tests.yml) |
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
-| SemVer release | _TODO_ link to `v0.2.0` (or chosen tag) release |
+| SemVer release | [MVP v2 — `v2.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.0.0) |
 | Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing) |
 | Customer review summary | [`customer-review-summary.md`](customer-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
@@ -157,9 +157,9 @@ Global repository coverage ~56% (lower by design — see [`docs/testing.md`](../
 - **Additional QA check:** `pip-audit` dependency vulnerability scan (the `audit` job
   in `backend-tests.yml`) — distinct from lint/format/type/build/test/coverage/QRT/
   link-check. Rationale in [`docs/testing.md`](../../docs/testing.md#additional-qa-check-dependency-vulnerability-scan).
-- **Latest protected-branch CI run:** _TODO_ permalink
-- **Branch protection evidence:** _TODO_ screenshot (`images/branch-protection.png`)
-- **Lint / coverage / tests / QA screenshots:** _TODO_ (`images/`)
+- **Latest protected-branch CI run:** [Actions → Backend tests on `main`](https://github.com/sweetlife999/SWP/actions/workflows/backend-tests.yml?query=branch%3Amain)
+- **Branch protection evidence:** `images/branch-protection.png` (embedded in §41)
+- **Lint / coverage / tests / QA screenshots:** `images/` — `ci_run.png`, `coverage.png`, `pip_audit.png` (embedded in §41)
 
 ## 27. How the gates continue to govern later work
 
@@ -171,10 +171,8 @@ one-time submission evidence.
 
 ## 28–30. Release & demo
 
-- **SemVer release (Assignment 4 increment):** _TODO_ (e.g. `v0.2.0`, tag on `main`,
-  linked to the Sprint 4 milestone, run instructions, and the demo video)
-- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — move `[Unreleased]` into the dated
-  release section at tag time
+- **SemVer release (Assignment 4 increment):** [MVP v2 — `v2.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.0.0) — tag on `main`, mapping to the Sprint 4 increment, with links to the Sprint 4 milestone, run instructions, and the demo video.
+- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.0.0] — 2026-06-28` section.
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/15ZJ8iA8VXKoJQ-fgKp29V69HoL4ikL0h/view?usp=sharing)
 
 ## 31. Presentation (optional public copy)
