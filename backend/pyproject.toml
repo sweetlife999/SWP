@@ -17,3 +17,15 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+# DB-backed integration tests are marked; they're skipped unless DATABASE_URL is set.
+markers = [
+    "integration: requires a Postgres database (DATABASE_URL)",
+]
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py"]
