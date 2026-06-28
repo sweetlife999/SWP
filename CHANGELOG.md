@@ -40,6 +40,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
 - Department avatars on the home page now show actual member photos
 - "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
+- Removed redundant information from forms page
 
 ## [1.0.0] — 2026-06-20
 
