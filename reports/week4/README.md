@@ -1,4 +1,4 @@
-<img width="1206" height="1206" alt="изображение" src="https://github.com/user-attachments/assets/c37479b3-7f95-4838-ae06-fecfa0ed7bcf" /># Week 4 Report — Student Union Portal
+# Week 4 Report — Student Union Portal
 
 **Project:** Student Union Portal — Innopolis University
 **Team:** Team 2
