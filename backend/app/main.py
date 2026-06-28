@@ -14,6 +14,7 @@ from app.routers import (
     events,
     kanban,
     members,
+    news,
     questionnaires,
     surveys,
     uploads,
@@ -52,6 +53,7 @@ app.add_middleware(
 
 app.include_router(events.router, prefix="/api")
 app.include_router(events.admin_router, prefix="/api")
+app.include_router(news.router, prefix="/api")
 app.include_router(members.router, prefix="/api")
 app.include_router(members.admin_router, prefix="/api")
 app.include_router(surveys.router, prefix="/api")

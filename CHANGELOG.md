@@ -25,6 +25,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Forms Builder has a questionnaire picker: choose which questionnaire to edit; editing updates the same one instead of creating duplicates
 - Kanban "New task" supports description, priority and an assignee
 - Students no longer see questionnaires they have already completed
+- Home page now displays the most recent 4 events
 
 ### Fixed
 - Multiple-choice questions in the Forms Builder could not be edited (option inputs were hidden by a CSS class collision)
