@@ -221,11 +221,17 @@ one-time submission evidence.
 
 Place in [`images/`](images/) and embed before submission:
 
-- [ ] Sprint 4 milestone — `images/sprint_milestone.png`
-- [ ] Latest protected-branch CI run — `images/ci_run.png`
-- [ ] Branch protection / rules — `images/branch-protection.png`
-- [ ] Coverage / test report — `images/coverage.png`
-- [ ] Additional QA check (`pip-audit`) result — `images/pip_audit.png`
-- [ ] SemVer release — `images/release.png`
-- [ ] Example reviewed issue-linked PR — `images/reviewed_pr.png`
-- [ ] (Optional) Product/Sprint board & deployed product where public links may not be inspectable
+- [x] Sprint 4 milestone — `images/sprint_milestone.png`
+![Sprint 4 milestone](images/sprint_milestone.png)
+- [x] Latest protected-branch CI run — `images/ci_run.png`
+![Latest protected-branch CI run](images/ci_run.png)
+- [x] Branch protection / rules — `images/branch-protection.png`
+![Branch protection / rules](images/branch-protection.png)
+- [x] Coverage / test report — `images/coverage.png`
+![Coverage / test report](images/coverage.png)
+- [x] Additional QA check (`pip-audit`) result — `images/pip_audit.png`
+![Additional QA check (`pip-audit`) result](images/pip_audit.png)
+- [x] SemVer release — `images/release.png`
+![SemVer release](images/release.png)
+- [x] Example reviewed issue-linked PR — `images/reviewed_pr.png`
+![Example reviewed issue-linked PR](images/reviewed_pr.png)
