@@ -10,7 +10,6 @@ type DatabaseEvent = Event & {
   department?: string
   cover_class?: string
   foot_text?: string
-  foot_label?: string
   status_text?: string
   tagCls?: string
 }
@@ -23,7 +22,6 @@ const BLANK_EVENT = {
   department: '',
   cover_class: '',
   foot_text: '',
-  foot_label: '',
   status: 'draft',
 }
 
@@ -153,14 +151,6 @@ export default function EventsManagementPage() {
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Локация</label>
-                  <input
-                    className="input"
-                    value={editData.foot_label ?? editData.footLabel ?? ev.foot_label ?? ev.footLabel ?? ''}
-                    onChange={e => setEditData({ ...editData, foot_label: e.target.value })}
-                  />
-                </div>
-                <div>
                   <label style={{ fontSize: 12, color: 'var(--text-muted)', display: 'block', marginBottom: 4 }}>Статус</label>
                   <select
                     className="input"
@@ -190,7 +180,6 @@ export default function EventsManagementPage() {
                 <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>
                   <div>{ev.dd} {ev.mm}{(ev.event_time ?? ev.time) ? ` · ${ev.event_time ?? ev.time}` : ''}</div>
                   <div>{ev.foot_text ?? ev.foot ?? ''}</div>
-                  {ev.foot_label ?? ev.footLabel ? <div style={{ fontStyle: 'italic', marginTop: 2 }}>{ev.foot_label ?? ev.footLabel}</div> : null}
                 </div>
                 <div style={{ display: 'flex', gap: 8 }}>
                   <button
@@ -201,9 +190,8 @@ export default function EventsManagementPage() {
                       setEditData({ 
                         title: ev.title, 
                         description: ev.description ?? ev.desc, 
-                        event_date: ev.event_date ?? ev.date, 
-                        status: ev.status,
-                        foot_label: ev.foot_label ?? ev.footLabel
+                        event_date: ev.event_date ?? ev.date,
+                        status: ev.status
                       })
                     }}
                   >
@@ -263,10 +251,6 @@ export default function EventsManagementPage() {
                       <option value="active">SU:Active</option>
                       <option value="media">SU:Media</option>
                     </select>
-                  </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Локация (Комната / Зал)</label>
-                    <input className="input" value={newEvent.foot_label} onChange={e => setNewEvent({ ...newEvent, foot_label: e.target.value })} />
                   </div>
                 </div>
                 <div className="field">

@@ -60,23 +60,19 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </NavLink>
           <NavLink className="nav-item" to="/admin/members" onClick={onClose}>
             <Icon id="i-users" className="ic" />
-            Members Manager
+            Manage members
           </NavLink>
           <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
             <Icon id="i-kanban" className="ic" />
-            SU:Core Board
+            Kanban
           </NavLink>
           <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
             <Icon id="i-calendar" className="ic" />
             Events Manager
           </NavLink>
-          <NavLink className="nav-item" to="/admin/forms/builder" onClick={onClose}>
-            <Icon id="i-edit" className="ic" />
-            Forms Builder
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/forms/viewer" onClick={onClose}>
+          <NavLink className="nav-item" to="/admin/forms" onClick={onClose}>
             <Icon id="i-clipboard" className="ic" />
-            Forms Viewer
+            Manage questionnaires
           </NavLink>
         </nav>
 

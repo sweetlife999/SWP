@@ -65,11 +65,13 @@ export interface Member {
   tag: string; name: string; role: string; meta: string
   bio: string; recent: string[]
   photo_url?: string
+  is_active?: boolean
 }
 
 export interface MemberPatch {
   dep?: Member['dep']; name?: string; role?: string
   meta?: string; bio?: string; recent?: string[]; photo_url?: string
+  is_active?: boolean
 }
 
 export type QStepType = 'single' | 'multi' | 'scale' | 'text'
