@@ -1,0 +1,253 @@
+/* ============================================================
+   Motion & polish layer
+   ------------------------------------------------------------
+   Loaded after styles.css. Adds entrance/scroll reveals, route
+   transitions, hover sheens and ambient motion on top of the
+   existing design system — without changing layout or colours.
+
+   Everything that *moves on its own* (entrances, drifts, sweeps,
+   ambient loops) lives inside the no-preference media query, so
+   users who ask for reduced motion get the calm static design.
+   Pure polish that doesn't move (scrollbars) stays global.
+   ============================================================ */
+
+/* ── Refined scrollbars (always on) ────────────────────────── */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-2) transparent;
+}
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--border-2);
+  border-radius: 999px;
+  border: 3px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover { background: var(--muted-2); }
+
+/* ── Scroll progress bar (always on, driven by ScrollProgress) ─ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  transform: scaleX(0);
+  transform-origin: left center;
+  background: linear-gradient(90deg, var(--accent), var(--accent-700));
+  box-shadow: 0 0 8px rgba(50, 178, 71, 0.5);
+  z-index: 100;
+  pointer-events: none;
+  will-change: transform;
+}
+
+/* ── Keyboard focus polish (always on) ─────────────────────── */
+.btn:focus-visible,
+.nav-link:focus-visible,
+.nav-item:focus-visible,
+.icon-btn:focus-visible,
+.dep-tint:focus-visible,
+.event-card:focus-visible,
+.tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* ============================================================
+   Motion — only when the user hasn't asked to reduce it
+   ============================================================ */
+@media (prefers-reduced-motion: no-preference) {
+
+  html { scroll-behavior: smooth; }
+
+  /* ── Scroll / entrance reveal ──────────────────────────────
+     Elements get .reveal from the useReveal hook, then .is-visible
+     when they scroll into view. Stagger via --reveal-i.            */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.6s cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 0.6s cubic-bezier(0.22, 0.61, 0.36, 1);
+    transition-delay: calc(var(--reveal-i, 0) * 65ms);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* ── Route change: gentle cross-fade of page content ───────
+     Wrapper is remounted (keyed by pathname) so this replays on
+     every navigation. Opacity-only — never breaks position:sticky. */
+  .route-fade { animation: pageFade 0.42s ease both; }
+  @keyframes pageFade {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Brand mark: slow ambient gradient shimmer ─────────────── */
+  .logo-sm,
+  .sidebar-brand .logo {
+    background: linear-gradient(135deg, var(--accent), var(--accent-700) 45%, var(--accent) 90%);
+    background-size: 220% 220%;
+    animation: logoShimmer 7s ease-in-out infinite;
+  }
+  @keyframes logoShimmer {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  /* ── Primary buttons: light sweep on hover ─────────────────── */
+  .btn.primary {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn.primary::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(120deg, transparent 28%, rgba(255, 255, 255, 0.38) 50%, transparent 72%);
+    transform: translateX(-130%);
+    transition: transform 0.65s ease;
+  }
+  .btn.primary:hover::after { transform: translateX(130%); }
+
+  /* ── Header nav: animated underline ────────────────────────── */
+  .header-nav .nav-link { position: relative; }
+  .header-nav .nav-link::after {
+    content: '';
+    position: absolute;
+    left: 12px;
+    right: 12px;
+    bottom: 3px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.25s ease;
+  }
+  .header-nav .nav-link:hover::after,
+  .header-nav .nav-link.active::after { transform: scaleX(1); }
+
+  /* ── Sidebar items: icon nudge on hover ────────────────────── */
+  .nav-item .ic { transition: color 150ms ease, transform 180ms ease; }
+  .nav-item:hover .ic { transform: translateX(2px); }
+
+  /* ── Department cards: diagonal light sweep on hover ───────── */
+  .dep-tint::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 55%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    background: linear-gradient(105deg, transparent 0%, rgba(255, 255, 255, 0.22) 50%, transparent 100%);
+    transform: translateX(-160%) skewX(-16deg);
+    transition: transform 0.85s ease;
+  }
+  .dep-tint:hover::after { transform: translateX(280%) skewX(-16deg); }
+
+  /* lift the avatar stack apart a touch on hover */
+  .dep-tint .avatars .avatar,
+  .dep-tint .avatars .more { transition: transform 200ms ease, margin-left 200ms ease; }
+  .dep-tint:hover .avatars .avatar:not(:first-child),
+  .dep-tint:hover .avatars .more { margin-left: -4px; }
+
+  /* ── Stat cards: subtle hover lift ─────────────────────────── */
+  .stat {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  }
+  .stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-2);
+    border-color: var(--border-2);
+  }
+
+  /* ── Event cards: cover comes alive on hover ───────────────── */
+  .event-card .ec-cover { transition: filter 0.35s ease, transform 0.45s ease; }
+  .event-card:hover .ec-cover { filter: brightness(1.05) saturate(1.06); }
+
+  /* ── Member tiles: gentle photo zoom on hover ──────────────── */
+  .person .photo img,
+  .person .photo .silhouette { transition: transform 0.5s cubic-bezier(0.22, 0.61, 0.36, 1); }
+  .person:hover .photo img { transform: scale(1.06); }
+  .person:hover .photo .silhouette { transform: translateX(-50%) scale(1.04); }
+
+  /* ── Event banner: slow aurora drift ───────────────────────── */
+  .event-banner {
+    background-size: 170% 170%;
+    animation: auroraDrift 20s ease-in-out infinite;
+  }
+  @keyframes auroraDrift {
+    0%, 100% { background-position: 0% 50%; }
+    50%      { background-position: 100% 50%; }
+  }
+
+  /* ── Donations lead card: breathing glow ───────────────────── */
+  .summary .stat-card.lead::after {
+    animation: breathe 9s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { opacity: 0.16; transform: scale(1); }
+    50%      { opacity: 0.30; transform: scale(1.12); }
+  }
+
+  /* ── Goal progress bars: animated stripe shimmer ───────────── */
+  .goal-card .progress .bar,
+  .reg-card .progress .bar {
+    position: relative;
+    overflow: hidden;
+  }
+  .goal-card .progress .bar::after,
+  .reg-card .progress .bar::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.45) 50%, transparent 80%);
+    transform: translateX(-100%);
+    animation: barSheen 2.6s ease-in-out infinite;
+  }
+  @keyframes barSheen {
+    0%   { transform: translateX(-100%); }
+    60%, 100% { transform: translateX(220%); }
+  }
+
+  /* ── Skeleton: travelling shimmer instead of flat pulse ────── */
+  .skeleton-pulse {
+    position: relative;
+    overflow: hidden;
+  }
+  .skeleton-pulse::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: translateX(-100%);
+    animation: skeletonSweep 1.6s ease-in-out infinite;
+  }
+  @keyframes skeletonSweep {
+    100% { transform: translateX(100%); }
+  }
+
+  /* ── Modals: pop in ────────────────────────────────────────── */
+  .modal-overlay { animation: overlayIn 0.2s ease both; }
+  .dep-modal,
+  .member-modal { animation: modalPop 0.3s cubic-bezier(0.22, 1.2, 0.36, 1) both; }
+  @keyframes overlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  @keyframes modalPop {
+    from { opacity: 0; transform: translateY(14px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  /* ── Icon buttons: springy press ───────────────────────────── */
+  .icon-btn { transition: background 150ms, color 150ms, transform 120ms ease; }
+  .icon-btn:active { transform: scale(0.9); }
+}
