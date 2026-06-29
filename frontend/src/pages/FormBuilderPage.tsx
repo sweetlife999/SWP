@@ -281,15 +281,6 @@ export default function FormBuilderPage() {
     }
   }
 
-  function exportCsv() {
-    const rows = questions.map((q, i) => [`${i + 1}`, q.type, q.title, q.hint, q.options.join(' | ')])
-    const csv = [['#', 'Type', 'Title', 'Hint', 'Options'], ...rows].map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'form-questions.csv'; a.click()
-    URL.revokeObjectURL(url)
-  }
-
   function addQuestion(type: QType) {
     const defaultOptions = (type === 'single' || type === 'multi') ? ['Вариант 1', 'Вариант 2'] : []
     setQuestions(qs => [...qs, { id: nextId++, type, title: '', hint: '', options: defaultOptions, required: false }])

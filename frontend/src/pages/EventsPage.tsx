@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Event } from '../lib/api'
-import { useAdmin } from '../lib/AdminContext'
+import { type Event } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -41,7 +40,6 @@ function EventCard({ ev }: { ev: Event }) {
 }
 
 export default function EventsPage() {
-  const { isAdmin } = useAdmin()
   // Public endpoint — useFetch owns loading/error/retry; the list is the single source of truth.
   const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>('/api/events')
   const events = fetchedEvents ?? []
@@ -52,12 +50,6 @@ export default function EventsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [limit, setLimit] = useState(4)
-  const [toast, setToast] = useState('')
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3000)
-  }
 
   function applyFilter(list: Event[]) {
     return list.filter(ev => {
@@ -80,11 +72,6 @@ export default function EventsPage() {
 
   return (
     <>
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
-          {toast}
-        </div>
-      )}
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Жизнь кампуса</span>
