@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test:smoke": "npx playwright test src/tests/smoke"
+    "test:smoke": "playwright test"
   },
   "dependencies": {
     "react": "^18.3.1",
