@@ -15,7 +15,7 @@ const NEWS = [
   },
 ]
 
-const MEMBERS = [
+export const MEMBERS = [
   {
     id: 'core-1',
     dep: 'core',
@@ -25,11 +25,11 @@ const MEMBERS = [
     meta: 'Переговоры с университетом и бюджет',
     bio: 'Координирует основную работу департамента.',
     recent: ['Бюджет Q3', 'Открытое собрание'],
-    photo_url: '',
+    photo_url: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
   },
 ]
 
-const EVENTS = [
+export const EVENTS = [
   {
     id: 1,
     title: 'Campus Welcome Day',
@@ -49,7 +49,7 @@ const EVENTS = [
   },
 ]
 
-const QUESTIONNAIRES = [
+export const QUESTIONNAIRES = [
   {
     id: 'survey-1',
     tag: 'SU:Active',
@@ -73,6 +73,9 @@ const QUESTIONNAIRES = [
 ]
 
 export async function setupSmokeFixtures(page: Page) {
+  // Pre-emptively mock content endpoints used during the home and members page
+  // load sequences so smoke tests never hit the real backend, even when those
+  // sections are not asserted directly yet.
   await page.route('**/api/content/home-intro', route => route.fulfill({ json: CONTENT_BLOCK }))
   await page.route('**/api/content/roadmap', route => route.fulfill({ json: CONTENT_BLOCK }))
   await page.route('**/api/content/history', route => route.fulfill({ json: CONTENT_BLOCK }))

@@ -143,7 +143,7 @@ export default function HomePage() {
         </div>
 
         <div className="deps">
-          <div className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
+          <div data-testid="dept-card-core" className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
             <span className="dep-name">SU:Core</span>
             <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
             <p className="desc">Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
@@ -167,7 +167,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
+          <div data-testid="dept-card-active" className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
             <span className="dep-name">SU:Active</span>
             <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
             <p className="desc">Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
@@ -191,7 +191,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
+          <div data-testid="dept-card-media" className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
             <span className="dep-name">SU:Media</span>
             <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
             <p className="desc">Снимает ивенты, ведёт соцсети, делает плакаты, пишет лонгриды для портала.</p>
@@ -268,7 +268,7 @@ export default function HomePage() {
 
       {info && (
         <div className="modal-overlay" onClick={() => setOpenDep(null)}>
-          <div className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
+          <div data-testid="dept-modal" className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
             <button className="modal-close" onClick={() => setOpenDep(null)}>
               <Icon id="i-x" style={{ width: 14, height: 14 }} />
             </button>
