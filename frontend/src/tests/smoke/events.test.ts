@@ -4,6 +4,7 @@ import { setupSmokeFixtures, EVENTS } from './fixtures'
 test('events page shows at least one event card', async ({ page }) => {
   await setupSmokeFixtures(page);
   await page.goto('/#/events');
-  await expect(page.locator('.event-card')).not.toHaveCount(0);
-  await expect(page.locator('.event-card')).toContainText(EVENTS[0].title);
+  const cards = page.getByTestId('event-card');
+  await expect(cards).toHaveCount(EVENTS.length);
+  await expect(cards).toContainText(EVENTS[0].title);
 });

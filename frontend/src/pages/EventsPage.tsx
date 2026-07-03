@@ -25,7 +25,7 @@ function EventCard({ ev }: { ev: Event }) {
   const label = statusLabel(ev)
   const footerLabel = ev.footLabel || 'Подробнее'
   return (
-    <Link className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
+    <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
       <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
         {label && <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>}
