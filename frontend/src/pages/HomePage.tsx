@@ -98,7 +98,11 @@ export default function HomePage() {
         </div>
 
         <div className="deps">
+<<<<<<< HEAD
           <div className="dep-tint dep-core" onClick={() => navigate('/members?dep=core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=core')}>
+=======
+          <div data-testid="dept-card-core" className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
+>>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
             <span className="dep-name">SU:Core</span>
             <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
             <p className="desc">Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
@@ -125,7 +129,11 @@ export default function HomePage() {
             </div>
           </div>
 
+<<<<<<< HEAD
           <div className="dep-tint dep-active" onClick={() => navigate('/members?dep=active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=active')}>
+=======
+          <div data-testid="dept-card-active" className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
+>>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
             <span className="dep-name">SU:Active</span>
             <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
             <p className="desc">Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
@@ -152,7 +160,11 @@ export default function HomePage() {
             </div>
           </div>
 
+<<<<<<< HEAD
           <div className="dep-tint dep-media" onClick={() => navigate('/members?dep=media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=media')}>
+=======
+          <div data-testid="dept-card-media" className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
+>>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
             <span className="dep-name">SU:Media</span>
             <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
             <p className="desc">Снимает ивенты, ведёт соцсети, делает плакаты, пишет лонгриды для портала.</p>
@@ -230,7 +242,42 @@ export default function HomePage() {
         )}
       </section>
 
+<<<<<<< HEAD
 
+=======
+      {info && (
+        <div className="modal-overlay" onClick={() => setOpenDep(null)}>
+          <div data-testid="dept-modal" className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setOpenDep(null)}>
+              <Icon id="i-x" style={{ width: 14, height: 14 }} />
+            </button>
+            <div className="dep-modal-header">
+              <div className="dep-name">{info.name}</div>
+              <h2 style={{ margin: '6px 0 4px' }}>{info.name}</h2>
+              <p className="tagline">{info.tagline}</p>
+            </div>
+            <div className="dep-modal-body">
+              <p>{info.desc}</p>
+              <h4>Недавние активности</h4>
+              <ul>
+                {info.recent.map((r, i) => <li key={i}>{r}</li>)}
+              </ul>
+            </div>
+            <div className="dep-modal-foot">
+              <Link
+                className="btn primary"
+                style={{ width: '100%', justifyContent: 'center' }}
+                to={`/members?dep=${info.dep}`}
+                onClick={() => setOpenDep(null)}
+              >
+                Посмотреть участников ({depCounts[openDep!]} чел.)
+                <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+>>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
     </>
   )
 }

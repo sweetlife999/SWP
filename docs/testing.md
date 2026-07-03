@@ -5,6 +5,19 @@ treated as critical, their coverage status, and the additional QA check the team
 runs in CI. Tests are **maintained product assets**: later work must keep them
 passing or replace them with documented equivalent-or-stronger coverage.
 
+## Table of contents
+
+- [Testing Strategy](#testing-strategy)
+  - [Table of contents](#table-of-contents)
+  - [Stack and tooling](#stack-and-tooling)
+  - [Test types](#test-types)
+    - [Unit tests](#unit-tests)
+    - [Integration tests](#integration-tests)
+    - [Frontend smoke tests](#frontend-smoke-tests)
+  - [Critical modules and coverage](#critical-modules-and-coverage)
+  - [Additional QA check: dependency vulnerability scan](#additional-qa-check-dependency-vulnerability-scan)
+  - [Maintenance policy](#maintenance-policy)
+
 ## Stack and tooling
 
 - **Backend:** Python / FastAPI, tested with [pytest](https://docs.pytest.org/),
@@ -14,6 +27,9 @@ passing or replace them with documented equivalent-or-stronger coverage.
   `ruff format --check`) in [`backend-lint.yml`](../.github/workflows/backend-lint.yml).
 - **Frontend:** ESLint + `tsc --noEmit` in
   [`frontend-lint.yml`](../.github/workflows/frontend-lint.yml).
+- **Frontend smoke tests:** Playwright runs the public-route smoke suite in
+  [`frontend/src/tests/smoke/`](../frontend/src/tests/smoke/) with mocked API
+  responses and a Vite `webServer`.
 - **Additional QA check:** [`pip-audit`](https://pypi.org/project/pip-audit/)
   dependency vulnerability scan (see [below](#additional-qa-check-dependency-vulnerability-scan)).
 
@@ -56,6 +72,32 @@ pip install -r requirements-dev.txt
 pytest -m "not integration"              # unit only, no DB needed
 pytest --cov=app --cov-report=term-missing   # full suite (needs a DB for integration)
 ```
+
+### Frontend smoke tests
+
+Browser-level checks validate the core public and admin entry points from the
+real frontend build, while stubbing API responses so the suite stays stable even
+when the backend is offline.
+
+- [`frontend/src/tests/smoke/home.test.ts`](../frontend/src/tests/smoke/home.test.ts) — home page loads, the `Student Union` heading is visible, and a department card opens the modal.
+- [`frontend/src/tests/smoke/events.test.ts`](../frontend/src/tests/smoke/events.test.ts) — `/events` loads with at least one event card visible.
+- [`frontend/src/tests/smoke/members.test.ts`](../frontend/src/tests/smoke/members.test.ts) — `/members` loads with at least one member card visible.
+- [`frontend/src/tests/smoke/questionnaires.test.ts`](../frontend/src/tests/smoke/questionnaires.test.ts) — `/questionnaires` loads.
+- [`frontend/src/tests/smoke/admin-login.test.ts`](../frontend/src/tests/smoke/admin-login.test.ts) — `/admin/login` shows the login form.
+
+Run them:
+
+```bash
+cd frontend
+npm run test:smoke
+```
+
+Notes:
+
+- The suite uses HashRouter routes, so Playwright navigates with `/#/...`.
+- [`frontend/playwright.config.ts`](../frontend/playwright.config.ts) starts Vite via `webServer`, so no manual frontend startup is needed.
+- API fixtures live in [`frontend/src/tests/smoke/fixtures.ts`](../frontend/src/tests/smoke/fixtures.ts) and intercept `/api/*` calls.
+- The smoke job runs in [`frontend-lint.yml`](../.github/workflows/frontend-lint.yml) and again in [`deploy.yml`](../.github/workflows/deploy.yml) before build and deploy.
 
 ## Critical modules and coverage
 
