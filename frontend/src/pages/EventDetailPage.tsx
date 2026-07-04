@@ -29,13 +29,15 @@ function EventDetailPageInner({ id }: { id?: string }) {
 
   useEffect(() => {
     if (!id) return
+    let cancelled = false
     api.events.get(id)
-      .then(ev => { setEvent(ev); setDescDraft(ev.desc) })
-      .catch(() => setEvent(null))
+      .then(ev => { if (!cancelled) { setEvent(ev); setDescDraft(ev.desc) } })
+      .catch(() => { if (!cancelled) setEvent(null) })
     // "Похожие мероприятия" — real other events instead of hardcoded mocks.
     api.events.list()
-      .then(list => setRelated(list.filter(e => String(e.id) !== String(id)).slice(0, 3)))
+      .then(list => { if (!cancelled) setRelated(list.filter(e => String(e.id) !== String(id)).slice(0, 3)) })
       .catch(() => {})
+    return () => { cancelled = true }
   }, [id])
 
   function showToast(msg: string) {

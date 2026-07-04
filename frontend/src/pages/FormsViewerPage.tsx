@@ -17,9 +17,11 @@ export default function FormsViewerPage() {
 
   useEffect(() => {
     if (!activeForm) return
+    let cancelled = false
     api.admin.forms.responses(activeForm).then(data => {
-      setResponses(data as Record<string, string>[])
-    }).catch(() => { setResponses([]) })
+      if (!cancelled) setResponses(data as Record<string, string>[])
+    }).catch(() => { if (!cancelled) setResponses([]) })
+    return () => { cancelled = true }
   }, [activeForm])
 
   const activeFormData = forms.find(f => f.id === activeForm)
