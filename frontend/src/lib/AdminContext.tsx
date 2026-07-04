@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 interface AdminCtx {
   isAdmin: boolean
@@ -48,6 +48,16 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     localStorage.removeItem('su_admin_token')
     setToken('')
   }
+
+  // api.ts dispatches this when a request comes back 401 (e.g. the token
+  // expired mid-session). Without this, a button click that only updates
+  // local page state never re-renders this provider, so isAdmin would stay
+  // true and the page would just show a stuck generic error instead of
+  // sending the admin back to the login screen.
+  useEffect(() => {
+    window.addEventListener('su:unauthorized', logout)
+    return () => window.removeEventListener('su:unauthorized', logout)
+  }, [])
 
   // Re-derive isAdmin from the token on every render so it goes false the moment
   // the token expires mid-session (e.g. a tab left open overnight).

@@ -17,6 +17,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Donations page now first displays where the money goes, and then the QR code centered below it
 - Removed location, format, and age from the event card on the events page
 - Moved "Create a member" to the admin panel; added a boolean "is_active" field to the member model, so that members can be archived instead of deleted
+- Admin panel: redirect to /admin/login now happens every time a token has expired, not only on changing nav
 
 ## [2.0.0] — 2026-06-28
 
@@ -35,6 +36,7 @@ MVP v2 — Sprint 4 increment: live frontend↔backend integration plus quality 
 - Kanban cards are editable (title, rich-note description, priority, assignee, column) from the card panel
 - Admin event form has a Location field; event location now displays on the event page
 - Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
+
 - Events have editable Format and Age fields, shown on the event page (were hardcoded)
 - Forms Builder has a questionnaire picker: choose which questionnaire to edit; editing updates the same one instead of creating duplicates
 - Kanban "New task" supports description, priority and an assignee
