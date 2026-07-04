@@ -51,7 +51,7 @@ Admins can export responses to CSV/XLSX, but cannot view submitted answers direc
 | Action | Owner | When |
 |---|---|---|
 | Fix duplicate "Manage Events" buttons on mobile | Frontend | Sprint 6 |
-| Add separate department/role for SEO and assistant | Backend + Frontend | Sprint 6 |
+| Add separate department/role for CEO and assistant | Backend + Frontend | Sprint 6 |
 | Remove percentages from Questionnaires page | Frontend | Sprint 6 |
 | Add responses viewer on the site | Frontend | Sprint 6 |
 
@@ -60,6 +60,6 @@ Admins can export responses to CSV/XLSX, but cannot view submitted answers direc
 ## Resulting Product Backlog Changes
 
 - New PBI: "Fix duplicate Manage Events buttons on mobile" — Sprint 6
-- New PBI: "Add separate department/role for SEO and assistant" — Sprint 6
+- New PBI: "Add separate department/role for CEO and assistant" — Sprint 6
 - New PBI: "Remove percentages from Questionnaires page" — Sprint 6
 - New PBI: "Add responses viewer on the site" — Sprint 6
