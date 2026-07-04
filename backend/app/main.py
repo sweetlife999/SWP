@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -19,6 +20,9 @@ from app.routers import (
     surveys,
     uploads,
 )
+
+logging.basicConfig(level=logging.INFO if not settings.debug else logging.DEBUG)
+logger = logging.getLogger("app")
 
 
 @asynccontextmanager
@@ -77,4 +81,5 @@ async def health(request: Request) -> JSONResponse:
         await asyncio.wait_for(get_pool(request).fetchval("SELECT 1"), timeout=2.0)
         return JSONResponse({"status": "ok"})
     except Exception:
+        logger.exception("Health check DB probe failed")
         return JSONResponse({"status": "db_unavailable"}, status_code=503)
