@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { utils, writeFile } from 'xlsx'
 import { Icon } from '../components/Icon'
 import { api, type Form } from '../lib/api'
 
@@ -41,12 +40,21 @@ export default function FormsViewerPage() {
     return String(val ?? '')
   }
 
-  function exportXlsx() {
+  async function exportXlsx() {
     if (!responses.length) return
-    const ws = utils.json_to_sheet(responses)
-    const wb = utils.book_new()
-    utils.book_append_sheet(wb, ws, 'Responses')
-    writeFile(wb, `responses_form_${activeForm}.xlsx`)
+    const { default: ExcelJS } = await import('exceljs')
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Responses')
+    ws.columns = columns.map(c => ({ header: c, key: c }))
+    ws.addRows(responses)
+    const buf = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `responses_form_${activeForm}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function exportCsv() {
