@@ -1,7 +1,7 @@
 # Customer Review Summary — Sprint 5 (MVP v2)
 
 **Date:** 2026-07-04
-**Participants:** Iaroslav M. (Team Lead), Dmitrii M. (Fullstack), Zakhar G. (DevOps), Olga F. (Frontend), Alisa K. (Frontend); Valerii (Customer), Anya (Customer)
+**Participants:** Zakhar G. (DevOps), Olga F. (Frontend), Alisa K. (Frontend); Valerii (Customer), Anya (Customer)
 **Format:** Video call (recording permission asked before recording started: yes)
 
 ---
@@ -12,7 +12,7 @@
 - Sprint 5 milestone: Sprint 5 — MVP v2
 - Product / Sprint board: [SU SWP Project](https://github.com/users/sweetlife999/projects/2)
 - `docs/architecture/README.md`, ADRs, `docs/development-process.md`
-- Hosted documentation site: [GitHub Pages](https://sweetlife999.github.io/SWP/)
+- Hosted documentation site: 
 
 ---
 
