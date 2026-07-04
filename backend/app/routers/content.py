@@ -1,6 +1,7 @@
 from typing import Annotated
 
 import asyncpg
+import bleach  # type: ignore[import-untyped]
 from fastapi import APIRouter, Depends, Path, Request
 
 from app.auth import require_admin
@@ -8,6 +9,27 @@ from app.database import get_pool
 from app.models.schemas import ContentBlockOut, ContentBlockUpdate
 
 router = APIRouter(prefix="/content", tags=["content"])
+
+_ALLOWED_TAGS = [
+    "p",
+    "br",
+    "strong",
+    "em",
+    "u",
+    "s",
+    "ul",
+    "ol",
+    "li",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "a",
+    "blockquote",
+    "span",
+    "div",
+]
+_ALLOWED_ATTRS = {"*": ["style"], "a": ["href", "target", "rel"]}
 
 # Slug is validated at the path level: only lowercase alphanumerics, hyphens, underscores.
 _SlugPath = Annotated[str, Path(pattern=r"^[a-z0-9_-]+$", max_length=128)]
@@ -37,6 +59,7 @@ async def update_content(
     request: Request,
     admin_sub: str = Depends(require_admin),
 ) -> ContentBlockOut:
+    clean_html = bleach.clean(body.html, tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS, strip=True)
     pool: asyncpg.Pool = get_pool(request)
     row = await pool.fetchrow(
         """
@@ -49,7 +72,7 @@ async def update_content(
         RETURNING html, updated_at, updated_by
         """,
         slug,
-        body.html,
+        clean_html,
         admin_sub,
     )
     return ContentBlockOut(

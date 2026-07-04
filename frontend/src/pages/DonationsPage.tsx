@@ -3,6 +3,7 @@ import QRCode from 'react-qr-code'
 import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { sanitizeHtml } from '../lib/sanitize'
 
 const DONATE_URL = 'https://www.tbank.ru/cf/6NXLtpINXzY'
 
@@ -34,7 +35,7 @@ export default function DonationsPage() {
   }
 
   async function handleSave() {
-    const newHtml = ref.current?.innerHTML ?? html
+    const newHtml = sanitizeHtml(ref.current?.innerHTML ?? html)
     try {
       await api.content.update('donations', newHtml)
       setHtml(newHtml)
@@ -85,7 +86,7 @@ export default function DonationsPage() {
             ref={ref}
             contentEditable={editing}
             suppressContentEditableWarning
-            dangerouslySetInnerHTML={{ __html: html }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(html) }}
             style={editing ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8, minHeight: 80 } : {}}
           />
         </div>

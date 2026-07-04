@@ -7,6 +7,7 @@ import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
+import { sanitizeHtml } from '../lib/sanitize'
 
 interface NewsItem {
   thumbClass?: string
@@ -46,7 +47,7 @@ export default function HomePage() {
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   async function handleIntroSave() {
-    const html = introRef.current?.innerHTML ?? introHtml
+    const html = sanitizeHtml(introRef.current?.innerHTML ?? introHtml)
     try {
       await api.content.update('home-intro', html)
       setIntroHtml(html)
@@ -69,7 +70,7 @@ export default function HomePage() {
           aria-label="О студсовете"
           contentEditable={editingIntro}
           suppressContentEditableWarning
-          dangerouslySetInnerHTML={{ __html: introHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(introHtml) }}
           style={editingIntro ? { outline: '2px solid var(--accent)', borderRadius: 8, padding: 16 } : {}}
         />
         {isAdmin && !editingIntro && (

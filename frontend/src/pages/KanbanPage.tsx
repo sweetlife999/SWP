@@ -11,6 +11,7 @@ function stripHtml(html?: string): string {
 }
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
+import { sanitizeHtml } from '../lib/sanitize'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -79,7 +80,7 @@ function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: C
     try {
       await onSave({
         title: title.trim() || card.title,
-        desc: descRef.current?.innerHTML ?? card.desc ?? '',
+        desc: sanitizeHtml(descRef.current?.innerHTML ?? card.desc ?? ''),
         priority,
         col: colKey,
         assignee: assignee.trim(),
@@ -153,11 +154,11 @@ function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: C
                 className="rm-edit"
                 contentEditable
                 suppressContentEditableWarning
-                dangerouslySetInnerHTML={{ __html: card.desc ?? '' }}
+                dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc ?? '') }}
                 style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
               />
             ) : card.desc ? (
-              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: card.desc }} />
+              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc) }} />
             ) : (
               <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
             )}
