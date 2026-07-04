@@ -19,6 +19,7 @@ from app.models.schemas import (
     QuestionResults,
 )
 from app.routers.questionnaires import _fetch_questions
+from app.sql_patch import SqlPatchBuilder, require_fields_provided
 
 admin_router = APIRouter(
     prefix="/admin/questionnaires",
@@ -153,17 +154,10 @@ async def patch_questionnaire(
     await _get_survey_or_404(pool, questionnaire_id)
 
     provided = body.model_fields_set
-    if not provided:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
-        )
+    require_fields_provided(provided)
 
-    updates: list[str] = []
-    params: list = []
-
-    def add(col: str, val) -> None:
-        params.append(val)
-        updates.append(f"{col} = ${len(params)}")
+    patch = SqlPatchBuilder()
+    add = patch.add
 
     if "status" in provided and body.status is not None:
         if body.status == "open":
@@ -186,11 +180,11 @@ async def patch_questionnaire(
     if "closes_at" in provided:
         add("closes_at", body.closes_at)
 
-    if updates:
-        params.append(questionnaire_id)
+    if patch.updates:
+        patch.params.append(questionnaire_id)
         await pool.execute(
-            f"UPDATE surveys SET {', '.join(updates)} WHERE id = ${len(params)}",
-            *params,
+            f"UPDATE surveys SET {', '.join(patch.updates)} WHERE id = ${len(patch.params)}",
+            *patch.params,
         )
 
     return await _build_admin_out(pool, questionnaire_id)
@@ -246,17 +240,10 @@ async def patch_question(
     pool: asyncpg.Pool = get_pool(request)
 
     provided = body.model_fields_set
-    if not provided:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
-        )
+    require_fields_provided(provided)
 
-    updates: list[str] = []
-    params: list = []
-
-    def add(col: str, val) -> None:
-        params.append(val)
-        updates.append(f"{col} = ${len(params)}")
+    patch = SqlPatchBuilder()
+    add = patch.add
 
     if "type" in provided and body.type is not None:
         add("type", body.type)
@@ -273,12 +260,13 @@ async def patch_question(
     if "scale_mid" in provided:
         add("scale_mid", body.scale_mid)
 
-    params.extend([question_id, questionnaire_id])
+    patch.params.extend([question_id, questionnaire_id])
     row = await pool.fetchrow(
-        f"UPDATE survey_questions SET {', '.join(updates)} "
-        f"WHERE id = ${len(params) - 1} AND survey_id = ${len(params)} AND deleted_at IS NULL "
+        f"UPDATE survey_questions SET {', '.join(patch.updates)} "
+        f"WHERE id = ${len(patch.params) - 1} AND survey_id = ${len(patch.params)} "
+        f"AND deleted_at IS NULL "
         f"RETURNING id, position, type, title, hint, options, scale_low, scale_high, scale_mid",
-        *params,
+        *patch.params,
     )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Question not found")

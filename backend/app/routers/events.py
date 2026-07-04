@@ -15,6 +15,7 @@ from app.computed import (
 )
 from app.database import get_pool
 from app.models.schemas import EventCreate, EventOut, EventPatch
+from app.sql_patch import SqlPatchBuilder, require_fields_provided
 
 router = APIRouter(prefix="/events", tags=["events"])
 admin_router = APIRouter(
@@ -159,18 +160,10 @@ async def delete_event(event_id: int, request: Request) -> None:
 
 async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> EventOut:
     provided = body.model_fields_set
-    if not provided:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
-        )
+    require_fields_provided(provided)
 
-    updates: list[str] = []
-    params: list = []
-
-    def add(col: str, val) -> None:
-        # col is always a hardcoded string literal, never user input.
-        params.append(val)
-        updates.append(f"{col} = ${len(params)}")
+    patch = SqlPatchBuilder()
+    add = patch.add
 
     # Non-nullable columns: reject explicit null.
     for field, col, val in [
@@ -233,17 +226,14 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
     if "organizers" in provided and body.organizers is not None:
         add("organizers", [o.model_dump() for o in body.organizers])
 
-    if not updates:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No valid fields to update"
-        )
+    patch.require_updates()
 
-    params.append(event_id)
+    patch.params.append(event_id)
     row = await pool.fetchrow(
-        f"UPDATE events SET {', '.join(updates)}, updated_at = now() "
-        f"WHERE id = ${len(params)} "
+        f"UPDATE events SET {', '.join(patch.updates)}, updated_at = now() "
+        f"WHERE id = ${len(patch.params)} "
         f"RETURNING {_RETURNING}",
-        *params,
+        *patch.params,
     )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
