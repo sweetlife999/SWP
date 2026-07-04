@@ -23,11 +23,16 @@ from app.routers import (
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Refuse to start in production with the default JWT secret.
+    # Refuse to start in production with the default JWT secret or admin password.
     if not settings.debug and settings.jwt_secret == "dev-secret-change-in-production":
         raise RuntimeError(
             "JWT_SECRET is set to the insecure default. "
             "Set a strong JWT_SECRET env var, or set DEBUG=true for local development."
+        )
+    if not settings.debug and settings.admin_password == "changeme":
+        raise RuntimeError(
+            "ADMIN_PASSWORD is set to the insecure default. "
+            "Set a strong ADMIN_PASSWORD env var, or set DEBUG=true for local development."
         )
     app.state.pool = await create_pool(settings.database_url)
     yield
