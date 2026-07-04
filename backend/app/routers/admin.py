@@ -1,8 +1,19 @@
+from datetime import UTC, datetime, timedelta
+
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from app.auth import check_login_rate, create_token, get_client_ip, require_admin, verify_password
+from app.auth import (
+    check_login_rate,
+    create_session,
+    create_token,
+    get_client_ip,
+    require_admin,
+    revoke_session,
+    verify_password,
+)
 from app.computed import dept_tag, dept_tag_cls
+from app.config import settings
 from app.database import get_pool
 from app.models.schemas import FormOut, LoginRequest, LoginResponse
 
@@ -14,7 +25,18 @@ async def login(body: LoginRequest, request: Request) -> LoginResponse:
     check_login_rate(get_client_ip(request))
     if not verify_password(body.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password")
-    return LoginResponse(token=create_token())
+    token, jti = create_token()
+    expires_at = datetime.now(UTC) + timedelta(hours=settings.token_expire_hours)
+    await create_session(get_pool(request), jti, expires_at)
+    return LoginResponse(token=token)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)
+async def logout(request: Request, admin_sub: str = Depends(require_admin)) -> None:
+    """Revokes the current session so the token can no longer be used, even before it expires."""
+    jti = getattr(request.state, "jti", None)
+    if jti:
+        await revoke_session(get_pool(request), jti)
 
 
 @router.get("/forms", response_model=list[FormOut], dependencies=[Depends(require_admin)])

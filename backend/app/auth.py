@@ -1,14 +1,17 @@
+import hashlib
 import secrets
 import time
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
+import asyncpg
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import settings
+from app.database import get_pool
 
 _ALGORITHM = "HS256"
 _bearer = HTTPBearer(auto_error=False)
@@ -58,13 +61,40 @@ def check_login_rate(ip: str) -> None:
         del _login_attempts[k]
 
 
-def create_token() -> str:
+def _hash_jti(jti: str) -> bytes:
+    return hashlib.sha256(jti.encode()).digest()
+
+
+async def create_session(pool: asyncpg.Pool, jti: str, expires_at: datetime) -> None:
+    await pool.execute(
+        "INSERT INTO admin_sessions (token_hash, expires_at) VALUES ($1, $2)",
+        _hash_jti(jti),
+        expires_at,
+    )
+
+
+async def is_session_valid(pool: asyncpg.Pool, jti: str) -> bool:
+    row = await pool.fetchval(
+        "SELECT 1 FROM admin_sessions WHERE token_hash = $1 AND expires_at > now()",
+        _hash_jti(jti),
+    )
+    return row is not None
+
+
+async def revoke_session(pool: asyncpg.Pool, jti: str) -> None:
+    await pool.execute("DELETE FROM admin_sessions WHERE token_hash = $1", _hash_jti(jti))
+
+
+def create_token() -> tuple[str, str]:
+    """Returns (token, jti). The caller must persist the session via create_session()."""
+    jti = secrets.token_hex(16)
     payload = {
         "sub": "admin",
+        "jti": jti,
         "iat": datetime.now(UTC),
         "exp": datetime.now(UTC) + timedelta(hours=settings.token_expire_hours),
     }
-    return jwt.encode(payload, settings.jwt_secret, algorithm=_ALGORITHM)
+    return jwt.encode(payload, settings.jwt_secret, algorithm=_ALGORITHM), jti
 
 
 def _decode_token(token: str) -> dict:
@@ -82,10 +112,16 @@ def _decode_token(token: str) -> dict:
 
 
 async def require_admin(
+    request: Request,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer)],
 ) -> str:
     """Verifies the JWT and returns the subject claim. Use as a FastAPI dependency."""
     if credentials is None:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not authenticated")
     payload = _decode_token(credentials.credentials)
+    jti = payload.get("jti")
+    if jti and not await is_session_valid(get_pool(request), jti):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Session revoked")
+    # Stash jti so a logout endpoint can revoke this exact session without re-decoding.
+    request.state.jti = jti
     return payload["sub"]
