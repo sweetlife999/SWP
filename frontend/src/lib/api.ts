@@ -210,6 +210,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       }),
+    logout: () => reqVoid('/admin/logout', { method: 'POST', headers: authHeaders() }),
     events: {
       list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
       create: (e: Record<string, unknown>) => req('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),
