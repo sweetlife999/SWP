@@ -34,7 +34,7 @@ On mobile view, two identical "Manage Events" buttons are displayed. One should 
 
 ### 2. No dedicated department for CEO and assistant
 
-SEO specialist and their assistant are not part of any existing SU department (Core, Active, Media). A separate department or role should be added so they appear on the Members page.
+CEO specialist and their assistant are not part of any existing SU department (Core, Active, Media). A separate department or role should be added so they appear on the Members page.
 
 ### 3. Percentages on questionnaires are unclear
 
