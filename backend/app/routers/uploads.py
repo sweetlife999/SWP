@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from PIL import Image, UnidentifiedImageError
 
 from app.auth import require_admin
+from app.models.schemas import UploadOut
 
 router = APIRouter(prefix="/admin/upload", tags=["upload"], dependencies=[Depends(require_admin)])
 
@@ -49,8 +50,8 @@ def _verify_image(data: bytes, expected_format: str) -> None:
         )
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
-async def upload_image(file: UploadFile = File(...)) -> dict:
+@router.post("", response_model=UploadOut, status_code=status.HTTP_201_CREATED)
+async def upload_image(file: UploadFile = File(...)) -> UploadOut:
     """Stores an uploaded image and returns its filename; serve it via Thumbor."""
     content_type = file.content_type or ""
     ext = ALLOWED.get(content_type)
@@ -75,4 +76,4 @@ async def upload_image(file: UploadFile = File(...)) -> dict:
 
     await asyncio.to_thread(_write)
     # Path is relative to Thumbor's FILE_LOADER_ROOT_PATH.
-    return {"path": name}
+    return UploadOut(path=name)

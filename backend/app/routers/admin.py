@@ -1,4 +1,5 @@
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
@@ -70,7 +71,9 @@ async def get_form_responses(
     request: Request,
     limit: int = Query(default=100, ge=1, le=500),
     offset: int = Query(default=0, ge=0),
-) -> list[dict]:
+) -> list[dict[str, Any]]:
+    """Each row's keys are that survey's question titles (plus "_submitted_at") —
+    genuinely dynamic per survey, so no fixed response_model applies here."""
     pool: asyncpg.Pool = get_pool(request)
     exists = await pool.fetchval(
         "SELECT 1 FROM surveys WHERE id = $1",
