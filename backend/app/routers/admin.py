@@ -1,7 +1,7 @@
 import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 
-from app.auth import check_login_rate, create_token, require_admin, verify_password
+from app.auth import check_login_rate, create_token, get_client_ip, require_admin, verify_password
 from app.computed import dept_tag, dept_tag_cls
 from app.database import get_pool
 from app.models.schemas import FormOut, LoginRequest, LoginResponse
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 
 @router.post("/login", response_model=LoginResponse)
 async def login(body: LoginRequest, request: Request) -> LoginResponse:
-    check_login_rate(request.client.host if request.client else "unknown")
+    check_login_rate(get_client_ip(request))
     if not verify_password(body.password):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Wrong password")
     return LoginResponse(token=create_token())

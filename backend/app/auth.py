@@ -5,7 +5,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Annotated
 
 import jwt
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.config import settings
@@ -23,6 +23,20 @@ _RATE_LIMIT_WINDOW = 60.0  # seconds
 def verify_password(password: str) -> bool:
     # compare_digest runs in constant time to prevent timing attacks.
     return secrets.compare_digest(password, settings.admin_password)
+
+
+def get_client_ip(request: Request) -> str:
+    """Real client IP for rate limiting.
+
+    The app is only ever reachable through the project's own nginx reverse
+    proxy (see compose.yml), which sets X-Forwarded-For — without this,
+    request.client.host is always the proxy's IP and every visitor shares
+    one rate-limit bucket.
+    """
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
 
 
 def check_login_rate(ip: str) -> None:
