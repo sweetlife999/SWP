@@ -66,10 +66,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
             <Icon id="i-kanban" className="ic" />
             Kanban
           </NavLink>
-          <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
-            <Icon id="i-calendar" className="ic" />
-            Events Manager
-          </NavLink>
           <NavLink className="nav-item" to="/admin/forms" onClick={onClose}>
             <Icon id="i-clipboard" className="ic" />
             Manage questionnaires

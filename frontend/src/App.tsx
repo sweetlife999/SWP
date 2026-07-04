@@ -10,7 +10,6 @@ import QuestionnairesPage from './pages/QuestionnairesPage'
 import DonationsPage from './pages/DonationsPage'
 import KanbanPage from './pages/KanbanPage'
 import ManageQuestionnairesPage from './pages/ManageQuestionnairesPage'
-import EventsManagementPage from './pages/EventsManagementPage'
 import AdminLoginPage from './pages/AdminLoginPage'
 import AdminEventsPage from './pages/AdminEventsPage'
 import AdminMembersPage from './pages/AdminMembersPage'
@@ -45,7 +44,6 @@ export default function App() {
             <Route path="/admin/events" element={<AdminEventsPage />} />
             <Route path="/admin/events/new" element={<AdminEventsPage />} />
             <Route path="/admin/members" element={<AdminMembersPage />} />
-            <Route path="/admin/events" element={<EventsManagementPage />} />
             <Route path="/admin/kanban" element={<KanbanPage />} />
             <Route path="/admin/forms" element={<ManageQuestionnairesPage />} />
           </Route>
