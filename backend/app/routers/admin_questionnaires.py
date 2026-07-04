@@ -93,7 +93,7 @@ async def _build_admin_out(pool: asyncpg.Pool, survey_id: int) -> QuestionnaireA
 async def list_questionnaires_admin(request: Request) -> list[QuestionnaireAdminOut]:
     """All questionnaires (drafts, open, closed) for the builder picker."""
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch("SELECT id FROM surveys ORDER BY created_at DESC")
+    rows = await pool.fetch("SELECT id FROM surveys ORDER BY created_at DESC LIMIT 500")
     return [await _build_admin_out(pool, r["id"]) for r in rows]
 
 

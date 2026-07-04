@@ -51,11 +51,13 @@ async def list_members(
     pool: asyncpg.Pool = get_pool(request)
     if dep:
         rows = await pool.fetch(
-            _SELECT + "WHERE active = TRUE AND department = $1 ORDER BY sort_order, id",
+            _SELECT + "WHERE active = TRUE AND department = $1 ORDER BY sort_order, id LIMIT 500",
             dep,
         )
     else:
-        rows = await pool.fetch(_SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id")
+        rows = await pool.fetch(
+            _SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id LIMIT 500"
+        )
     return [_row_to_member(r) for r in rows]
 
 

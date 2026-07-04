@@ -72,7 +72,8 @@ async def list_events(request: Request) -> list[EventOut]:
     """AC1: drafts are excluded from the public listing."""
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(
-        _SELECT + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC"
+        _SELECT
+        + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC LIMIT 500"
     )
     return [_row_to_event(r) for r in rows]
 
@@ -96,7 +97,7 @@ async def get_event(event_id: int, request: Request) -> EventOut:
 async def admin_list_events(request: Request) -> list[EventOut]:
     """Returns all events regardless of status."""
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(_SELECT + "WHERE TRUE ORDER BY event_date DESC, id DESC")
+    rows = await pool.fetch(_SELECT + "WHERE TRUE ORDER BY event_date DESC, id DESC LIMIT 500")
     return [_row_to_event(r) for r in rows]
 
 

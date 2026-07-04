@@ -1,7 +1,7 @@
 from datetime import UTC, datetime, timedelta
 
 import asyncpg
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
 
 from app.auth import (
     check_login_rate,
@@ -68,8 +68,8 @@ async def list_forms(request: Request) -> list[FormOut]:
 async def get_form_responses(
     form_id: int,
     request: Request,
-    limit: int = 100,
-    offset: int = 0,
+    limit: int = Query(default=100, ge=1, le=500),
+    offset: int = Query(default=0, ge=0),
 ) -> list[dict]:
     pool: asyncpg.Pool = get_pool(request)
     exists = await pool.fetchval(

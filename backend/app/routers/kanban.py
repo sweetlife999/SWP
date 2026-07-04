@@ -85,7 +85,9 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
 @router.get("", response_model=list[KanbanCardOut])
 async def list_cards(request: Request) -> list[KanbanCardOut]:
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(_CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id")
+    rows = await pool.fetch(
+        _CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id LIMIT 1000"
+    )
     return [_row_to_card(r) for r in rows]
 
 
