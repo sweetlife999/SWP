@@ -1,3 +1,4 @@
+import asyncio
 import os
 import uuid
 
@@ -34,9 +35,13 @@ async def upload_image(file: UploadFile = File(...)) -> dict:
             status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             detail="Image too large (max 5 MB)",
         )
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
     name = f"{uuid.uuid4().hex}{ext}"
-    with open(os.path.join(UPLOAD_DIR, name), "wb") as f:
-        f.write(data)
+
+    def _write() -> None:
+        os.makedirs(UPLOAD_DIR, exist_ok=True)
+        with open(os.path.join(UPLOAD_DIR, name), "wb") as f:
+            f.write(data)
+
+    await asyncio.to_thread(_write)
     # Path is relative to Thumbor's FILE_LOADER_ROOT_PATH.
     return {"path": name}
