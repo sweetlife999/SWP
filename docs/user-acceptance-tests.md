@@ -127,9 +127,9 @@ completed survey is no longer offered to the same student.
 | 2026-06-30 | Sprint 5 | Passed | Admin created the task on the Kanban board; the task could be redacted or deleted if needed; the task could be moved to any column | Customer confirmed. |
 
 **Evidence from Sprint Review:**
-> TODO speech (Team)
+> *"Log in as an admin and try to create, change, and move the task."* (Team)
 >
-> TODO speech (Customer)
+> *"Yes, I did this, coool."* (Customer)
 
 ---
 
@@ -154,9 +154,9 @@ completed survey is no longer offered to the same student.
 | 2026-06-27 | Sprint 5 | Passed | Admin wrote and changed the roadmap text; student can see the SU roadmap; | Customer confirmed. |
 
 **Evidence from Sprint Review:**
-> TODO (Team)
+> *"You can edit and read the SU roadmap"* (Team)
 >
-> TODO (Customer)
+> *"Yes, I see it, good"* (Customer)
 
 ---
 
@@ -175,8 +175,10 @@ completed survey is no longer offered to the same student.
 
 | Feedback | Resulting action |
 |----------|------------------|
-| Remove age, format, location fields from events | Will be removed |
-TODO
+| Remove 2nd button "Manage events" on the mobile verison of the website  | Will be removed |
+| Remove outdated sign with mock information from "Surveys" page | Will be removed |
+| Surveys' results are absent at the surveys admin page | Will be fixed |
+| Add a specific tab for SU CEO and assistent | Will be added |
 
 ---
 
