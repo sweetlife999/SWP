@@ -14,13 +14,19 @@ set -eu
 : "${PGUSER:=su}"
 : "${PGDATABASE:=su_portal}"
 export PGPASSWORD="${PGPASSWORD:-}"
+# Password for the restricted, DML-only role the backend connects as (see
+# migrations/0010_app_role.sql) — never the schema-owning PGUSER above.
+: "${APP_DB_PASSWORD:=su_app_dev_password}"
 
 echo "[migrate] waiting for $PGHOST:$PGPORT ..."
 until pg_isready -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" >/dev/null 2>&1; do
   sleep 1
 done
 
-psql_do() { psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 "$@"; }
+psql_do() {
+  psql -h "$PGHOST" -p "$PGPORT" -U "$PGUSER" -d "$PGDATABASE" -v ON_ERROR_STOP=1 \
+    -v app_db_password="$APP_DB_PASSWORD" "$@"
+}
 
 psql_do -q -c "CREATE TABLE IF NOT EXISTS schema_migrations (
   filename   TEXT PRIMARY KEY,
