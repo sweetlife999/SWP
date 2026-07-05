@@ -207,7 +207,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
                     <input className="input" style={{ width: 130 }} placeholder="20.06 · 10:00" value={s.time} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], time: e.target.value }; return { ...d, schedule: sc } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Название пункта" value={s.title} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], title: e.target.value }; return { ...d, schedule: sc } })} />
                     <input className="input" style={{ width: 160 }} placeholder="Место" value={s.where} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], where: e.target.value }; return { ...d, schedule: sc } })} />
-                    <button className="icon-btn" onClick={() => setDraft(d => ({ ...d, schedule: d.schedule.filter((_, j) => j !== i) }))}><Icon id="i-x" /></button>
+                    <button className="icon-btn" aria-label="Удалить пункт" onClick={() => setDraft(d => ({ ...d, schedule: d.schedule.filter((_, j) => j !== i) }))}><Icon id="i-x" /></button>
                   </div>
                 ))}
                 {draft.schedule.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>Пунктов нет — добавьте.</p>}
@@ -239,7 +239,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
                     <input className="input" style={{ width: 64 }} maxLength={3} placeholder="МР" value={o.initials} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], initials: e.target.value }; return { ...d, organizers: or } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Имя" value={o.name} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], name: e.target.value }; return { ...d, organizers: or } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Роль" value={o.role} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], role: e.target.value }; return { ...d, organizers: or } })} />
-                    <button className="icon-btn" onClick={() => setDraft(d => ({ ...d, organizers: d.organizers.filter((_, j) => j !== i) }))}><Icon id="i-x" /></button>
+                    <button className="icon-btn" aria-label="Удалить человека" onClick={() => setDraft(d => ({ ...d, organizers: d.organizers.filter((_, j) => j !== i) }))}><Icon id="i-x" /></button>
                   </div>
                 ))}
                 {draft.organizers.length === 0 && <p className="text-muted" style={{ fontSize: 13 }}>Никого нет — добавьте.</p>}

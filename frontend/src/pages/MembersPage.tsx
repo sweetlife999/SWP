@@ -7,6 +7,7 @@ import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 import { sanitizeHtml } from '../lib/sanitize'
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -35,6 +36,8 @@ export default function MembersPage() {
   const [editing, setEditing] = useState(false)
   const [editingHistory, setEditingHistory] = useState(false)
   const [selected, setSelected] = useState<Member | null>(null)
+  const closeSelected = () => setSelected(null)
+  const dialogRef = useModalA11y(Boolean(selected), closeSelected)
   const [search, setSearch] = useState('')
   const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
@@ -271,9 +274,15 @@ export default function MembersPage() {
       )}
 
       {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="member-modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelected(null)}>
+        <div className="modal-overlay" onClick={closeSelected}>
+          <div
+            className="member-modal"
+            onClick={e => e.stopPropagation()}
+            ref={dialogRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label={selected.name}
+          >
+            <button className="modal-close" onClick={closeSelected} aria-label="Закрыть">
               <Icon id="i-x" style={{ width: 14, height: 14 }} />
             </button>
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>

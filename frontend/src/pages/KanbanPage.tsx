@@ -12,6 +12,7 @@ function stripHtml(html?: string): string {
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { sanitizeHtml } from '../lib/sanitize'
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 
 type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
 type Priority = 'p-low' | 'p-mid' | 'p-high'
@@ -74,6 +75,7 @@ function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: C
   const [busy, setBusy] = useState(false)
   const descRef = useRef<HTMLDivElement>(null)
   const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
+  const dialogRef = useModalA11y(true, onClose)
 
   async function save() {
     setBusy(true)
@@ -94,7 +96,12 @@ function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: C
   return (
     <>
       <div className="kb-detail-backdrop" onClick={onClose} />
-      <div className="kb-detail-panel">
+      <div
+        className="kb-detail-panel"
+        ref={dialogRef}
+        {...MODAL_A11Y_PROPS}
+        aria-label={card.title}
+      >
         <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
           <div style={{ width: 4, flexShrink: 0, borderRadius: 4, background: borderColor, alignSelf: 'stretch', minHeight: 52 }} />
           <div style={{ flex: 1 }}>
@@ -109,7 +116,7 @@ function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: C
               ? <input className="input" value={title} onChange={e => setTitle(e.target.value)} />
               : <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>}
           </div>
-          <button className="icon-btn" onClick={onClose} style={{ flexShrink: 0, marginTop: -2 }}>
+          <button className="icon-btn" onClick={onClose} aria-label="Закрыть" style={{ flexShrink: 0, marginTop: -2 }}>
             <Icon id="i-x" />
           </button>
         </div>
@@ -284,6 +291,8 @@ export default function KanbanPage() {
   const [chipP01, setChipP01] = useState(false)
   const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  const closeNewTask = () => setNewTask(t => ({ ...t, open: false }))
+  const newTaskRef = useModalA11y(newTask.open, closeNewTask)
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -588,29 +597,36 @@ export default function KanbanPage() {
       </footer>
 
       {newTask.open && (
-        <div className="modal-overlay" onClick={() => setNewTask(t => ({ ...t, open: false }))}>
-          <div className="dep-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
-            <button className="modal-close" onClick={() => setNewTask(t => ({ ...t, open: false }))}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+        <div className="modal-overlay" onClick={closeNewTask}>
+          <div
+            className="dep-modal"
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: 420 }}
+            ref={newTaskRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label="New task"
+          >
+            <button className="modal-close" onClick={closeNewTask} aria-label="Закрыть"><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
             <div className="dep-modal-header"><h2>New task</h2></div>
             <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
-                <label>Title</label>
-                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
+                <label htmlFor="kb-title">Title</label>
+                <input id="kb-title" className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
               </div>
               <div className="field">
-                <label>Description</label>
-                <textarea className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
+                <label htmlFor="kb-desc">Description</label>
+                <textarea id="kb-desc" className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
               </div>
               <div className="row gap-3">
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Column</label>
-                  <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                  <label htmlFor="kb-col">Column</label>
+                  <select id="kb-col" className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
                     {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </select>
                 </div>
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Priority</label>
-                  <select className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
+                  <label htmlFor="kb-priority">Priority</label>
+                  <select id="kb-priority" className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
                     <option value="p-high">P0 · Urgent</option>
                     <option value="p-mid">P1 · High</option>
                     <option value="p-low">P2 · Low</option>
@@ -618,8 +634,8 @@ export default function KanbanPage() {
                 </div>
               </div>
               <div className="field">
-                <label>Assignee (инициалы)</label>
-                <input className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
+                <label htmlFor="kb-assignee">Assignee (инициалы)</label>
+                <input id="kb-assignee" className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>

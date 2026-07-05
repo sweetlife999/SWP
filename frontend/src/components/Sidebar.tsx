@@ -84,7 +84,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 <div className="name">Администратор</div>
                 <div className="role">SU:Core</div>
               </div>
-              <button className="icon-btn" title="Выйти" onClick={handleLogout}>
+              <button className="icon-btn" title="Выйти" aria-label="Выйти" onClick={handleLogout}>
                 <Icon id="i-x" style={{ width: 14, height: 14 }} />
               </button>
             </>
