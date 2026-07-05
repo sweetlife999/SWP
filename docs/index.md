@@ -12,12 +12,12 @@ in the repository, and every document is reachable from the navigation sidebar.
 
 ### Product & process
 - [Roadmap](roadmap.md) — product direction, current Sprint, and upcoming increments.
-- [Development process](development-process.md) — git workflow and how the team develops and releases. *(added in Assignment 5)*
+- **Development process** — git workflow and how the team develops and releases. *(coming in Assignment 5)*
 - [User stories](user-stories.md) — the product backlog stories.
 - [Definition of Done](definition-of-done.md) — the team's completion standard.
 
 ### Architecture
-- [Architecture overview](architecture/README.md) — static, dynamic, and deployment views, plus linked ADRs. *(added in Assignment 5)*
+- **Architecture overview** — static, dynamic, and deployment views, plus linked ADRs. *(coming in Assignment 5)*
 
 ### Quality & testing
 - [Testing](testing.md) — testing status overview and CI evidence.
@@ -26,6 +26,5 @@ in the repository, and every document is reachable from the navigation sidebar.
 - [User acceptance tests](user-acceptance-tests.md) — maintained UAT scenarios and results.
 
 !!! note
-    Some links above point to documents that are being introduced during Assignment 5
-    (development process and architecture). They will resolve once those pages are added
-    under `docs/`.
+    The **development process** and **architecture** documents are being introduced
+    during Assignment 5. They will be added under `docs/` and linked here once ready.
