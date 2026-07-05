@@ -8,9 +8,9 @@ that shaped these choices.
 Diagrams are maintained as PlantUML source under this directory and
 rendered from source (diagrams-as-code), not pasted as static images:
 
-- [`static-view/component-diagram.puml`](static-view/component-diagram.puml)
-- [`dynamic-view/admin-publish-event-sequence.puml`](dynamic-view/admin-publish-event-sequence.puml)
-- [`deployment-view/deployment-diagram.puml`](deployment-view/deployment-diagram.puml)
+- [`static-view/component-diagram.puml`](static-view/component.puml)
+- [`dynamic-view/admin-publish-event-sequence.puml`](dynamic-view/sequence.puml)
+- [`deployment-view/deployment-diagram.puml`](deployment-view/deployment.puml)
 
 Related decisions: [ADR-0001](adr/ADR-0001-single-admin-jwt-authentication.md),
 [ADR-0002](adr/ADR-0002-pydantic-request-validation.md),
@@ -20,7 +20,7 @@ Related decisions: [ADR-0001](adr/ADR-0001-single-admin-jwt-authentication.md),
 
 ## Static View
 
-![Component diagram](static-view/component-diagram.puml)
+![Component diagram](static-view/component.puml)
 
 **What the diagram shows.** The Student Union Portal is a React/TypeScript
 SPA talking to a FastAPI backend over REST/JSON. The backend is split into
@@ -62,7 +62,7 @@ roles or scopes (see ADR-0001).
 
 ## Dynamic View
 
-![Admin publishes an event — sequence diagram](dynamic-view/admin-publish-event-sequence.puml)
+![Admin publishes an event — sequence diagram](dynamic-view/sequence.puml)
 
 **Scenario represented.** An admin publishes a new event: the SPA sends a
 `POST /api/admin/events` request with a bearer JWT and event data; the
@@ -92,7 +92,7 @@ the Events Router and PostgreSQL and returns `201 Created`.
 
 ## Deployment View
 
-![Deployment diagram](deployment-view/deployment-diagram.puml)
+![Deployment diagram](deployment-view/deployment.puml)
 
 **Why this deployment model was chosen.** See
 [ADR-0003](adr/ADR-0003-docker-compose-deployment-on-vps.md) for the full
