@@ -1,7 +1,7 @@
 # User Stories Index
 
 Authoritative source for issue status: GitHub Issues.
-Historical Assignment 2 artifact: [`reports/week2/user-stories.md`](../reports/week2/user-stories.md).
+Historical Assignment 2 artifact: [`reports/week2/user-stories.md`](https://github.com/sweetlife999/SWP/blob/main/reports/week2/user-stories.md).
 
 ---
 

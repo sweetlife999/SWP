@@ -3,7 +3,7 @@
 Each quality requirement in [`quality-requirements.md`](quality-requirements.md)
 has at least one **automated** quality requirement test (QRT). All QRTs live in
 the normal backend test location (`backend/tests/`), run in CI on every push and
-pull request via [`backend-tests.yml`](../.github/workflows/backend-tests.yml),
+pull request via [`backend-tests.yml`](https://github.com/sweetlife999/SWP/blob/main/.github/workflows/backend-tests.yml),
 and fail the build if the measured property regresses.
 
 | QRT | Verifies | Type | Location | Runs in CI |
@@ -18,15 +18,15 @@ and fail the build if the measured property regresses.
 
 - **Verifies:** [QR-SEC](quality-requirements.md#qr-sec--admin-write-endpoints-are-authenticated) — Security / Authenticity
 - **Tests:**
-  - [`tests/test_auth.py`](../backend/tests/test_auth.py) — token round-trip, **expired** token rejected, garbage token rejected, **`none`-algorithm forgery rejected**, `require_admin(None)` → 401, login **rate limit** (5 allowed, 6th → 429), password check.
-  - [`tests/test_integration_api.py::test_admin_write_requires_auth`](../backend/tests/test_integration_api.py) — `POST /api/admin/events` **without a token** returns **401** against the running app + database.
+  - [`tests/test_auth.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_auth.py) — token round-trip, **expired** token rejected, garbage token rejected, **`none`-algorithm forgery rejected**, `require_admin(None)` → 401, login **rate limit** (5 allowed, 6th → 429), password check.
+  - [`tests/test_integration_api.py::test_admin_write_requires_auth`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_integration_api.py) — `POST /api/admin/events` **without a token** returns **401** against the running app + database.
 - **Pass criteria:** every listed assertion holds. Any path that would accept an
   unauthenticated, expired, or forged token fails the build.
 
 ## QRT-REL
 
 - **Verifies:** [QR-REL](quality-requirements.md#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) — Reliability / Fault tolerance
-- **Test:** [`tests/test_schemas.py`](../backend/tests/test_schemas.py) — an unknown
+- **Test:** [`tests/test_schemas.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_schemas.py) — an unknown
   department tag raises `ValidationError`; a `>200`-answer questionnaire response
   is rejected; valid `HH:MM` times and dates parse to the correct typed values;
   documented defaults are applied. Because validation runs *before* the database
@@ -37,7 +37,7 @@ and fail the build if the measured property regresses.
 ## QRT-PERF
 
 - **Verifies:** [QR-PERF](quality-requirements.md#qr-perf--public-event-listing-is-fast) — Performance Efficiency / Time behaviour
-- **Test:** [`tests/test_integration_api.py::test_get_events_latency`](../backend/tests/test_integration_api.py) —
+- **Test:** [`tests/test_integration_api.py::test_get_events_latency`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_integration_api.py) —
   warms the path, then measures 5 consecutive `GET /api/events` calls and asserts
   the **median** is **< 500 ms** with HTTP 200.
 - **Pass criteria:** median latency under budget. A regression that pushes the
