@@ -6,7 +6,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased] — 2026-07-05
+## [2.1.0] — 2026-07-05
 - Department avatars on the home page now show actual member photos
 - "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
 - Removed redundant information from forms page
