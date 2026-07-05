@@ -57,7 +57,7 @@ The **Student Union Portal** is an informational web portal for the Innopolis Un
 - **Sprint Goal:** Deliver MVP v2 with architectural documentation, development process formalisation, ADRs, hosted docs, and selected customer feedback from Sprint 4.
 - **Sprint dates:** 2026-06-29 – 2026-07-05
 - **Scope summary:** architecture documentation (Static, Dynamic, Deployment views), 3 ADRs, development process with gitGraph, hosted documentation site, customer feedback implementation from Sprint 4, product fixes.
-- **Total Sprint size (Story Points):** 20
+- **Total Sprint size (Story Points):** 40
 
 ---
 
@@ -68,7 +68,7 @@ See [`CHANGELOG.md` → `[v2.1.0]`](../../CHANGELOG.md). Highlights:
 - **Product fixes:** redirect to `/admin/login` on token expiration (#79), navlink to admin member page (#77), lint fixes
 - **Customer feedback implemented (Sprint 4):** edit on Members page, main page banner, last 4 events, removed age/format/location from events, merged admin tabs, enlarged QR code
 - **Architecture documentation:** Static View (Component Diagram), Dynamic View (Sequence Diagram), Deployment View
-- **3 ADRs:** React, FastAPI, PostgreSQL
+- **3 ADRs:** Single-Admin JWT Authentication, Pydantic Request Validation, Docker Compose Deployment on VPS
 - **Development Process:** `docs/development-process.md` with Mermaid gitGraph
 - **Hosted Documentation:** GitHub Pages site with all `docs/` files
 
@@ -97,7 +97,7 @@ See [`CHANGELOG.md` → `[v2.1.0]`](../../CHANGELOG.md). Highlights:
 | Feedback point | Resulting PBI / Issue | Status | Response |
 |---|---|---|---|
 | Duplicate "Manage Events" buttons on mobile | — | Planned | Fix in Sprint 6 |
-| No dedicated department for SEO and assistant | — | Planned | Add new department/role in Sprint 6 |
+| No dedicated department for CEO and assistant | — | Planned | Add new department/role in Sprint 6 |
 | Percentages on questionnaires are confusing | — | Planned | Remove in Sprint 6 |
 | Submitted responses not visible on the site | — | Planned | Add responses viewer in Sprint 6 |
 | Photo upload: only JPG and specific sizes; photos rotate | — | Planned | Fix in Sprint 6 |
@@ -145,9 +145,9 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 | ADR | Decision | Quality Requirements |
 |---|---|---|
-| [ADR-001](../../docs/architecture/adr/ADR-001-react-frontend.md) | Use React + TypeScript + Vite for frontend | QR-003 (Maintainability) |
-| [ADR-002](../../docs/architecture/adr/ADR-002-fastapi-backend.md) | Use FastAPI for backend | QR-PERF (Performance), QR-REL (Reliability) |
-| [ADR-003](../../docs/architecture/adr/ADR-003-postgres-database.md) | Use PostgreSQL as the database | QR-REL (Reliability), QR-SEC (Authenticity) |
+| [ADR-0001](../../docs/architecture/adr/ADR-0001-single-admin-jwt-authentication.md) | Single-Admin JWT Authentication for Admin Write Endpoints | QR-SEC |
+| [ADR-0002](../../docs/architecture/adr/ADR-0002-pydantic-request-validation.md) | Validate All Write Requests with Pydantic Schemas at the API Boundary | QR-REL |
+| [ADR-0003](../../docs/architecture/adr/ADR-0003-docker-compose-deployment-on-vps.md) | Deploy via Docker Compose on a Single VPS with GHCR-Built Images | QR-FE, QR-PERF |
 
 ---
 
@@ -155,9 +155,9 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 | QR | Characteristic | Sub-characteristic | Related ADR |
 |---|---|---|---|
-| QR-SEC | Security | Authenticity | ADR-002, ADR-003 |
-| QR-REL | Reliability | Fault tolerance | ADR-002, ADR-003 |
-| QR-PERF | Performance Efficiency | Time behaviour | ADR-001, ADR-002 |
+| QR-SEC | Security | Authenticity | ADR-0001, ADR-0002 |
+| QR-REL | Reliability | Fault tolerance | ADR-0002, ADR-0003 |
+| QR-PERF | Performance Efficiency | Time behaviour | ADR-0003 |
 
 ---
 
@@ -181,8 +181,8 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ## 31–33. Release & demo
 
-- **SemVer release (MVP v2):** [`v2.1.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.1.0)
-- **`CHANGELOG.md`:** [link](../../CHANGELOG.md)
+- **SemVer release (MVP v2):** [`v2.1.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.1.0) — tag on `main`, mapping to Sprint 5, with links to milestone, run instructions, and demo video
+- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.1.0] — 2026-07-05` section
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/16xm0VSj6ILjdjnrxDuQ2PC5oVpOenGVU/view?usp=sharing)
 
 ---
@@ -206,7 +206,7 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 ## 40–41. Product status & next steps
 
 - **Current status:** MVP v2 deployed and functional; architecture documented; ADRs recorded; development process formalised; customer feedback from Sprint 4 addressed
-- **Next steps:** Fix new feedback from Sprint 5 (duplicate buttons, SEO department, remove percentages, responses viewer, photo upload, form button); continue quality automation
+- **Next steps:** Fix new feedback from Sprint 5 (duplicate buttons, CEO department, remove percentages, responses viewer, photo upload, form button); continue quality automation
 
 ---
 
@@ -223,7 +223,6 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 ---
 
 ## 43–44. Screenshots
-
 
 - Sprint 5 milestone — `images/sprint_milestone.png`
 ![Sprint 5 milestone](images/sprint_milestone.png)
