@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { api, type QStepType, type QuestionInput, type QuestionnaireAdmin } from '../lib/api'
 
@@ -199,15 +199,15 @@ export default function FormBuilderPage() {
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [list, setList] = useState<QuestionnaireAdmin[]>([])
 
-  function loadList() {
-    api.admin.questionnaires.list().then(setList).catch(() => {})
-  }
-  useEffect(() => { loadList() }, [])
-
-  function showToast(msg: string) {
+  const showToast = useCallback((msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
-  }
+  }, [])
+
+  const loadList = useCallback(() => {
+    api.admin.questionnaires.list().then(setList).catch(() => showToast('Не удалось загрузить список опросов'))
+  }, [showToast])
+  useEffect(() => { loadList() }, [loadList])
 
   function mapQuestion(q: Question): QuestionInput {
     const type = BACKEND_TYPE[q.type] as QStepType
