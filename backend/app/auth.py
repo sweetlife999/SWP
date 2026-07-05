@@ -22,6 +22,13 @@ _login_attempts: dict[str, list[float]] = defaultdict(list)
 _RATE_LIMIT_MAX = 5
 _RATE_LIMIT_WINDOW = 60.0  # seconds
 
+# Separate bucket for public survey/questionnaire submissions — no auth to key
+# off of, so IP is the only signal; more lenient than login since legitimate
+# users may retry a submission.
+_submission_attempts: dict[str, list[float]] = defaultdict(list)
+_SUBMIT_RATE_LIMIT_MAX = 10
+_SUBMIT_RATE_LIMIT_WINDOW = 60.0  # seconds
+
 
 def verify_password(password: str) -> bool:
     # compare_digest runs in constant time to prevent timing attacks.
@@ -42,23 +49,40 @@ def get_client_ip(request: Request) -> str:
     return request.client.host if request.client else "unknown"
 
 
-def check_login_rate(ip: str) -> None:
+def _check_rate(
+    store: dict[str, list[float]], ip: str, max_attempts: int, window_s: float, message: str
+) -> None:
     now = time.monotonic()
     # Discard attempts outside the window, then check the count.
-    window = [t for t in _login_attempts[ip] if now - t < _RATE_LIMIT_WINDOW]
-    if len(window) >= _RATE_LIMIT_MAX:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many login attempts, try again later",
-        )
+    window = [t for t in store[ip] if now - t < window_s]
+    if len(window) >= max_attempts:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=message)
     window.append(now)
-    _login_attempts[ip] = window
+    store[ip] = window
     # Remove IPs whose entire window has expired to prevent unbounded growth.
-    expired = [
-        k for k, ts in _login_attempts.items() if all(now - t >= _RATE_LIMIT_WINDOW for t in ts)
-    ]
+    expired = [k for k, ts in store.items() if all(now - t >= window_s for t in ts)]
     for k in expired:
-        del _login_attempts[k]
+        del store[k]
+
+
+def check_login_rate(ip: str) -> None:
+    _check_rate(
+        _login_attempts,
+        ip,
+        _RATE_LIMIT_MAX,
+        _RATE_LIMIT_WINDOW,
+        "Too many login attempts, try again later",
+    )
+
+
+def check_submission_rate(ip: str) -> None:
+    _check_rate(
+        _submission_attempts,
+        ip,
+        _SUBMIT_RATE_LIMIT_MAX,
+        _SUBMIT_RATE_LIMIT_WINDOW,
+        "Too many submissions, try again later",
+    )
 
 
 def _hash_jti(jti: str) -> bytes:
