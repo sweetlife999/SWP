@@ -222,22 +222,22 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ---
 
-## 43–44. TODO    Screenshots
+## 43–44. Screenshots
 
 
-- [x] Sprint 5 milestone — `images/sprint_milestone.png`
+- Sprint 5 milestone — `images/sprint_milestone.png`
 ![Sprint 5 milestone](images/sprint_milestone.png)
-- [x] Board / project workflow view — `images/board_view.png`
+- Board / project workflow view — `images/board_view.png`
 ![Board / project workflow view](images/board_view.png)
-- [x] Latest protected-branch CI run — `images/ci_run.png`
+- Latest protected-branch CI run — `images/ci_run.png`
 ![Latest protected-branch CI run](images/ci_run.png)
-- [x] SemVer release — `images/release.png`
+- SemVer release — `images/release.png`
 ![SemVer release](images/release.png)
-- [x] Example reviewed issue-linked PR — `images/reviewed_pr.png`
+- Example reviewed issue-linked PR — `images/reviewed_pr.png`
 ![Example reviewed issue-linked PR](images/reviewed_pr.png)
-- [x] Hosted docs site — `images/hosted_docs.png`
+- Hosted docs site — `images/hosted_docs.png`
 ![Hosted docs site](images/hosted_docs.png)
-- [x] Architecture diagrams — `images/architecture.png`
+- Architecture diagrams — `images/architecture.png`
 ![Architecture diagrams](images/architecture.png)
-- [x] ADR directory — `images/adr_list.png`
+- ADR directory — `images/adr_list.png`
 ![ADR directory](images/adr_list.png)
