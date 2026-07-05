@@ -170,7 +170,7 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ---
 
-## 27–30. TODO     CI & quality automation
+## 27–30. CI & quality automation
 
 - **CI pipeline:** [`.github/workflows/`](../../.github/workflows/) — backend tests + coverage, backend lint, frontend lint, link-check, deploy
 - **Additional QA check:** `pip-audit` dependency vulnerability scan
