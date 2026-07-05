@@ -57,7 +57,7 @@ The **Student Union Portal** is an informational web portal for the Innopolis Un
 - **Sprint Goal:** Deliver MVP v2 with architectural documentation, development process formalisation, ADRs, hosted docs, and selected customer feedback from Sprint 4.
 - **Sprint dates:** 2026-06-29 – 2026-07-05
 - **Scope summary:** architecture documentation (Static, Dynamic, Deployment views), 3 ADRs, development process with gitGraph, hosted documentation site, customer feedback implementation from Sprint 4, product fixes.
-- **Total Sprint size (Story Points):** 20
+- **Total Sprint size (Story Points):** 40
 
 ---
 
