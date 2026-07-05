@@ -24,7 +24,7 @@ passing or replace them with documented equivalent-or-stronger coverage.
   `pytest-asyncio` (async test support), `pytest-cov` (coverage), and FastAPI's
   `TestClient`.
 - **Linting / formatting:** [Ruff](https://docs.astral.sh/ruff/) (`ruff check`,
-  `ruff format --check`) in [`backend-lint.yml`](../.github/workflows/backend-lint.yml).
+  `ruff format --check`) in [`backend-lint.yml`](https://github.com/sweetlife999/SWP/blob/main/.github/workflows/backend-lint.yml).
 - **Frontend:** ESLint + `tsc --noEmit` in
   [`frontend-lint.yml`](../.github/workflows/frontend-lint.yml).
 - **Frontend smoke tests:** Playwright runs the public-route smoke suite in
@@ -34,8 +34,8 @@ passing or replace them with documented equivalent-or-stronger coverage.
   dependency vulnerability scan (see [below](#additional-qa-check-dependency-vulnerability-scan)).
 
 Test dependencies are pinned in
-[`backend/requirements-dev.txt`](../backend/requirements-dev.txt); pytest is
-configured in [`backend/pyproject.toml`](../backend/pyproject.toml)
+[`backend/requirements-dev.txt`](https://github.com/sweetlife999/SWP/blob/main/backend/requirements-dev.txt); pytest is
+configured in [`backend/pyproject.toml`](https://github.com/sweetlife999/SWP/blob/main/backend/pyproject.toml)
 (`asyncio_mode = "auto"`, an `integration` marker, and coverage source).
 
 ## Test types
@@ -44,13 +44,13 @@ configured in [`backend/pyproject.toml`](../backend/pyproject.toml)
 
 Pure logic, no database, fast and deterministic:
 
-- [`tests/test_auth.py`](../backend/tests/test_auth.py) — JWT issue/verify, expiry,
+- [`tests/test_auth.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_auth.py) — JWT issue/verify, expiry,
   forgery rejection (`none` algorithm), rate limiting. *(security-critical)*
-- [`tests/test_schemas.py`](../backend/tests/test_schemas.py) — request-model
+- [`tests/test_schemas.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_schemas.py) — request-model
   validation: bad input rejected, defaults applied, types parsed.
-- [`tests/test_computed.py`](../backend/tests/test_computed.py) — display helpers
+- [`tests/test_computed.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_computed.py) — display helpers
   (department tags, date/time formatting, "is past", survey countdown).
-- [`tests/test_config.py`](../backend/tests/test_config.py) — settings load env
+- [`tests/test_config.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_config.py) — settings load env
   overrides and sane defaults.
 
 ### Integration tests
@@ -58,7 +58,7 @@ Pure logic, no database, fast and deterministic:
 Cross-component behaviour against the real app + a PostgreSQL database, via
 `TestClient` (which runs the app lifespan and opens the DB pool):
 
-- [`tests/test_integration_api.py`](../backend/tests/test_integration_api.py) —
+- [`tests/test_integration_api.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_integration_api.py) —
   events list returns 200; **admin write requires auth** (401); **`GET /events`
   latency** under budget; full **create → draft-hidden → publish → public →
   cleanup** flow. Marked `@pytest.mark.integration`; **skips** automatically when
@@ -139,7 +139,7 @@ The Assignment 4 **additional** QA check must be distinct from all of those.
   `pip-audit` in CI turns "are our dependencies safe today?" into an automated
   gate instead of an assumption.
 - **Where it runs:** the `audit` job in
-  [`backend-tests.yml`](../.github/workflows/backend-tests.yml), on every push and
+  [`backend-tests.yml`](https://github.com/sweetlife999/SWP/blob/main/.github/workflows/backend-tests.yml), on every push and
   PR touching `backend/**`.
 - **Limitations / deferred work:** `pip-audit` only covers Python dependencies
   and only *known* (published) CVEs — not the frontend `npm` tree and not

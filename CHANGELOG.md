@@ -36,6 +36,7 @@ MVP v2 — Sprint 4 increment: live frontend↔backend integration plus quality 
 - Kanban cards are editable (title, rich-note description, priority, assignee, column) from the card panel
 - Admin event form has a Location field; event location now displays on the event page
 - Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
+
 - Events have editable Format and Age fields, shown on the event page (were hardcoded)
 - Forms Builder has a questionnaire picker: choose which questionnaire to edit; editing updates the same one instead of creating duplicates
 - Kanban "New task" supports description, priority and an assignee
