@@ -1,5 +1,5 @@
 import { Navigate, Routes, Route } from 'react-router-dom'
-import { AdminProvider } from './lib/AdminContext'
+import { AdminProvider, useAdmin } from './lib/AdminContext'
 import AppShell from './components/AppShell'
 import ProtectedRoute from './components/ProtectedRoute'
 import HomePage from './pages/HomePage'
@@ -15,8 +15,11 @@ import AdminEventsPage from './pages/AdminEventsPage'
 import AdminMembersPage from './pages/AdminMembersPage'
 
 function AdminEntry() {
-  const token = localStorage.getItem('su_admin_token') ?? ''
-  return <Navigate to={token ? '/admin/events' : '/admin/login'} replace />
+  // Route through AdminContext instead of re-reading localStorage: isAdmin
+  // also validates expiry, so a stale token no longer redirects into the
+  // admin area only to bounce off the first 401.
+  const { isAdmin } = useAdmin()
+  return <Navigate to={isAdmin ? '/admin/events' : '/admin/login'} replace />
 }
 
 export default function App() {
