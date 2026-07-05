@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
+import { LoadingSkeleton } from '../components/LoadingSkeleton'
+import { ErrorBanner } from '../components/ErrorBanner'
 
 const ORG_BG = [
   'linear-gradient(135deg,#a3e0ad,#32b247)', 'linear-gradient(135deg,#b3d5a8,#5fa44f)',
@@ -20,25 +22,34 @@ function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
   const [event, setEvent] = useState<Event | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [related, setRelated] = useState<Event[]>([])
   const [editingDesc, setEditingDesc] = useState(false)
   const [descDraft, setDescDraft] = useState('')
   // Single edit mode for the structured detail blocks (admin only).
   const [editingDetails, setEditingDetails] = useState(false)
   const [draft, setDraft] = useState<Details>({ schedule: [], organizers: [] })
+  const [reloadKey, setReloadKey] = useState(0)
 
+  // Initial state covers the first load; the retry handler resets these
+  // flags (not the effect body, per react-hooks/set-state-in-effect), and
+  // id changes remount this component entirely via key={id}.
   useEffect(() => {
     if (!id) return
     let cancelled = false
     api.events.get(id)
       .then(ev => { if (!cancelled) { setEvent(ev); setDescDraft(ev.desc) } })
-      .catch(() => { if (!cancelled) setEvent(null) })
+      .catch(() => { if (!cancelled) { setEvent(null); setError(true) } })
+      .finally(() => { if (!cancelled) setLoading(false) })
     // "Похожие мероприятия" — real other events instead of hardcoded mocks.
     api.events.list()
       .then(list => { if (!cancelled) setRelated(list.filter(e => String(e.id) !== String(id)).slice(0, 3)) })
       .catch(() => {})
     return () => { cancelled = true }
-  }, [id])
+  }, [id, reloadKey])
+
+  const retry = useCallback(() => { setError(false); setLoading(true); setReloadKey(k => k + 1) }, [])
 
   function showToast(msg: string) {
     setToast(msg)
@@ -107,6 +118,15 @@ function EventDetailPageInner({ id }: { id?: string }) {
 
   const schedule = event?.schedule ?? []
   const organizers = event?.organizers ?? []
+
+  if (loading) return <LoadingSkeleton type="event" count={1} />
+  if (error || !event) {
+    return (
+      <div style={{ padding: '48px 16px' }}>
+        <ErrorBanner message="Не удалось загрузить мероприятие" onRetry={retry} />
+      </div>
+    )
+  }
 
   return (
     <>
