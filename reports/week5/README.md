@@ -29,7 +29,7 @@
 | CI: backend tests + coverage | [`backend-tests.yml`](../../.github/workflows/backend-tests.yml) |
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
-| SemVer release (MVP v2) | [`v2.1.0`]() |
+| SemVer release (MVP v2) | [`v2.1.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.1.0) |
 | Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/16xm0VSj6ILjdjnrxDuQ2PC5oVpOenGVU/view?usp=sharing) |
 | Sprint review summary | [`sprint-review-summary.md`](sprint-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
@@ -179,9 +179,9 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ---
 
-## 31–33. TODO   Release & demo
+## 31–33. Release & demo
 
-- **SemVer release (MVP v2):** [`v2.1.0`](https://github.com/sweetlife999/SWP/releases/tag/v0.3.0) — tag on `main`, mapping to Sprint 3, with links to milestone, run instructions, and demo video
+- **SemVer release (MVP v2):** [`v2.1.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.1.0)
 - **`CHANGELOG.md`:** [link](../../CHANGELOG.md)
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/16xm0VSj6ILjdjnrxDuQ2PC5oVpOenGVU/view?usp=sharing)
 
