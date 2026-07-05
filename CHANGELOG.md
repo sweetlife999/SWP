@@ -6,7 +6,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [2.1.0] — 2026-07-05
 - Department avatars on the home page now show actual member photos
 - "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
 - Removed redundant information from forms page
@@ -17,7 +17,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Donations page now first displays where the money goes, and then the QR code centered below it
 - Removed location, format, and age from the event card on the events page
 - Moved "Create a member" to the admin panel; added a boolean "is_active" field to the member model, so that members can be archived instead of deleted
-- Admin panel: redirect to /admin/login now happens every time a token has expired, not only on changing nav
+- Added E2E smoke-tests
 
 ## [2.0.0] — 2026-06-28
 

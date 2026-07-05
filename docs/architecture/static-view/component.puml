@@ -1,0 +1,44 @@
+@startuml component-diagram
+!theme plain
+title Student Union Portal — Component Diagram (Static View)
+
+actor Student
+actor Admin
+
+package "Student Union Portal" {
+  [Frontend SPA\n(React + TypeScript + Vite)] as FE
+  [Backend API\n(FastAPI)] as API
+  [Auth Module\n(JWT, app/auth.py)] as AUTH
+  [Events Router] as EVR
+  [Members Router] as MEM
+  [Kanban Router] as KAN
+  [Questionnaires Router] as QST
+}
+
+database "PostgreSQL" as DB
+[Thumbor\n(image processing service)] as THUMBOR
+cloud "GitHub Actions\n(CI/CD)" as CI
+cloud "GHCR\n(container image registry)" as GHCR
+
+Student --> FE : HTTPS
+Admin --> FE : HTTPS
+
+FE --> API : REST / JSON over HTTPS
+API --> AUTH : validates JWT on admin routes
+API --> EVR
+API --> MEM
+API --> KAN
+API --> QST
+
+EVR --> DB : SQL (asyncpg)
+MEM --> DB : SQL (asyncpg)
+KAN --> DB : SQL (asyncpg)
+QST --> DB : SQL (asyncpg)
+
+MEM --> THUMBOR : image resize / crop (member photos)
+
+CI --> GHCR : build & push images on push to main
+GHCR ..> FE : image pulled by VPS at deploy
+GHCR ..> API : image pulled by VPS at deploy
+
+@enduml

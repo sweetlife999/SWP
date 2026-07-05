@@ -1,16 +1,29 @@
 # Quality Requirement Tests
 
 Each quality requirement in [`quality-requirements.md`](quality-requirements.md)
-has at least one **automated** quality requirement test (QRT). All QRTs live in
-the normal backend test location (`backend/tests/`), run in CI on every push and
-pull request via [`backend-tests.yml`](https://github.com/sweetlife999/SWP/blob/main/.github/workflows/backend-tests.yml),
-and fail the build if the measured property regresses.
+has at least one **automated** quality requirement test (QRT). Most QRTs live in
+the normal backend test location (`backend/tests/`), while the frontend smoke
+QRT lives in `frontend/src/tests/smoke/`. They run in CI on every push and pull
+request via the relevant workflow and fail the build if the measured property
+regresses.
+
+## Table of contents
+
+- [QRT-SEC](#qrt-sec)
+- [QRT-REL](#qrt-rel)
+- [QRT-SMOKE](#qrt-smoke)
+- [QRT-PERF](#qrt-perf)
 
 | QRT | Verifies | Type | Location | Runs in CI |
 |-----|----------|------|----------|-----------|
 | [QRT-SEC](#qrt-sec) | [QR-SEC](quality-requirements.md#qr-sec--admin-write-endpoints-are-authenticated) | Unit + integration | `tests/test_auth.py`, `tests/test_integration_api.py` | `backend-tests.yml` |
 | [QRT-REL](#qrt-rel) | [QR-REL](quality-requirements.md#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) | Unit | `tests/test_schemas.py` | `backend-tests.yml` |
+| [QRT-SMOKE](#qrt-smoke) | [QR-FE](quality-requirements.md#qr-fe--core-public-entry-points-stay-reachable) | Frontend smoke / Playwright | `frontend/src/tests/smoke/*.test.ts` | `frontend-lint.yml`, `deploy.yml` |
 | [QRT-PERF](#qrt-perf) | [QR-PERF](quality-requirements.md#qr-perf--public-event-listing-is-fast) | Integration | `tests/test_integration_api.py` | `backend-tests.yml` |
+
+> **Note on location.** Most QRTs live under `backend/tests/`, but the smoke QRT
+> for the frontend public routes lives in `frontend/src/tests/smoke/` and runs
+> via Playwright.
 
 ---
 
@@ -33,6 +46,23 @@ and fail the build if the measured property regresses.
   layer, a rejected request can never persist a malformed row.
 - **Pass criteria:** each malformed input raises a validation error; each
   well-formed input parses to the expected typed value.
+
+## QRT-SMOKE
+
+- **Verifies:** [QR-FE](quality-requirements.md#qr-fe--core-public-entry-points-stay-reachable) — Functional suitability / Functional completeness
+- **Tests:**
+  - [`frontend/src/tests/smoke/home.test.ts`](../frontend/src/tests/smoke/home.test.ts) — home page loads, the `Student Union` heading is visible, and a department card opens the modal.
+  - [`frontend/src/tests/smoke/events.test.ts`](../frontend/src/tests/smoke/events.test.ts) — `/events` loads with at least one event card visible.
+  - [`frontend/src/tests/smoke/members.test.ts`](../frontend/src/tests/smoke/members.test.ts) — `/members` loads with at least one member card visible.
+  - [`frontend/src/tests/smoke/questionnaires.test.ts`](../frontend/src/tests/smoke/questionnaires.test.ts) — `/questionnaires` loads.
+  - [`frontend/src/tests/smoke/admin-login.test.ts`](../frontend/src/tests/smoke/admin-login.test.ts) — `/admin/login` shows the login form.
+- **Pass criteria:** every smoke test passes against the Vite-served frontend with mocked API responses. If any listed public route stops loading or its key element disappears, the build fails.
+
+The smoke suite uses HashRouter routes (`/#/...`) and the fixtures in
+[`frontend/src/tests/smoke/fixtures.ts`](../frontend/src/tests/smoke/fixtures.ts)
+to keep the checks deterministic without a live backend. CI runs the suite in
+[`frontend-lint.yml`](../.github/workflows/frontend-lint.yml) and again in
+[`deploy.yml`](../.github/workflows/deploy.yml).
 
 ## QRT-PERF
 

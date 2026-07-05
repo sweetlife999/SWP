@@ -1,0 +1,40 @@
+@startuml admin-publish-event-sequence
+!theme plain
+title Admin Publishes an Event (Dynamic View)
+
+actor Admin
+participant "Frontend SPA" as FE
+participant "Backend API\n(FastAPI)" as API
+participant "Auth Module" as AUTH
+participant "EventCreate\n(Pydantic schema)" as SCHEMA
+participant "Events Router" as EVR
+database "PostgreSQL" as DB
+
+Admin -> FE : Fill event form, click "Publish"
+FE -> API : POST /api/admin/events\n(Authorization: Bearer <JWT>, event JSON)
+API -> AUTH : verify JWT signature & expiry
+
+alt token missing, malformed, expired, or forged
+  AUTH --> API : reject
+  API --> FE : 401 Unauthorized
+  FE --> Admin : show authentication error
+else token valid
+  AUTH --> API : admin identity confirmed
+  API -> SCHEMA : validate request body against EventCreate
+
+  alt body invalid (bad time format, unknown department tag, etc.)
+    SCHEMA --> API : validation error
+    API --> FE : 422 Unprocessable Entity
+    FE --> Admin : show field-level errors
+  else body valid
+    SCHEMA --> API : validated EventCreate object
+    API -> EVR : create_event(data)
+    EVR -> DB : INSERT INTO events (...)
+    DB --> EVR : new event row
+    EVR --> API : Event
+    API --> FE : 201 Created (event JSON)
+    FE --> Admin : show newly published event
+  end
+end
+
+@enduml

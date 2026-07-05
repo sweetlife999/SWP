@@ -10,11 +10,21 @@ quality requirement test(s) that verify it.
 These QRs are **maintained project assets**. Later work must keep them satisfied
 or supersede them explicitly — it must not bypass or disable the verifying tests.
 
-| ID | Quality characteristic | Sub-characteristic | Verified by |
-|----|------------------------|--------------------|-------------|
-| [QR-SEC](#qr-sec--admin-write-endpoints-are-authenticated) | Security | Authenticity | [QRT-SEC](quality-requirement-tests.md#qrt-sec) |
-| [QR-REL](#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) | Reliability | Fault tolerance | [QRT-REL](quality-requirement-tests.md#qrt-rel) |
-| [QR-PERF](#qr-perf--public-event-listing-is-fast) | Performance Efficiency | Time behaviour | [QRT-PERF](quality-requirement-tests.md#qrt-perf) |
+## Table of contents
+
+- [Quality Requirements](#quality-requirements)
+  - [Table of contents](#table-of-contents)
+  - [QR-SEC — Admin write endpoints are authenticated](#qr-sec--admin-write-endpoints-are-authenticated)
+  - [QR-REL — Invalid input is rejected, not stored or crashed on](#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on)
+  - [QR-FE — Core public entry points stay reachable](#qr-fe--core-public-entry-points-stay-reachable)
+  - [QR-PERF — Public event listing is fast](#qr-perf--public-event-listing-is-fast)
+
+| ID | Quality characteristic | Sub-characteristic | Verified by | Related ADR |
+|----|------------------------|--------------------|-------------|-------------|
+| [QR-SEC](#qr-sec--admin-write-endpoints-are-authenticated) | Security | Authenticity | [QRT-SEC](quality-requirement-tests.md#qrt-sec) | [ADR-0001](architecture/adr/ADR-0001-single-admin-jwt-authentication.md) |
+| [QR-REL](#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) | Reliability | Fault tolerance | [QRT-REL](quality-requirement-tests.md#qrt-rel) | [ADR-0002](architecture/adr/ADR-0002-pydantic-request-validation.md) |
+| [QR-FE](#qr-fe--core-public-entry-points-stay-reachable) | Functional suitability | Functional completeness | [QRT-SMOKE](quality-requirement-tests.md#qrt-smoke) | [ADR-0003](architecture/adr/ADR-0003-docker-compose-deployment-on-vps.md) |
+| [QR-PERF](#qr-perf--public-event-listing-is-fast) | Performance Efficiency | Time behaviour | [QRT-PERF](quality-requirement-tests.md#qrt-perf) | [ADR-0003](architecture/adr/ADR-0003-docker-compose-deployment-on-vps.md) |
 
 ---
 
@@ -41,7 +51,8 @@ genuinely comes from the admin) is the property that must hold for every write.
 
 **Traceability.** Supports admin stories US-11 (publish events) and US-13
 (manage questionnaires); guards every `/api/admin/**` route. Verified by
-[QRT-SEC](quality-requirement-tests.md#qrt-sec).
+[QRT-SEC](quality-requirement-tests.md#qrt-sec). Architecture decision:
+[ADR-0001 — Single-admin JWT authentication](architecture/adr/ADR-0001-single-admin-jwt-authentication.md).
 
 ---
 
@@ -68,9 +79,31 @@ data or taking the API down for everyone — the essence of fault tolerance.
 
 **Traceability.** Applies to all write endpoints; concentrated in
 `EventCreate`, `MemberCreate`, and `SurveyResponseBody`. Verified by
-[QRT-REL](quality-requirement-tests.md#qrt-rel).
+[QRT-REL](quality-requirement-tests.md#qrt-rel). Architecture decision:
+[ADR-0002 — Pydantic request validation at the API boundary](architecture/adr/ADR-0002-pydantic-request-validation.md).
 
 ---
+
+## QR-FE — Core public entry points stay reachable
+
+- **ISO/IEC 25010 characteristic:** Functional suitability
+- **Sub-characteristic:** Functional completeness
+- **Artifact:** Frontend public routes and admin login entry point, validated by the Playwright smoke suite (`frontend/src/tests/smoke/`)
+
+**Scenario**
+
+| Element | Value |
+|---|---|
+| Source | A student or admin opening the published Student Union Portal in a browser |
+| Stimulus | Opening the home page, public content routes, or the admin login route, and interacting with the home-page department cards |
+| Environment | Deployed frontend or CI smoke environment, Chromium browser, mocked API responses |
+| Response | The expected page or modal renders and the key entry point is visible and usable |
+| Response measure | All smoke scenarios pass: the home page loads and shows the `Student Union` heading, clicking a department card opens the modal, `/events` shows at least one event card, `/members` shows at least one member card, `/questionnaires` loads, and `/admin/login` shows the login form. |
+
+**Rationale.** These routes are the minimum public surface that proves the portal is alive: the landing page, the main student-facing lists, the questionnaire entry point, and the admin login gate. If any of them stop rendering, the product is effectively broken for the people who use it most often.
+
+**Traceability.** Covers the main public browse paths and the admin login entry point. Verified by [QRT-SMOKE](quality-requirement-tests.md#qrt-smoke). Architecture decision:
+[ADR-0003 — Docker Compose deployment on a single VPS](architecture/adr/ADR-0003-docker-compose-deployment-on-vps.md).
 
 ## QR-PERF — Public event listing is fast
 
@@ -93,4 +126,5 @@ customer demos. A slow listing endpoint makes the whole portal feel broken. A
 median latency budget keeps the primary read path honest as the data set grows.
 
 **Traceability.** Supports US-01 (browse events). Verified by
-[QRT-PERF](quality-requirement-tests.md#qrt-perf).
+[QRT-PERF](quality-requirement-tests.md#qrt-perf). Architecture decision:
+[ADR-0003 — Docker Compose deployment on a single VPS](architecture/adr/ADR-0003-docker-compose-deployment-on-vps.md).

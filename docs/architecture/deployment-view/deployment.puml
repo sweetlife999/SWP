@@ -1,0 +1,36 @@
+@startuml deployment-diagram
+!theme plain
+title Deployment View — Student Union Portal
+
+actor "Student / Admin\n(Browser)" as USER
+
+node "GitHub" {
+  component "GitHub Actions\n(CI/CD)" as CI
+}
+
+node "GHCR" as GHCR
+
+cloud "Let's Encrypt" as LE
+
+node "VPS (production host)" {
+  node "Docker Compose environment" {
+    node "nginx\n(reverse proxy + TLS termination)" as NGINX
+    node "frontend container\n(static build)" as FEC
+    node "backend container\n(FastAPI + uvicorn)" as BEC
+    database "PostgreSQL container" as DBC
+    node "Thumbor container" as THC
+  }
+}
+
+CI -down-> GHCR : build & push images\n(on push to main)
+GHCR -down-> FEC : pulled on deploy
+GHCR -down-> BEC : pulled on deploy
+
+USER -down-> NGINX : HTTPS (443)
+NGINX -down-> FEC : serve static assets
+NGINX -down-> BEC : proxy /api/**
+BEC -down-> DBC : SQL (internal Compose network)
+BEC -down-> THC : image processing (internal Compose network)
+NGINX ..> LE : TLS certificate issuance / renewal
+
+@enduml

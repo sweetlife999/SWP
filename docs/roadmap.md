@@ -4,10 +4,9 @@
 
 **Dates:** 2026-06-01 – 2026-06-07
 **Goal:** Set up repository, CI/CD, design system, and deploy a static shell of the portal.
-**Milestone:** Sprint 1 *(milestone TBD)*
 
 - Repository structure, branch protection, PR/issue workflow
-- Docker + GitHub Actions deploy pipeline (#34)
+- Docker + GitHub Actions deploy pipeline
 - Frontend scaffold (React + Vite + TypeScript)
 - Design system: layout, typography, colour tokens
 
@@ -17,13 +16,12 @@
 
 **Dates:** 2026-06-08 – 2026-06-14
 **Goal:** Deliver the public-facing informational pages — Events, Members, Departments, Donations — with realistic content.
-**Milestone:** [Sprint2](https://github.com/sweetlife999/SWP/milestone/2)
 
-- Events page (US-01, #15)
-- Member directory (US-05, #19)
-- Department overview (US-08, #21)
-- Donations info page (US-04, #16)
-- CI: ESLint + TypeScript type-check (#31)
+- Events page (US-01)
+- Member directory (US-05)
+- Department overview (US-08)
+- Donations info page (US-04)
+- CI: ESLint + TypeScript type-check
 
 ---
 
@@ -31,17 +29,16 @@
 
 **Dates:** 2026-06-15 – 2026-06-21
 **Goal:** Ship a usable MVP v1 and lay the backend foundation: students can browse events, fill out questionnaires; admin can publish events and manage surveys; DB schema designed and backend project scaffolded.
-**Milestone:** [Sprint 3 — MVP v1](https://github.com/sweetlife999/SWP/milestone/1)
 
-- Admin login and authentication (#30)
-- Admin inline content editing (#32)
-- Publish and manage events — admin (US-11, #35)
-- Questionnaire viewer for students (US-12, #25)
-- Form builder + results viewer for admin (US-13, #24)
-- SU:Core Kanban board (US-10, #23)
-- API stub layer (#29)
-- Database schema and migrations (#43)
-- Backend setup: stack, project structure, dev environment (#41)
+- Admin login and authentication
+- Admin inline content editing
+- Publish and manage events — admin (US-11)
+- Questionnaire viewer for students (US-12)
+- Form builder + results viewer for admin (US-13)
+- SU:Core Kanban board (US-10)
+- API stub layer
+- Database schema and migrations
+- Backend setup: stack, project structure, dev environment
 - Sprint Review with customer
 
 ---
@@ -49,51 +46,72 @@
 ## Sprint 4 — Integration, Quality & Automation
 
 **Dates:** 2026-06-22 – 2026-06-28
-**Milestone:** [Sprint 4 - Refining product](https://github.com/sweetlife999/SWP/milestone/3)
-**Goal:** Make the increment *reliable and verifiable*: connect the frontend to the
-live FastAPI backend, respond to customer feedback, and put measurable quality
-gates (automated tests, quality requirement tests, coverage, dependency audit) in
-CI so quality is enforced, not assumed.
+**Goal:** Make the increment *reliable and verifiable*: connect the frontend to the live FastAPI backend, respond to customer feedback, and put measurable quality gates (automated tests, quality requirement tests, coverage, dependency audit) in CI.
 
-**Product integration**
-- Events page → live API with loading/error/empty states (US-01, #40)
-- Members directory → live API with department filter and photos via Thumbor (US-05, #39)
-- Kanban board → persisted moves/edits with optimistic update + rollback (US-10, #46)
-- Admin panel: events & members management, fixed admin endpoints (US-11, #44)
-- Questionnaires: build → publish → fill → view results / export (US-13, US-14, #26)
+**Product integration:**
+- Events → live API with loading/error/empty states
+- Members → live API with department filter and photos via Thumbor
+- Kanban → persisted moves/edits with optimistic update + rollback
+- Admin panel: events & members management
+- Questionnaires: build → publish → fill → view results / export
 - Editable event detail (schedule, organizers, location, format, age)
+- Export to XLSX
+- Error skeletons everywhere
 
-**Reliability / ops**
+**Reliability / ops:**
 - Fix backend startup under Python 3.12 and restore `/api` in production
 - Automatic database migrations on every deploy (migration runner)
 
-**Quality & automation (maintained gates)**
-- Quality requirements: [`docs/quality-requirements.md`](quality-requirements.md) — QR-SEC, QR-REL, QR-PERF
-- Automated QRTs: [`docs/quality-requirement-tests.md`](quality-requirement-tests.md)
-- Backend unit + integration tests, critical-module coverage ≥ 30% ([`docs/testing.md`](testing.md))
-- CI: `backend-tests.yml` (pytest + coverage + Postgres) and `pip-audit` dependency scan
-- Updated [Definition of Done](definition-of-done.md) requiring tests, QRTs, coverage, and test evidence
-
-> These quality gates are **maintained assets**: every later Sprint must keep them
-> passing or replace them with documented equivalent-or-stronger coverage.
+**Quality & automation (maintained gates):**
+- Quality requirements: QR-SEC, QR-REL, QR-PERF
+- Automated QRTs
+- Backend unit + integration tests, critical-module coverage ≥ 30%
+- CI: `backend-tests.yml` (pytest + coverage + Postgres) and `pip-audit`
+- Updated Definition of Done
 
 ---
 
-## Sprint 5 — Enhancements
+## Sprint 5 — MVP v2 (Architecture, Feedback & Enhancements)
 
-**Dates:** TBD
-**Goal:** Deliver Should Have stories and close remaining customer feedback.
+**Dates:** 2026-06-29 – 2026-07-05
+**Goal:** Deliver MVP v2 with architectural documentation, development process formalisation, ADRs, hosted docs, and selected customer feedback from Sprint 4.
+
+**Product fixes & improvements:**
+- Fix redirect to `/admin/login` when not changing nav and token expiration (#79)
+- Fix navlink to admin member page (#77)
+- Fix lint issues across the codebase
+
+**Customer feedback (from Sprint 4 review):**
+- Replace delete with edit on Members page — add status/role field
+- Add banner/description on main page
+- Show last 4 events in updates section
+- Remove age/format/location fields from events
+- Rename/merge admin tabs (Forms + Responses → Manage Questionnaires)
+- Enlarge and center QR code on Donations page
+
+**Architecture & Documentation:**
+- `docs/architecture/README.md` with Static, Dynamic, Deployment views
+- 3 ADRs (React, FastAPI, PostgreSQL)
+- `docs/development-process.md` with Mermaid gitGraph
+- Hosted documentation site (GitHub Pages)
+
+**Quality & Testing:**
+- Maintain all Assignment 4 quality gates
+- 2 new UAT scenarios for MVP v2
+- Update `docs/user-acceptance-tests.md` with Sprint 5 results
+
+**Release:**
+- MVP v2 release (v0.3.0)
+- Public sanitized demo video (< 2 min)
+- Sprint Review with customer
+
+---
+
+## Sprint 6 — Future Enhancements (if time permits)
+
+**Goal:** Could Have stories and remaining backlog items.
 
 - Photo gallery / media links (US-03)
-- Questionnaire result export to XLSX (US-14)
 - Feedback form (US-06)
 - Anonymous survey enforcement (US-07)
-
----
-
-## Sprint 6 — Integrations (if time permits)
-
-**Dates:** TBD
-**Goal:** Could Have integrations if the team has velocity.
-
 - Telegram channel sync (US-15)
