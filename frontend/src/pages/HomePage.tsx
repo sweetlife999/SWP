@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, photoUrl, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
@@ -21,9 +21,17 @@ const DEFAULT_INTRO = `<span class="eyebrow">О студсовете</span>
 <h1>Студенческий совет<br>Университета Иннополис</h1>
 <p class="lead">Представляем интересы студентов, организуем кампусную жизнь и помогаем университету становиться лучше — с 2019 года. Три департамента, одна команда.</p>`
 
+type DepKey = 'core' | 'active' | 'media'
+
+const DEPARTMENT_ORDER: DepKey[] = ['core', 'active', 'media']
+
+function depLabel(dep: DepKey): string {
+  return `SU:${dep.charAt(0).toUpperCase()}${dep.slice(1)}`
+}
+
 export default function HomePage() {
   const { isAdmin } = useAdmin()
-  const navigate = useNavigate()
+  const [openDep, setOpenDep] = useState<DepKey | null>(null)
   const [editingIntro, setEditingIntro] = useState(false)
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
@@ -42,6 +50,54 @@ export default function HomePage() {
     fetchedMembers.forEach((m: Member) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
     return counts
   }, [fetchedMembers]);
+
+  const departmentCards = useMemo(() => {
+    return DEPARTMENT_ORDER.map(dep => {
+      const members = (fetchedMembers ?? []).filter(m => m.dep === dep)
+      const first = members[0]
+      const name = first?.tag?.trim() || depLabel(dep)
+      const tagline = first?.role?.trim() || `Команда ${name}`
+      const desc = first?.meta?.trim() || first?.bio?.trim() || `Департамент ${name}`
+      const uniqueRecent = new Set<string>()
+      let leadCount = 0
+      members.forEach(member => {
+        if (/lead/i.test(member.role)) leadCount += 1
+        ;(member.recent ?? []).forEach(item => {
+          const text = item.trim()
+          if (text) uniqueRecent.add(text)
+        })
+      })
+      return {
+        dep,
+        testId: `dept-card-${dep}`,
+        cls: `dep-${dep}`,
+        name,
+        tagline,
+        desc,
+        count: depCounts[dep],
+        activityCount: uniqueRecent.size,
+        leadCount,
+      }
+    })
+  }, [depCounts, fetchedMembers])
+
+  const info = openDep ? departmentCards.find(card => card.dep === openDep) ?? null : null
+  const openDepMembers = useMemo(
+    () => (openDep ? (fetchedMembers ?? []).filter(member => member.dep === openDep) : []),
+    [openDep, fetchedMembers],
+  )
+  const openDepRecent = (() => {
+    const seen = new Set<string>()
+    for (const member of openDepMembers) {
+      for (const item of member.recent ?? []) {
+        const text = item.trim()
+        if (!text || seen.has(text)) continue
+        seen.add(text)
+        if (seen.size === 3) return [...seen]
+      }
+    }
+    return [...seen]
+  })()
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -98,98 +154,37 @@ export default function HomePage() {
         </div>
 
         <div className="deps">
-<<<<<<< HEAD
-          <div className="dep-tint dep-core" onClick={() => navigate('/members?dep=core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=core')}>
-=======
-          <div data-testid="dept-card-core" className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
->>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
-            <span className="dep-name">SU:Core</span>
-            <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
-            <p className="desc">Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
-            <div className="meta">
-              <span><b>{depCounts.core}</b> участников</span>
-              <span className="dot" />
-              <span><b>3</b> активных проекта</span>
-              <span className="dot" />
-              <span><b>2</b> co-leads</span>
+          {departmentCards.map(card => (
+            <div
+              key={card.dep}
+              data-testid={card.testId}
+              className={`dep-tint ${card.cls}`}
+              onClick={() => setOpenDep(card.dep)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && setOpenDep(card.dep)}
+            >
+              <span className="dep-name">{card.name}</span>
+              <h3>{card.tagline}</h3>
+              <p className="desc">{card.desc}</p>
+              <div className="meta">
+              </div>
+              <div className="avatars">
+                {(avatars?.[card.dep] ?? []).map((url, i) => (
+                  <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                    <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+                {card.count > (avatars?.[card.dep]?.length ?? 0) && (
+                  <div className="more">+{card.count - (avatars?.[card.dep]?.length ?? 0)}</div>
+                )}
+              </div>
+              <div className="open-row">
+                <span>Подробнее о департаменте</span>
+                <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+              </div>
             </div>
-            <div className="avatars">
-              {(avatars?.core ?? []).map((url, i) => (
-                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
-                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              ))}
-              {depCounts.core > (avatars?.core?.length ?? 0) && (
-                <div className="more">+{depCounts.core - (avatars?.core?.length ?? 0)}</div>
-              )}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
-
-<<<<<<< HEAD
-          <div className="dep-tint dep-active" onClick={() => navigate('/members?dep=active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=active')}>
-=======
-          <div data-testid="dept-card-active" className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
->>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
-            <span className="dep-name">SU:Active</span>
-            <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
-            <p className="desc">Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
-            <div className="meta">
-              <span><b>{depCounts.active}</b> участников</span>
-              <span className="dot" />
-              <span><b>7</b> ивентов в плане</span>
-              <span className="dot" />
-              <span><b>3</b> co-leads</span>
-            </div>
-            <div className="avatars">
-              {(avatars?.active ?? []).map((url, i) => (
-                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
-                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              ))}
-              {depCounts.active > (avatars?.active?.length ?? 0) && (
-                <div className="more">+{depCounts.active - (avatars?.active?.length ?? 0)}</div>
-              )}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
-
-<<<<<<< HEAD
-          <div className="dep-tint dep-media" onClick={() => navigate('/members?dep=media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && navigate('/members?dep=media')}>
-=======
-          <div data-testid="dept-card-media" className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
->>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
-            <span className="dep-name">SU:Media</span>
-            <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
-            <p className="desc">Снимает ивенты, ведёт соцсети, делает плакаты, пишет лонгриды для портала.</p>
-            <div className="meta">
-              <span><b>{depCounts.media}</b> участников</span>
-              <span className="dot" />
-              <span><b>34</b> публикации</span>
-              <span className="dot" />
-              <span><b>1</b> co-lead</span>
-            </div>
-            <div className="avatars">
-              {(avatars?.media ?? []).map((url, i) => (
-                <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
-                  <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                </div>
-              ))}
-              {depCounts.media > (avatars?.media?.length ?? 0) && (
-                <div className="more">+{depCounts.media - (avatars?.media?.length ?? 0)}</div>
-              )}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -242,9 +237,6 @@ export default function HomePage() {
         )}
       </section>
 
-<<<<<<< HEAD
-
-=======
       {info && (
         <div className="modal-overlay" onClick={() => setOpenDep(null)}>
           <div data-testid="dept-modal" className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
@@ -259,9 +251,13 @@ export default function HomePage() {
             <div className="dep-modal-body">
               <p>{info.desc}</p>
               <h4>Недавние активности</h4>
-              <ul>
-                {info.recent.map((r, i) => <li key={i}>{r}</li>)}
-              </ul>
+              {openDepRecent.length > 0 ? (
+                <ul>
+                  {openDepRecent.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              ) : (
+                <p className="text-muted">Пока нет данных об активностях.</p>
+              )}
             </div>
             <div className="dep-modal-foot">
               <Link
@@ -270,14 +266,13 @@ export default function HomePage() {
                 to={`/members?dep=${info.dep}`}
                 onClick={() => setOpenDep(null)}
               >
-                Посмотреть участников ({depCounts[openDep!]} чел.)
+                Посмотреть участников ({fetchedMembers ? openDepMembers.length : depCounts[info.dep]} чел.)
                 <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
               </Link>
             </div>
           </div>
         </div>
       )}
->>>>>>> 3cab0444683756c679e083e5bbfa3a6a08d2ebe7
     </>
   )
 }
