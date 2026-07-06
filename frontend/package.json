@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "lint": "eslint src",
     "typecheck": "tsc --noEmit",
-    "test:smoke": "node ./scripts/run-smoke-tests.mjs"
+    "test:smoke": "node ./scripts/run-smoke-tests.mjs ${CI+--reporter=github}"
   },
   "dependencies": {
     "react": "^18.3.1",
