@@ -21,20 +21,16 @@ alt token missing, malformed, expired, or forged
 else token valid
   AUTH --> API : admin identity confirmed
   API -> SCHEMA : validate request body against EventCreate
-
+  
   alt body invalid (bad time format, unknown department tag, etc.)
     SCHEMA --> API : validation error
     API --> FE : 422 Unprocessable Entity
-    FE --> Admin : show field-level errors
   else body valid
-    SCHEMA --> API : validated EventCreate object
-    API -> EVR : create_event(data)
-    EVR -> DB : INSERT INTO events (...)
-    DB --> EVR : new event row
-    EVR --> API : Event
-    API --> FE : 201 Created (event JSON)
-    FE --> Admin : show newly published event
+    API -> EVR : process event creation
+    EVR -> DB : save event
+    DB --> EVR : confirmation
+    EVR --> FE : 201 Created
+    FE --> Admin : show success message
   end
 end
-
 @enduml
