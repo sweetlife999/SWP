@@ -1,4 +1,4 @@
-@startuml admin-publish-event-sequence
+@startuml
 !theme plain
 title Admin Publishes an Event (Dynamic View)
 
