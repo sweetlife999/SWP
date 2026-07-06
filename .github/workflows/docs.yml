@@ -28,10 +28,24 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install PlantUML
+      - name: Set up Java for PlantUML
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Graphviz
         run: |
           sudo apt-get update
-          sudo apt-get install -y plantuml graphviz
+          sudo apt-get install -y graphviz
+
+      - name: Download PlantUML
+        env:
+          PLANTUML_VERSION: '1.2025.5'
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/plantuml.jar" \
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+          echo "PLANTUML_JAR=$RUNNER_TEMP/plantuml.jar" >> "$GITHUB_ENV"
 
       - name: Render PlantUML diagrams (.puml -> .svg)
         run: |
@@ -43,7 +57,7 @@ jobs:
             echo "Rendering ${#files[@]} diagram(s):"
             printf '  %s\n' "${files[@]}"
             # Outputs an .svg next to each source so Markdown can embed a relative path.
-            plantuml -tsvg "${files[@]}"
+            java -jar "$PLANTUML_JAR" -tsvg "${files[@]}"
           fi
 
       - uses: actions/setup-python@v5
