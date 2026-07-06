@@ -33,6 +33,9 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
   audit:
     name: npm audit (dependency vulnerability scan)
     runs-on: ubuntu-latest
