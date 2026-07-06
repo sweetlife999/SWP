@@ -9,16 +9,18 @@ regresses.
 
 ## Table of contents
 
-- [QRT-SEC](#qrt-sec)
-- [QRT-REL](#qrt-rel)
-- [QRT-SMOKE](#qrt-smoke)
-- [QRT-PERF](#qrt-perf)
+- [Quality Requirement Tests](#quality-requirement-tests)
+  - [Table of contents](#table-of-contents)
+  - [QRT-SEC](#qrt-sec)
+  - [QRT-REL](#qrt-rel)
+  - [QRT-SMOKE](#qrt-smoke)
+  - [QRT-PERF](#qrt-perf)
 
 | QRT | Verifies | Type | Location | Runs in CI |
 |-----|----------|------|----------|-----------|
 | [QRT-SEC](#qrt-sec) | [QR-SEC](quality-requirements.md#qr-sec--admin-write-endpoints-are-authenticated) | Unit + integration | `tests/test_auth.py`, `tests/test_integration_api.py` | `backend-tests.yml` |
 | [QRT-REL](#qrt-rel) | [QR-REL](quality-requirements.md#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) | Unit | `tests/test_schemas.py` | `backend-tests.yml` |
-| [QRT-SMOKE](#qrt-smoke) | [QR-FE](quality-requirements.md#qr-fe--core-public-entry-points-stay-reachable) | Frontend smoke / Playwright | `frontend/src/tests/smoke/*.test.ts` | `frontend-lint.yml`, `deploy.yml` |
+| [QRT-SMOKE](#qrt-smoke) | [QR-FE](quality-requirements.md#qr-fe--core-public-entry-points-stay-reachable) | Frontend smoke / Playwright | `frontend/src/tests/smoke/*.test.ts` | `deploy.yml` *(Planned)* |
 | [QRT-PERF](#qrt-perf) | [QR-PERF](quality-requirements.md#qr-perf--public-event-listing-is-fast) | Integration | `tests/test_integration_api.py` | `backend-tests.yml` |
 
 > **Note on location.** Most QRTs live under `backend/tests/`, but the smoke QRT
@@ -39,7 +41,7 @@ regresses.
 ## QRT-REL
 
 - **Verifies:** [QR-REL](quality-requirements.md#qr-rel--invalid-input-is-rejected-not-stored-or-crashed-on) — Reliability / Fault tolerance
-- **Test:** [`tests/test_schemas.py`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_schemas.py) — an unknown
+- **Test:** [`tests/test_schemas.py`](../backend/tests/test_schemas.py) — an unknown
   department tag raises `ValidationError`; a `>200`-answer questionnaire response
   is rejected; valid `HH:MM` times and dates parse to the correct typed values;
   documented defaults are applied. Because validation runs *before* the database
@@ -60,14 +62,14 @@ regresses.
 
 The smoke suite uses HashRouter routes (`/#/...`) and the fixtures in
 [`frontend/src/tests/smoke/fixtures.ts`](../frontend/src/tests/smoke/fixtures.ts)
-to keep the checks deterministic without a live backend. CI runs the suite in
-[`frontend-lint.yml`](../.github/workflows/frontend-lint.yml) and again in
-[`deploy.yml`](../.github/workflows/deploy.yml).
+to keep the checks deterministic without a live backend. 
+
+> **Note on CI Integration:** Integration into CI via [`deploy.yml`](../.github/workflows/deploy.yml) is currently planned and pending verification. The suite will run automatically on every push and pull request once the workflow job is active.
 
 ## QRT-PERF
 
 - **Verifies:** [QR-PERF](quality-requirements.md#qr-perf--public-event-listing-is-fast) — Performance Efficiency / Time behaviour
-- **Test:** [`tests/test_integration_api.py::test_get_events_latency`](https://github.com/sweetlife999/SWP/blob/main/backend/tests/test_integration_api.py) —
+- **Test:** [`tests/test_integration_api.py::test_get_events_latency`](../backend/tests/test_integration_api.py) —
   warms the path, then measures 5 consecutive `GET /api/events` calls and asserts
   the **median** is **< 500 ms** with HTTP 200.
 - **Pass criteria:** median latency under budget. A regression that pushes the

@@ -97,7 +97,7 @@ Notes:
 - The suite uses HashRouter routes, so Playwright navigates with `/#/...`.
 - [`frontend/playwright.config.ts`](../frontend/playwright.config.ts) starts Vite via `webServer`, so no manual frontend startup is needed.
 - API fixtures live in [`frontend/src/tests/smoke/fixtures.ts`](../frontend/src/tests/smoke/fixtures.ts) and intercept `/api/*` calls.
-- The smoke job runs in [`frontend-lint.yml`](../.github/workflows/frontend-lint.yml) and again in [`deploy.yml`](../.github/workflows/deploy.yml) before build and deploy.
+- The smoke job is planned to run in [`deploy.yml`](../.github/workflows/deploy.yml) before build and deploy, pending workflow verification on this branch.
 
 ## Critical modules and coverage
 
