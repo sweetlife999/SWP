@@ -1,6 +1,6 @@
-@startuml deployment-diagram
+@startuml
 !theme plain
-title Deployment View — Student Union Portal
+title Deployment View - Student Union Portal
 
 actor "Student / Admin\n(Browser)" as USER
 

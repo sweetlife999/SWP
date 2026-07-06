@@ -1,6 +1,6 @@
-@startuml component-diagram
+@startuml
 !theme plain
-title Student Union Portal — Component Diagram (Static View)
+title Student Union Portal - Component Diagram (Static View)
 
 actor Student
 actor Admin
