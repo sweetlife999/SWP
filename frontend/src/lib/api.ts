@@ -2,8 +2,27 @@ const BASE = '/api'
 
 function token() { return localStorage.getItem('su_admin_token') ?? '' }
 
+function hasAuthHeader(init?: RequestInit): boolean {
+  const h = init?.headers
+  if (!h) return false
+  if (h instanceof Headers) return h.has('Authorization')
+  if (Array.isArray(h)) return h.some(([k]) => k.toLowerCase() === 'authorization')
+  return Object.keys(h).some(k => k.toLowerCase() === 'authorization')
+}
+
+// Clears the stored token and tells AdminContext so any open admin page
+// redirects to /admin/login instead of getting stuck on a silent 401. Only
+// called for requests that carried an Authorization header — the login
+// endpoint also returns 401 for a wrong password, which is not a session
+// expiry and must not trigger this.
+function handleUnauthorized() {
+  localStorage.removeItem('su_admin_token')
+  window.dispatchEvent(new Event('su:unauthorized'))
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init)
+  if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
   if (!res.ok) throw new Error(String(res.status))
   if (res.status === 204) return undefined as T
   const text = await res.text()
@@ -14,6 +33,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 // an empty body throws, so skip parsing.
 async function reqVoid(path: string, init?: RequestInit): Promise<void> {
   const res = await fetch(`${BASE}${path}`, init)
+  if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
   if (!res.ok) throw new Error(String(res.status))
 }
 
@@ -65,11 +85,13 @@ export interface Member {
   tag: string; name: string; role: string; meta: string
   bio: string; recent: string[]
   photo_url?: string
+  is_active?: boolean
 }
 
 export interface MemberPatch {
   dep?: Member['dep']; name?: string; role?: string
   meta?: string; bio?: string; recent?: string[]; photo_url?: string
+  is_active?: boolean
 }
 
 export type QStepType = 'single' | 'multi' | 'scale' | 'text'
@@ -138,6 +160,7 @@ export const api = {
       headers: { Authorization: `Bearer ${token()}` },
       body,
     })
+    if (res.status === 401) handleUnauthorized()
     if (!res.ok) throw new Error(String(res.status))
     return res.json()
   },

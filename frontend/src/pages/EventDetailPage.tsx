@@ -4,8 +4,6 @@ import { Icon } from '../components/Icon'
 import { api, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 
-const FORMAT_OPTIONS = ['Оффлайн', 'Онлайн', 'Гибрид']
-const AGE_OPTIONS = ['0+', '6+', '12+', '16+', '18+']
 const ORG_BG = [
   'linear-gradient(135deg,#a3e0ad,#32b247)', 'linear-gradient(135deg,#b3d5a8,#5fa44f)',
   'linear-gradient(135deg,#a8c0e0,#3868b8)', 'linear-gradient(135deg,#e0a8c8,#c93f8b)',
@@ -16,7 +14,7 @@ export default function EventDetailPage() {
   return <EventDetailPageInner key={id} id={id} />
 }
 
-type Details = { format: string; age: string; locationAddress: string; schedule: ScheduleItem[]; organizers: OrganizerItem[] }
+type Details = { schedule: ScheduleItem[]; organizers: OrganizerItem[] }
 
 function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
@@ -27,7 +25,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
   const [descDraft, setDescDraft] = useState('')
   // Single edit mode for the structured detail blocks (admin only).
   const [editingDetails, setEditingDetails] = useState(false)
-  const [draft, setDraft] = useState<Details>({ format: 'Оффлайн', age: '0+', locationAddress: '', schedule: [], organizers: [] })
+  const [draft, setDraft] = useState<Details>({ schedule: [], organizers: [] })
 
   useEffect(() => {
     if (!id) return
@@ -58,9 +56,6 @@ function EventDetailPageInner({ id }: { id?: string }) {
   function startEditDetails() {
     if (!event) return
     setDraft({
-      format: event.format ?? 'Оффлайн',
-      age: event.age ?? '0+',
-      locationAddress: event.locationAddress ?? '',
       schedule: event.schedule ? event.schedule.map(s => ({ ...s })) : [],
       organizers: event.organizers ? event.organizers.map(o => ({ ...o })) : [],
     })
@@ -71,7 +66,6 @@ function EventDetailPageInner({ id }: { id?: string }) {
     if (!id) return
     try {
       const updated = await api.events.update(id, {
-        format: draft.format, age: draft.age, locationAddress: draft.locationAddress,
         schedule: draft.schedule.filter(s => s.time || s.title || s.where),
         organizers: draft.organizers.filter(o => o.name || o.initials || o.role),
       })
@@ -98,7 +92,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
     const ics = [
       'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//SU Portal//Events//RU', 'BEGIN:VEVENT',
       `UID:su-event-${event.id}@su-portal`, `DTSTAMP:${dateCompact}T000000Z`, `SUMMARY:${esc(title)}`,
-      ...dtLines, `LOCATION:${esc(event.footLabel ?? '')}`, `DESCRIPTION:${esc(event.desc ?? '')}`,
+      ...dtLines, `DESCRIPTION:${esc(event.desc ?? '')}`,
       'END:VEVENT', 'END:VCALENDAR',
     ].join('\r\n')
     const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' })
@@ -134,7 +128,6 @@ function EventDetailPageInner({ id }: { id?: string }) {
           </div>
           <div className="quick-meta">
             <div className="qm"><span className="qm-label">КОГДА</span><span className="qm-value">{event ? `${event.dd} ${event.mm}${event.time ? ` · ${event.time}` : ''}` : ''}</span></div>
-            <div className="qm"><span className="qm-label">ГДЕ</span><span className="qm-value">{event?.footLabel ?? '—'}</span></div>
           </div>
         </div>
       </section>
@@ -241,25 +234,6 @@ function EventDetailPageInner({ id }: { id?: string }) {
             ) : <p className="text-muted" style={{ fontSize: 13 }}>Организаторы пока не указаны.</p>}
           </article>
 
-          {/* Location */}
-          <article className="content-block">
-            <h2>Локация</h2>
-            <div className="row gap-3 mb-4">
-              <Icon id="i-pin" style={{ width: 18, height: 18, color: 'var(--accent)' }} />
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 500 }}>{event?.footLabel ?? '—'}</div>
-                {editingDetails
-                  ? <input className="input" style={{ marginTop: 6 }} placeholder="Адрес (улица, ориентир)" value={draft.locationAddress} onChange={e => setDraft(d => ({ ...d, locationAddress: e.target.value }))} />
-                  : <div className="text-muted" style={{ fontSize: 13 }}>{event?.locationAddress || 'Адрес не указан'}</div>}
-              </div>
-            </div>
-            <div className="map-card"></div>
-            <div className="row gap-2 mt-4">
-              <a className="btn secondary" href={`https://yandex.ru/maps/?text=${encodeURIComponent(`${event?.footLabel ?? ''} ${event?.locationAddress ?? ''}`)}`} target="_blank" rel="noopener noreferrer">
-                <Icon id="i-map" style={{ width: 14, height: 14 }} />Открыть в Яндекс.Картах
-              </a>
-            </div>
-          </article>
 
           {/* Related — real other events */}
           {related.length > 0 && (
@@ -287,18 +261,6 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <button className="btn primary lg" onClick={handleCalendar}>Сохранить в календарь</button>
             <div className="key-meta">
               <div className="row sb"><span className="lbl">Департамент</span><span className="val">{event?.tag ?? ''}</span></div>
-              <div className="row sb">
-                <span className="lbl">Формат</span>
-                {editingDetails
-                  ? <select className="input" style={{ width: 'auto', height: 30 }} value={draft.format} onChange={e => setDraft(d => ({ ...d, format: e.target.value }))}>{FORMAT_OPTIONS.map(o => <option key={o}>{o}</option>)}</select>
-                  : <span className="val">{event?.format ?? 'Оффлайн'}</span>}
-              </div>
-              <div className="row sb">
-                <span className="lbl">Возраст</span>
-                {editingDetails
-                  ? <select className="input" style={{ width: 'auto', height: 30 }} value={draft.age} onChange={e => setDraft(d => ({ ...d, age: e.target.value }))}>{AGE_OPTIONS.map(o => <option key={o}>{o}</option>)}</select>
-                  : <span className="val">{event?.age ?? '0+'}</span>}
-              </div>
             </div>
           </div>
         </aside>

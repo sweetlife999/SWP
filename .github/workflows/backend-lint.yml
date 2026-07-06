@@ -30,3 +30,23 @@ jobs:
 
       - name: Format check
         run: ruff format --check .
+
+  typecheck:
+    name: mypy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # Install runtime deps so mypy can resolve fastapi/pydantic types.
+      - run: pip install -r requirements.txt mypy
+
+      - name: Type check
+        run: mypy

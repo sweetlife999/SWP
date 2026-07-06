@@ -1,0 +1,60 @@
+site_name: SWP — Student Union Portal Docs
+site_description: Maintained project documentation for the SWP student union portal (architecture, process, quality, testing).
+site_url: https://sweetlife999.github.io/SWP/
+repo_url: https://github.com/sweetlife999/SWP
+repo_name: sweetlife999/SWP
+edit_uri: edit/main/docs/
+
+docs_dir: docs
+
+# No explicit `nav:` on purpose. MkDocs auto-builds the navigation from every
+# file under docs/, so no Markdown page can be silently dropped from the site.
+# Page titles come from each file's first H1 (or filename as a fallback).
+
+theme:
+  name: material
+  features:
+    - navigation.tracking
+    - navigation.top
+    - navigation.indexes
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        # Renders ```mermaid fenced blocks (e.g. the gitGraph workflow diagram)
+        # client-side via Material's bundled Mermaid.
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+plugins:
+  - search

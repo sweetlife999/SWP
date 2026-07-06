@@ -4,13 +4,25 @@ import { PhotoUpload } from '../components/PhotoUpload'
 import { api, type Member, type MemberPatch } from '../lib/api'
 
 type Dep = Member['dep']
-type MemberForm = { dep: Dep; name: string; role: string; meta: string; bio: string; recent: string[]; photo_url: string }
+type MemberForm = {
+  dep: Dep; name: string; role: string; meta: string; bio: string
+  recent: string[]; photo_url: string; is_active: boolean
+}
 
-const BLANK: MemberForm = { dep: 'core', name: '', role: '', meta: '', bio: '', recent: ['', '', ''], photo_url: '' }
+const BLANK: MemberForm = {
+  dep: 'core', name: '', role: '', meta: '', bio: '',
+  recent: ['', '', ''], photo_url: '', is_active: true,
+}
 const DEP_TAG: Record<Dep, string> = { core: 'SU:Core', active: 'SU:Active', media: 'SU:Media' }
+const DEPS: Dep[] = ['core', 'active', 'media']
 
 function toForm(m: Member): MemberForm {
-  return { dep: m.dep, name: m.name, role: m.role, meta: m.meta, bio: m.bio, recent: [...m.recent, '', '', ''].slice(0, 3), photo_url: m.photo_url ?? '' }
+  return {
+    dep: m.dep, name: m.name, role: m.role, meta: m.meta, bio: m.bio,
+    recent: [...m.recent, '', '', ''].slice(0, 3),
+    photo_url: m.photo_url ?? '',
+    is_active: m.is_active !== false,
+  }
 }
 
 export default function AdminMembersPage() {
@@ -46,7 +58,7 @@ export default function AdminMembersPage() {
         await api.members.create({ dep: form.dep, tag: DEP_TAG[form.dep], name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent, photo_url: form.photo_url })
         showToast('Участник добавлен')
       } else if (editing) {
-        const patch: MemberPatch = { dep: form.dep, name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent, photo_url: form.photo_url }
+        const patch: MemberPatch = { dep: form.dep, name: form.name, role: form.role, meta: form.meta, bio: form.bio, recent, photo_url: form.photo_url, is_active: form.is_active }
         await api.members.update(editing.id, patch)
         showToast('Сохранено')
       }
@@ -56,17 +68,6 @@ export default function AdminMembersPage() {
       showToast('Не удалось сохранить участника')
     } finally {
       setBusy(false)
-    }
-  }
-
-  async function remove(m: Member) {
-    if (!window.confirm(`Удалить участника «${m.name}»? Действие нельзя отменить.`)) return
-    try {
-      await api.members.remove(m.id)
-      showToast('Участник удалён')
-      reload()
-    } catch {
-      showToast('Не удалось удалить участника')
     }
   }
 
@@ -80,50 +81,58 @@ export default function AdminMembersPage() {
 
       <div className="page-head">
         <div className="title">
-          <span className="eyebrow">Admin · Управление</span>
-          <h1>Участники</h1>
-          <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Состав студсовета: добавление, редактирование, удаление профилей.</p>
+          <span className="eyebrow">Admin</span>
+          <h1>Manage members</h1>
         </div>
-        <div className="row gap-2">
-          <button className="btn primary" onClick={openCreate}>
-            <Icon id="i-plus" style={{ width: 14, height: 14 }} />Добавить участника
-          </button>
-        </div>
+        <button className="btn primary" onClick={openCreate}>
+          <Icon id="i-plus" style={{ width: 14, height: 14 }} />Добавить участника
+        </button>
       </div>
 
       {error && (
-        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-          <span>Не удалось загрузить участников. Войдите как администратор и обновите страницу.</span>
-          <a className="btn secondary sm" href="#/admin/login">Войти</a>
+        <div role="alert" style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#B91C1C', padding: '12px 16px', borderRadius: 8, fontSize: 14, marginBottom: 16 }}>
+          Не удалось загрузить участников.
         </div>
       )}
 
-      <table className="table">
-        <thead>
-          <tr>
-            <th>Имя</th><th>Департамент</th><th>Роль</th><th style={{ textAlign: 'right' }}>Действия</th>
-          </tr>
-        </thead>
-        <tbody>
-          {members.map(m => (
-            <tr key={m.id}>
-              <td>{m.name}</td>
-              <td>{DEP_TAG[m.dep]}</td>
-              <td className="text-muted">{m.role}</td>
-              <td>
-                <div className="row gap-2" style={{ justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                  <button className="btn secondary sm" onClick={() => openEdit(m)}>Изменить</button>
-                  <button className="btn danger sm" onClick={() => remove(m)}>Удалить</button>
-                </div>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-      {members.length === 0 && (
-        <p className="text-muted" style={{ padding: '24px 0' }}>
-          {error ? 'Ошибка загрузки' : loading ? 'Загрузка…' : 'Участников пока нет — добавьте первого.'}
-        </p>
+      {loading && <p className="text-muted">Загрузка…</p>}
+
+      {!loading && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32, marginTop: 8 }}>
+          {DEPS.map(dep => {
+            const group = members.filter(m => m.dep === dep)
+            return (
+              <section key={dep}>
+                <h3 style={{ fontSize: 13, fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--muted)', marginBottom: 10 }}>
+                  {DEP_TAG[dep]} · {group.length}
+                </h3>
+                {group.length === 0
+                  ? <p className="text-muted" style={{ fontSize: 13 }}>Нет участников</p>
+                  : (
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                      {group.map(m => (
+                        <li key={m.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <button
+                            onClick={() => openEdit(m)}
+                            style={{ all: 'unset', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '8px 0' }}
+                          >
+                            <span style={{ color: 'var(--muted)', fontSize: 18, lineHeight: 1 }}>•</span>
+                            <span style={{ flex: 1, fontSize: 14 }}>{m.name}</span>
+                            <span className="text-muted" style={{ fontSize: 12 }}>{m.role}</span>
+                            {m.is_active === false && (
+                              <span style={{ fontSize: 11, color: 'var(--muted)', border: '1px solid var(--border)', borderRadius: 4, padding: '1px 6px' }}>Неактивный</span>
+                            )}
+                            <Icon id="i-arrow-r" style={{ width: 12, height: 12, color: 'var(--muted)' }} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )
+                }
+              </section>
+            )
+          })}
+        </div>
       )}
 
       {(creating || editing) && (
@@ -167,6 +176,12 @@ export default function AdminMembersPage() {
                     <input key={i} className="input" style={{ marginBottom: 6 }} placeholder={`Активность ${i + 1}…`} value={form.recent[i] ?? ''} onChange={e => setForm(f => { const r = [...f.recent]; r[i] = e.target.value; return { ...f, recent: r } })} />
                   ))}
                 </div>
+                {!creating && (
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, cursor: 'pointer' }}>
+                    <input type="checkbox" checked={form.is_active} onChange={e => setForm(f => ({ ...f, is_active: e.target.checked }))} />
+                    Активный участник
+                  </label>
+                )}
                 <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
                   <button className="btn ghost" onClick={closeModal}>Отмена</button>
                   <button className="btn primary" disabled={!form.name.trim() || busy} onClick={submit}>{busy ? 'Сохранение…' : 'Сохранить'}</button>

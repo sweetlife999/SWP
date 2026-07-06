@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Member } from '../lib/api'
+import { api, photoUrl, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
@@ -17,53 +17,17 @@ interface NewsItem {
   desc?: string
 }
 
-const DEP_INFO = {
-  core: {
-    name: 'SU:Core',
-    tagline: 'Стратегия, инфраструктура, переговоры с университетом',
-    desc: 'SU:Core — административный хребет студсовета. Договаривается с университетом по вопросам расписания, кампусной инфраструктуры и студенческих правил. Ведёт бюджет, координирует работу других департаментов и проводит открытые собрания каждые две недели.',
-    recent: [
-      'Запуск SU Portal v1 — июнь 2026',
-      'Согласование бюджета Q3 — ₽ 240 000',
-      'Open meeting Q2: итоги и вопросы',
-    ],
-    dep: 'core' as const,
-    cls: 'dep-core',
-    count: 8,
-  },
-  active: {
-    name: 'SU:Active',
-    tagline: 'Мероприятия, спорт, культура кампуса',
-    desc: 'SU:Active организует всё, что собирает кампус вместе: хакатоны, спортивные турниры, тематические недели, кино под открытым небом. Главные люди за кулисами любого ивента — логистика, еда, звук и атмосфера.',
-    recent: [
-      'Hackathon Summer 24h — июнь 2026',
-      'Movie under the sky · La La Land — июль',
-      'Гребля и BBQ · закрытие Summer Days',
-    ],
-    dep: 'active' as const,
-    cls: 'dep-active',
-    count: 14,
-  },
-  media: {
-    name: 'SU:Media',
-    tagline: 'Контент, дизайн, голос студсовета',
-    desc: 'SU:Media — публичный фронт студсовета. Снимает фото и видео с мероприятий, ведёт соцсети, делает плакаты и печатные материалы, пишет лонгриды и репортажи о жизни кампуса.',
-    recent: [
-      'Репортаж с Innopolis Open 2026 — 320 участников',
-      'Photo walk · Volga shore — июнь 2026',
-      'Серия лонгридов «Как мы делали хакатон»',
-    ],
-    dep: 'media' as const,
-    cls: 'dep-media',
-    count: 6,
-  },
-}
-
-type DepKey = keyof typeof DEP_INFO
-
 const DEFAULT_INTRO = `<span class="eyebrow">О студсовете</span>
 <h1>Студенческий совет<br>Университета Иннополис</h1>
 <p class="lead">Представляем интересы студентов, организуем кампусную жизнь и помогаем университету становиться лучше — с 2019 года. Три департамента, одна команда.</p>`
+
+type DepKey = 'core' | 'active' | 'media'
+
+const DEPARTMENT_ORDER: DepKey[] = ['core', 'active', 'media']
+
+function depLabel(dep: DepKey): string {
+  return `SU:${dep.charAt(0).toUpperCase()}${dep.slice(1)}`
+}
 
 export default function HomePage() {
   const { isAdmin } = useAdmin()
@@ -72,9 +36,8 @@ export default function HomePage() {
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
   const introRef = useRef<HTMLElement>(null)
-  const info = openDep ? DEP_INFO[openDep] : null
-
-  const { data: fetchedMembers } = useFetch<Member[]>('/api/members');
+  const { data: fetchedMembers } = useFetch<Member[]>('/api/members')
+  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>('/api/members/avatars')
   const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
 
   useEffect(() => {
@@ -87,6 +50,54 @@ export default function HomePage() {
     fetchedMembers.forEach((m: Member) => { if (m.dep in counts) counts[m.dep as keyof typeof counts]++ })
     return counts
   }, [fetchedMembers]);
+
+  const departmentCards = useMemo(() => {
+    return DEPARTMENT_ORDER.map(dep => {
+      const members = (fetchedMembers ?? []).filter(m => m.dep === dep)
+      const first = members[0]
+      const name = first?.tag?.trim() || depLabel(dep)
+      const tagline = first?.role?.trim() || `Команда ${name}`
+      const desc = first?.meta?.trim() || first?.bio?.trim() || `Департамент ${name}`
+      const uniqueRecent = new Set<string>()
+      let leadCount = 0
+      members.forEach(member => {
+        if (/lead/i.test(member.role)) leadCount += 1
+        ;(member.recent ?? []).forEach(item => {
+          const text = item.trim()
+          if (text) uniqueRecent.add(text)
+        })
+      })
+      return {
+        dep,
+        testId: `dept-card-${dep}`,
+        cls: `dep-${dep}`,
+        name,
+        tagline,
+        desc,
+        count: depCounts[dep],
+        activityCount: uniqueRecent.size,
+        leadCount,
+      }
+    })
+  }, [depCounts, fetchedMembers])
+
+  const info = openDep ? departmentCards.find(card => card.dep === openDep) ?? null : null
+  const openDepMembers = useMemo(
+    () => (openDep ? (fetchedMembers ?? []).filter(member => member.dep === openDep) : []),
+    [openDep, fetchedMembers],
+  )
+  const openDepRecent = (() => {
+    const seen = new Set<string>()
+    for (const member of openDepMembers) {
+      for (const item of member.recent ?? []) {
+        const text = item.trim()
+        if (!text || seen.has(text)) continue
+        seen.add(text)
+        if (seen.size === 3) return [...seen]
+      }
+    }
+    return [...seen]
+  })()
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -143,77 +154,37 @@ export default function HomePage() {
         </div>
 
         <div className="deps">
-          <div data-testid="dept-card-core" className="dep-tint dep-core" onClick={() => setOpenDep('core')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('core')}>
-            <span className="dep-name">SU:Core</span>
-            <h3>Стратегия, инфраструктура, переговоры с университетом.</h3>
-            <p className="desc">Координирует политики, бюджет студсовета, ведёт коммуникацию с деканатами и кампусной службой.</p>
-            <div className="meta">
-              <span><b>{depCounts.core}</b> участников</span>
-              <span className="dot" />
-              <span><b>3</b> активных проекта</span>
-              <span className="dot" />
-              <span><b>2</b> co-leads</span>
+          {departmentCards.map(card => (
+            <div
+              key={card.dep}
+              data-testid={card.testId}
+              className={`dep-tint ${card.cls}`}
+              onClick={() => setOpenDep(card.dep)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={e => e.key === 'Enter' && setOpenDep(card.dep)}
+            >
+              <span className="dep-name">{card.name}</span>
+              <h3>{card.tagline}</h3>
+              <p className="desc">{card.desc}</p>
+              <div className="meta">
+              </div>
+              <div className="avatars">
+                {(avatars?.[card.dep] ?? []).map((url, i) => (
+                  <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                    <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                ))}
+                {card.count > (avatars?.[card.dep]?.length ?? 0) && (
+                  <div className="more">+{card.count - (avatars?.[card.dep]?.length ?? 0)}</div>
+                )}
+              </div>
+              <div className="open-row">
+                <span>Подробнее о департаменте</span>
+                <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+              </div>
             </div>
-            <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a3e0ad,#32b247)' }}>МР</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' }}>ДА</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c7dfa9,#74a55c)' }}>ЕВ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8dba8,#3da152)' }}>ТК</div>
-              {depCounts.core > 4 && <div className="more">+{depCounts.core - 4}</div>}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
-
-          <div data-testid="dept-card-active" className="dep-tint dep-active" onClick={() => setOpenDep('active')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('active')}>
-            <span className="dep-name">SU:Active</span>
-            <h3>Мероприятия, культура, спорт — всё, что собирает кампус.</h3>
-            <p className="desc">Организует тематические недели, лекции, спортивные турниры. Главные люди за back-of-house ивентов.</p>
-            <div className="meta">
-              <span><b>{depCounts.active}</b> участников</span>
-              <span className="dot" />
-              <span><b>7</b> ивентов в плане</span>
-              <span className="dot" />
-              <span><b>3</b> co-leads</span>
-            </div>
-            <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#a8c0e0,#3868b8)' }}>АГ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#b9c8e0,#5481c5)' }}>КЛ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#c8d3e6,#7290c9)' }}>ИС</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#9eb6db,#2c5ba8)' }}>МЯ</div>
-              {depCounts.active > 4 && <div className="more">+{depCounts.active - 4}</div>}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
-
-          <div data-testid="dept-card-media" className="dep-tint dep-media" onClick={() => setOpenDep('media')} role="button" tabIndex={0} onKeyDown={e => e.key === 'Enter' && setOpenDep('media')}>
-            <span className="dep-name">SU:Media</span>
-            <h3>Контент, дизайн, лента кампуса — фронт студсовета.</h3>
-            <p className="desc">Снимает ивенты, ведёт соцсети, делает плакаты, пишет лонгриды для портала.</p>
-            <div className="meta">
-              <span><b>{depCounts.media}</b> участников</span>
-              <span className="dot" />
-              <span><b>34</b> публикации</span>
-              <span className="dot" />
-              <span><b>1</b> co-lead</span>
-            </div>
-            <div className="avatars">
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e0a8c8,#c93f8b)' }}>АЛ</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e6b9d3,#d65fa3)' }}>ПК</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#dbb3d8,#b85eb0)' }}>ОН</div>
-              <div className="avatar" style={{ background: 'linear-gradient(135deg,#e8c5db,#dc7eb3)' }}>СВ</div>
-              {depCounts.media > 4 && <div className="more">+{depCounts.media - 4}</div>}
-            </div>
-            <div className="open-row">
-              <span>Подробнее о департаменте</span>
-              <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
@@ -280,9 +251,13 @@ export default function HomePage() {
             <div className="dep-modal-body">
               <p>{info.desc}</p>
               <h4>Недавние активности</h4>
-              <ul>
-                {info.recent.map((r, i) => <li key={i}>{r}</li>)}
-              </ul>
+              {openDepRecent.length > 0 ? (
+                <ul>
+                  {openDepRecent.map((r, i) => <li key={i}>{r}</li>)}
+                </ul>
+              ) : (
+                <p className="text-muted">Пока нет данных об активностях.</p>
+              )}
             </div>
             <div className="dep-modal-foot">
               <Link
@@ -291,7 +266,7 @@ export default function HomePage() {
                 to={`/members?dep=${info.dep}`}
                 onClick={() => setOpenDep(null)}
               >
-                Посмотреть участников ({depCounts[openDep!]} чел.)
+                Посмотреть участников ({fetchedMembers ? openDepMembers.length : depCounts[info.dep]} чел.)
                 <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
               </Link>
             </div>

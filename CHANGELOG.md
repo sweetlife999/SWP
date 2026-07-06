@@ -6,7 +6,22 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [Unreleased]
+## [2.1.0] — 2026-07-05
+- Department avatars on the home page now show actual member photos
+- "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
+- Removed redundant information from forms page
+- Forms viewer and forms builder pages on admin panel now merged into one manage questionnaires page, with a list of all questionnaires and a "Create a questionnaire" button
+- Forms viewer now displays submission time in a coherent format
+- Removed a possibility to remove a member from the members page, it is now only possible to remove a member directly from a db
+- Removed an option to create a new event from the events page, it is now only possible to create a new event from the admin panel
+- Donations page now first displays where the money goes, and then the QR code centered below it
+- Removed location, format, and age from the event card on the events page
+- Moved "Create a member" to the admin panel; added a boolean "is_active" field to the member model, so that members can be archived instead of deleted
+- Added E2E smoke-tests
+
+## [2.0.0] — 2026-06-28
+
+MVP v2 — Sprint 4 increment: live frontend↔backend integration plus quality automation (tests, QRTs, coverage, CI gates).
 
 ### Added
 - Admin management panel: `/admin/events` (create, edit, publish, archive, delete drafts) and `/admin/members` (create, edit, delete with confirmation), reachable from the sidebar Admin section
@@ -21,10 +36,12 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Kanban cards are editable (title, rich-note description, priority, assignee, column) from the card panel
 - Admin event form has a Location field; event location now displays on the event page
 - Event "Save to calendar" produces a valid `.ics` file (all-day or timed)
+
 - Events have editable Format and Age fields, shown on the event page (were hardcoded)
 - Forms Builder has a questionnaire picker: choose which questionnaire to edit; editing updates the same one instead of creating duplicates
 - Kanban "New task" supports description, priority and an assignee
 - Students no longer see questionnaires they have already completed
+- Home page now displays the most recent 4 events
 
 ### Fixed
 - Multiple-choice questions in the Forms Builder could not be edited (option inputs were hidden by a CSS class collision)
@@ -37,6 +54,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Backend failed to start under Python 3.12: the `date`/`time` fields in the event schemas shadowed their imported types, crashing the app on import; event times also now persist correctly to the `TIME` column
 - API is reachable in local development (Vite dev proxy) and from the Docker stack (nginx now proxies `/api` to the backend); backend container port standardised on `9999`
 - Error banners now show a button with error message on every page
+- Clicking on a department in the home page now directly navigates to the members page filtered by that department, instead of showing a toast with a link
 
 ## [1.0.0] — 2026-06-20
 

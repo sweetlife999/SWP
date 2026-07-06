@@ -17,3 +17,21 @@ ignore = [
 
 [tool.ruff.lint.isort]
 known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]  # make the `app` package importable under a plain `pytest` run (CI)
+asyncio_mode = "auto"
+# DB-backed integration tests are marked; they're skipped unless DATABASE_URL is set.
+markers = [
+    "integration: requires a Postgres database (DATABASE_URL)",
+]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["app"]
+ignore_missing_imports = true  # asyncpg ships no type stubs / py.typed marker
+
+[tool.coverage.run]
+source = ["app"]
+omit = ["app/main.py"]

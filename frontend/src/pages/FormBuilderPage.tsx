@@ -281,15 +281,6 @@ export default function FormBuilderPage() {
     }
   }
 
-  function exportCsv() {
-    const rows = questions.map((q, i) => [`${i + 1}`, q.type, q.title, q.hint, q.options.join(' | ')])
-    const csv = [['#', 'Type', 'Title', 'Hint', 'Options'], ...rows].map(r => r.map(v => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'form-questions.csv'; a.click()
-    URL.revokeObjectURL(url)
-  }
-
   function addQuestion(type: QType) {
     const defaultOptions = (type === 'single' || type === 'multi') ? ['Вариант 1', 'Вариант 2'] : []
     setQuestions(qs => [...qs, { id: nextId++, type, title: '', hint: '', options: defaultOptions, required: false }])
@@ -341,7 +332,7 @@ export default function FormBuilderPage() {
         </select>
         <button className="btn ghost sm" disabled={saving} onClick={newQuestionnaire}><Icon id="i-plus" style={{ width: 12, height: 12 }} />Новый</button>
         <span className="stat-pill"><Icon id="i-clipboard" style={{ width: 12, height: 12 }} />{nonSectionCount} вопросов</span>
-        <span className="stat-pill"><Icon id="i-users" style={{ width: 12, height: 12 }} />видит: все студенты</span>
+
       </div>
 
       <div className={`builder-layout${preview ? ' preview-on' : ''}`}>
@@ -437,11 +428,7 @@ export default function FormBuilderPage() {
             <div className="row sb"><span>Email при новом ответе</span><label className="switch"><input type="checkbox" /><span className="track"></span></label></div>
             <div className="row sb"><span>Daily digest</span><label className="switch"><input type="checkbox" defaultChecked /><span className="track"></span></label></div>
           </div>
-          <div className="export-card">
-            <h4><Icon id="i-download" style={{ width: 16, height: 16 }} />Экспорт результатов</h4>
-            <p>Скачать ответы в .xlsx, .csv или скопировать ссылку на дашборд после публикации.</p>
-            <button className="btn" onClick={exportCsv}>Экспорт в .csv</button>
-          </div>
+
         </aside>
       </div>
     </>

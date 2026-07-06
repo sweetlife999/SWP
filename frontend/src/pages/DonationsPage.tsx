@@ -68,28 +68,26 @@ export default function DonationsPage() {
         )}
       </div>
 
-      <div className="donate-static">
-        <div className="col gap-6">
-          <div className={`card card-body${editing ? ' editing' : ''}`}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2>На что идут средства</h2>
-              {editing && (
-                <div className="row gap-2">
-                  <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
-                  <button className="btn primary" onClick={handleSave}>
-                    <Icon id="i-check" style={{ width: 14, height: 14 }} /> Сохранить
-                  </button>
-                </div>
-              )}
-            </div>
-            <div
-              ref={ref}
-              contentEditable={editing}
-              suppressContentEditableWarning
-              dangerouslySetInnerHTML={{ __html: html }}
-              style={editing ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8, minHeight: 80 } : {}}
-            />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 40 }}>
+        <div className={`card card-body${editing ? ' editing' : ''}`} style={{ width: '100%' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+            <h2 style={editing ? {} : { width: '100%', textAlign: 'center' }}>На что идут средства</h2>
+            {editing && (
+              <div className="row gap-2">
+                <button className="btn ghost" onClick={() => setEditing(false)}>Отмена</button>
+                <button className="btn primary" onClick={handleSave}>
+                  <Icon id="i-check" style={{ width: 14, height: 14 }} /> Сохранить
+                </button>
+              </div>
+            )}
           </div>
+          <div
+            ref={ref}
+            contentEditable={editing}
+            suppressContentEditableWarning
+            dangerouslySetInnerHTML={{ __html: html }}
+            style={editing ? { outline: '2px solid var(--accent)', borderRadius: 6, padding: 8, minHeight: 80 } : {}}
+          />
         </div>
 
         <div className="donate-cta-simple">

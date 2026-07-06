@@ -1,19 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Event } from '../lib/api'
-import { useAdmin } from '../lib/AdminContext'
+import { type Event } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 
-const MONTH_ABBR = ['ЯНВ', 'ФЕВ', 'МАР', 'АПР', 'МАЙ', 'ИЮН', 'ИЮЛ', 'АВГ', 'СЕН', 'ОКТ', 'НОЯ', 'ДЕК']
-
-const BLANK_EVENT: Omit<Event, 'id'> = {
-  title: '', desc: '', date: '', dd: '', mm: '', cover: '',
-  tag: 'SU:Core', tagCls: 'green', time: '', foot: '', footLabel: '', past: false,
-}
 
 function statusLabel(ev: Event): string {
   if (ev.statusText) return ev.statusText
@@ -47,7 +40,6 @@ function EventCard({ ev }: { ev: Event }) {
 }
 
 export default function EventsPage() {
-  const { isAdmin } = useAdmin()
   // Public endpoint — useFetch owns loading/error/retry; the list is the single source of truth.
   const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>('/api/events')
   const events = fetchedEvents ?? []
@@ -58,37 +50,6 @@ export default function EventsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [limit, setLimit] = useState(4)
-  const [addingEvent, setAddingEvent] = useState(false)
-  const [newEvent, setNewEvent] = useState<Omit<Event, 'id'>>(BLANK_EVENT)
-  const [toast, setToast] = useState('')
-
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 3000)
-  }
-
-  async function handleAddEvent() {
-    const d = new Date(newEvent.date)
-    const ev: Omit<Event, 'id'> = {
-      ...newEvent,
-      // Empty time would be sent as "" and rejected by the backend (TIME column) — omit it.
-      time: newEvent.time || undefined,
-      dd: newEvent.date ? String(d.getDate()).padStart(2, '0') : '',
-      mm: newEvent.date ? MONTH_ABBR[d.getMonth()] : '',
-    }
-    try {
-      const created = await api.events.create(ev)
-      // Quick-add publishes immediately so it shows on /events; the admin panel
-      // (/admin/events) keeps the full draft → publish → archive workflow.
-      await api.events.update(created.id, { status: 'published' })
-      retry()
-      showToast('Мероприятие добавлено')
-    } catch {
-      showToast('Не удалось добавить мероприятие')
-    }
-    setNewEvent(BLANK_EVENT)
-    setAddingEvent(false)
-  }
 
   function applyFilter(list: Event[]) {
     return list.filter(ev => {
@@ -111,11 +72,6 @@ export default function EventsPage() {
 
   return (
     <>
-      {toast && (
-        <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>
-          {toast}
-        </div>
-      )}
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">Жизнь кампуса</span>
@@ -123,11 +79,6 @@ export default function EventsPage() {
           <p className="lead" style={{ fontSize: 14, marginTop: 6 }}>Ближайшие и прошедшие мероприятия от студсовета.</p>
         </div>
         <div className="row gap-2">
-          {isAdmin && (
-            <button className="btn primary" onClick={() => setAddingEvent(true)}>
-              <Icon id="i-plus" style={{ width: 14, height: 14 }} />Добавить ивент
-            </button>
-          )}
           <div className="input-group" style={{ width: 220 }}>
             <Icon id="i-search" className="ic" />
             <input placeholder="Поиск мероприятий…" value={search} onChange={e => setSearch(e.target.value)} />
@@ -195,59 +146,6 @@ export default function EventsPage() {
         </div>
       )}
 
-      {addingEvent && (
-        <div className="modal-overlay" onClick={() => setAddingEvent(false)}>
-          <div className="member-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 480 }}>
-            <button className="modal-close" onClick={() => setAddingEvent(false)}>
-              <Icon id="i-x" style={{ width: 14, height: 14 }} />
-            </button>
-            <div className="member-modal-body" style={{ paddingTop: 24 }}>
-              <h3 style={{ marginBottom: 20 }}>Новое мероприятие</h3>
-              <div className="col gap-3">
-                <div className="field">
-                  <label>Название</label>
-                  <input className="input" value={newEvent.title} onChange={e => setNewEvent(v => ({ ...v, title: e.target.value }))} />
-                </div>
-                <div className="field">
-                  <label>Описание</label>
-                  <textarea className="textarea" rows={2} value={newEvent.desc} onChange={e => setNewEvent(v => ({ ...v, desc: e.target.value }))} />
-                </div>
-                <div className="row gap-3">
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Дата</label>
-                    <input className="input" type="date" value={newEvent.date} onChange={e => setNewEvent(v => ({ ...v, date: e.target.value }))} />
-                  </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Время (опц.)</label>
-                    <input className="input" type="time" value={newEvent.time ?? ''} onChange={e => setNewEvent(v => ({ ...v, time: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="row gap-3">
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Департамент</label>
-                    <select className="input" value={newEvent.tag} onChange={e => {
-                      const map: Record<string, string> = { 'SU:Core': 'green', 'SU:Active': 'blue', 'SU:Media': 'purple' }
-                      setNewEvent(v => ({ ...v, tag: e.target.value, tagCls: map[e.target.value] ?? 'green' }))
-                    }}>
-                      <option value="SU:Core">SU:Core</option>
-                      <option value="SU:Active">SU:Active</option>
-                      <option value="SU:Media">SU:Media</option>
-                    </select>
-                  </div>
-                  <div className="field" style={{ flex: 1 }}>
-                    <label>Доп. инфо (участники, места)</label>
-                    <input className="input" placeholder="32 участника" value={newEvent.foot} onChange={e => setNewEvent(v => ({ ...v, foot: e.target.value }))} />
-                  </div>
-                </div>
-                <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
-                  <button className="btn ghost" onClick={() => setAddingEvent(false)}>Отмена</button>
-                  <button className="btn primary" disabled={!newEvent.title.trim() || !newEvent.date} onClick={handleAddEvent}>Добавить</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
