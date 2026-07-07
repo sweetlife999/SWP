@@ -16,7 +16,12 @@ export default function EventDetailPage() {
   return <EventDetailPageInner key={id} id={id} />
 }
 
-type Details = { schedule: ScheduleItem[]; organizers: OrganizerItem[] }
+// Draft rows carry a client-only _k so React keys stay stable when a middle
+// row is deleted (index keys would misplace focus); _k is stripped on save.
+type Keyed<T> = T & { _k: number }
+type Details = { schedule: Keyed<ScheduleItem>[]; organizers: Keyed<OrganizerItem>[] }
+let draftKey = 0
+const nextKey = () => ++draftKey
 
 function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
@@ -69,8 +74,8 @@ function EventDetailPageInner({ id }: { id?: string }) {
   function startEditDetails() {
     if (!event) return
     setDraft({
-      schedule: event.schedule ? event.schedule.map(s => ({ ...s })) : [],
-      organizers: event.organizers ? event.organizers.map(o => ({ ...o })) : [],
+      schedule: event.schedule ? event.schedule.map(s => ({ ...s, _k: nextKey() })) : [],
+      organizers: event.organizers ? event.organizers.map(o => ({ ...o, _k: nextKey() })) : [],
     })
     setEditingDetails(true)
   }
@@ -79,8 +84,12 @@ function EventDetailPageInner({ id }: { id?: string }) {
     if (!id) return
     try {
       const updated = await api.events.update(id, {
-        schedule: draft.schedule.filter(s => s.time || s.title || s.where),
-        organizers: draft.organizers.filter(o => o.name || o.initials || o.role),
+        schedule: draft.schedule
+          .filter(s => s.time || s.title || s.where)
+          .map(s => ({ time: s.time, title: s.title, where: s.where })),
+        organizers: draft.organizers
+          .filter(o => o.name || o.initials || o.role)
+          .map(o => ({ initials: o.initials, name: o.name, role: o.role })),
       })
       setEvent(updated)
       showToast('Детали сохранены')
@@ -195,7 +204,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <div className="row sb mb-4">
               <h2 style={{ marginBottom: 0 }}>Расписание</h2>
               {editingDetails && (
-                <button className="btn ghost sm" onClick={() => setDraft(d => ({ ...d, schedule: [...d.schedule, { time: '', title: '', where: '' }] }))}>
+                <button className="btn ghost sm" onClick={() => setDraft(d => ({ ...d, schedule: [...d.schedule, { time: '', title: '', where: '', _k: nextKey() }] }))}>
                   <Icon id="i-plus" style={{ width: 12, height: 12 }} />Пункт
                 </button>
               )}
@@ -203,7 +212,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             {editingDetails ? (
               <div className="col gap-2">
                 {draft.schedule.map((s, i) => (
-                  <div key={i} className="row gap-2" style={{ alignItems: 'center' }}>
+                  <div key={s._k} className="row gap-2" style={{ alignItems: 'center' }}>
                     <input className="input" style={{ width: 130 }} placeholder="20.06 · 10:00" value={s.time} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], time: e.target.value }; return { ...d, schedule: sc } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Название пункта" value={s.title} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], title: e.target.value }; return { ...d, schedule: sc } })} />
                     <input className="input" style={{ width: 160 }} placeholder="Место" value={s.where} onChange={e => setDraft(d => { const sc = [...d.schedule]; sc[i] = { ...sc[i], where: e.target.value }; return { ...d, schedule: sc } })} />
@@ -227,7 +236,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <div className="row sb mb-4">
               <h2 style={{ marginBottom: 0 }}>Кто за это отвечает</h2>
               {editingDetails && (
-                <button className="btn ghost sm" onClick={() => setDraft(d => ({ ...d, organizers: [...d.organizers, { initials: '', name: '', role: '' }] }))}>
+                <button className="btn ghost sm" onClick={() => setDraft(d => ({ ...d, organizers: [...d.organizers, { initials: '', name: '', role: '', _k: nextKey() }] }))}>
                   <Icon id="i-plus" style={{ width: 12, height: 12 }} />Человек
                 </button>
               )}
@@ -235,7 +244,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
             {editingDetails ? (
               <div className="col gap-2">
                 {draft.organizers.map((o, i) => (
-                  <div key={i} className="row gap-2" style={{ alignItems: 'center' }}>
+                  <div key={o._k} className="row gap-2" style={{ alignItems: 'center' }}>
                     <input className="input" style={{ width: 64 }} maxLength={3} placeholder="МР" value={o.initials} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], initials: e.target.value }; return { ...d, organizers: or } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Имя" value={o.name} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], name: e.target.value }; return { ...d, organizers: or } })} />
                     <input className="input" style={{ flex: 1 }} placeholder="Роль" value={o.role} onChange={e => setDraft(d => { const or = [...d.organizers]; or[i] = { ...or[i], role: e.target.value }; return { ...d, organizers: or } })} />
