@@ -15,6 +15,8 @@ expected result, a current status, and an execution history.
 | [UAT-01](#uat-01--publish-an-event) | Publish an event and see it appear publicly | Admin → student | Passed |
 | [UAT-02](#uat-02--add-a-team-member-with-a-photo) | Add a team member with a photo | Admin → student | Passed |
 | [UAT-03](#uat-03--create-publish-and-fill-a-questionnaire) | Create, publish, and fill a questionnaire | Admin → student | Passed |
+| [UAT-04](#uat-04--create-a-task-on-the-kanban-board) | Create a task on the kanban board | Admin → Admin | Passed |
+| [UAT-05](#uat-05--see-the-roadmap) | See the Student Union roadmap | Admin → student | Passed |
 
 ---
 
@@ -105,28 +107,78 @@ completed survey is no longer offered to the same student.
 
 ---
 
-## UAT Summary — Sprint 4
+## UAT-04 — Create a task on the kanban board
+
+- **Role:** Admin (creates the task, fills the details)
+- **Precondition:** Admin is logged in.
+
+**Steps**
+
+1. Open the Kanban board and press the "New task" button.
+2. Fill the title, description, column, priority, and assignee fields.
+3. Press the "Create" button.
+
+**Expected result:** the created task is movable from any column to any other column; every task could be redacted or deleted if needed;
+
+**Execution history**
+
+| Date | Sprint | Result | Notes |
+|------|--------|--------|-------|
+| 2026-06-30 | Sprint 5 | Passed | Admin created the task on the Kanban board; the task could be redacted or deleted if needed; the task could be moved to any column | Customer confirmed. |
+
+**Evidence from Sprint Review:**
+> *"Log in as an admin and try to create, change, and move the task."* (Team)
+>
+> *"Yes, I did this, coool."* (Customer)
+
+---
+
+## UAT-05 — See the roadmap
+
+- **Role:** Admin (writes and changes the text if needed), then student (reads)
+- **Precondition:** Admin is logged in.
+
+**Steps**
+
+1. Open the "Members" page and click "Roadmap 2026" button.
+2. As an admin, write or change the text of roadmap.
+3. Confirm the changes.
+4. As a student, open the "Members" page, find the roadmap and read it.
+
+**Expected result:** the roadmap text could be changed by an admin; the roadmap might be readed by any user;
+
+**Execution history**
+
+| Date | Sprint | Result | Notes |
+|------|--------|--------|-------|
+| 2026-06-27 | Sprint 5 | Passed | Admin wrote and changed the roadmap text; student can see the SU roadmap; | Customer confirmed. |
+
+**Evidence from Sprint Review:**
+> *"You can edit and read the SU roadmap"* (Team)
+>
+> *"Yes, I see it, good"* (Customer)
+
+---
+
+## UAT Summary — Sprint 5
 
 | UAT ID | Scenario | Status |
 |--------|----------|--------|
 | UAT-01 | Publish an event | Passed |
 | UAT-02 | Add a team member with a photo | Passed (with feedback — replace delete with edit) |
 | UAT-03 | Create, publish, and fill a questionnaire | Passed |
-
+| UAT-04 | Create a task on the kanban board | Passed |
+| UAT-05 | See the roadmap | Passed |
 ---
 
-## Key Feedback from UAT Session (Sprint 4)
+## Key Feedback from UAT Session (Sprint 5)
 
 | Feedback | Resulting action |
 |----------|------------------|
-| Remove age, format, location fields from events | Will be removed |
-| Replace delete with edit on Members page | Will be implemented |
-| QR code should be large and centered on Donations page | Will be fixed |
-| Last 4 events should appear in the updates section on main page | Will be implemented |
-| Rename/merge admin tabs (Forms + Responses → Manage Questionnaires) | Will be done |
-| Add banner/description on main page | Will be added |
-| Keep only one Kanban board (SU Core) | Confirmed, no change needed |
-| Don't track completed questionnaires (stay anonymous) | Confirmed, no change needed |
+| Remove 2nd button "Manage events" on the mobile verison of the website  | Will be removed |
+| Remove outdated sign with mock information from "Surveys" page | Will be removed |
+| Surveys' results are absent at the surveys admin page | Will be fixed |
+| Add a specific tab for SU CEO and assistent | Will be added |
 
 ---
 
@@ -135,5 +187,5 @@ completed survey is no longer offered to the same student.
 - Ask the customer for permission **before recording** every session.
 - The private UAT recording link goes to Moodle only — **never** committed to this
   public repository.
-- The public Week 4 report summarises results (pass/fail, key feedback, resulting
+- The public Week 5 report summarises results (pass/fail, key feedback, resulting
   PBIs) without exposing private customer information.

@@ -10,13 +10,14 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 | Assignment | Report |
 |------------|--------|
+| Assignment 5 (Sprint 5 - MVP v2) | [reports/week5/README.md](reports/week5/README.md) |
 | Assignment 4 (Sprint 4 — Integration, Quality & Automation) | [reports/week4/README.md](reports/week4/README.md) |
 | Assignment 3 (Sprint 3 — MVP v1) | [reports/week3/README.md](reports/week3/README.md) |
 | Assignment 2 (Sprint 2 — MVP v0) | [reports/week2/README.md](reports/week2/README.md) |
 
 ---
 
-## Access to MVP v1
+## Access to MVP v2
 
 The deployed site is publicly accessible at [https://su.fblrkus.ru](https://su.fblrkus.ru).
 
@@ -84,18 +85,85 @@ The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every pus
 ## Repository structure
 
 ```
-frontend/          — React + TypeScript + Vite
-backend/           — FastAPI + asyncpg + Alembic
-database/          — PostgreSQL migrations
-docs/              — user-stories, roadmap, definition-of-done, quality-requirements, quality-requirement-tests, testing, user-acceptance-tests
-reports/
-  week2/           — Assignment 2 reports
-  week3/           — Assignment 3 reports (Sprint 3 — MVP v1)
-  week4/           — Assignment 4 reports (Sprint 4 — Integration, Quality & Automation)
-.github/
-  workflows/       — CI: frontend lint, backend lint (ruff + mypy), backend tests + coverage, pip-audit, link-check, deploy
-  ISSUE_TEMPLATE/
-  pull_request_template.md
-CHANGELOG.md
-compose.yml
+.
+|-- .github/
+|   |-- ISSUE_TEMPLATE/
+|   |-- workflows/
+|   |   |-- backend-lint.yml
+|   |   |-- backend-tests.yml
+|   |   |-- deploy.yml
+|   |   |-- frontend-lint.yml
+|   |   `-- link-check.yml
+|   `-- pull_request_template.md
+|-- backend/               - FastAPI + asyncpg + Alembic
+|   |-- app/
+|   |   |-- models/
+|   |   |-- routers/
+|   |   |-- auth.py
+|   |   |-- computed.py
+|   |   |-- config.py
+|   |   |-- database.py
+|   |   `-- main.py
+|   |-- tests/
+|   |-- Dockerfile
+|   |-- README.md
+|   |-- mantra.md
+|   |-- pyproject.toml
+|   |-- pyrightconfig.json
+|   |-- requirements-dev.txt
+|   `-- requirements.txt
+|-- compose.local.yml
+|-- compose.yml
+|-- database/              - PostgreSQL migrations
+|   |-- migrations/
+|   |   |-- 0001_init.sql
+|   |   |-- 0002_content_seed.sql
+|   |   |-- 0003_stats_views.sql
+|   |   |-- 0004_kanban_seed.sql
+|   |   |-- 0005_event_format_age.sql
+|   |   |-- 0006_event_detail_fields.sql
+|   |   `-- 0007_member_is_active.sql
+|   |-- Dockerfile
+|   |-- README.md
+|   `-- run-migrations.sh
+|-- docs/                  - user stories, roadmap, definition of done, quality and testing docs
+|   |-- architecture/
+|   |-- definition-of-done.md
+|   |-- development-process.md
+|   |-- Process_Requirements.md
+|   |-- quality-requirement-tests.md
+|   |-- quality-requirements.md
+|   |-- roadmap.md
+|   |-- testing.md
+|   |-- user-acceptance-tests.md
+|   `-- user-stories.md
+|-- frontend/              - React + TypeScript + Vite
+|   |-- public/
+|   |-- src/
+|   |   |-- components/
+|   |   |-- hooks/
+|   |   |-- lib/
+|   |   |-- pages/
+|   |   |-- tests/
+|   |   |-- App.tsx
+|   |   |-- main.tsx
+|   |   `-- styles.css
+|   |-- Dockerfile
+|   |-- eslint.config.js
+|   |-- index.html
+|   |-- nginx.conf
+|   |-- package.json
+|   |-- playwright.config.ts
+|   |-- tsconfig.json
+|   `-- vite.config.ts
+|-- reports/
+|   |-- week2/             - Assignment 2 reports
+|   |-- week3/             - Assignment 3 reports (Sprint 3 - MVP v1)
+|   |-- week4/             - Assignment 4 reports (Sprint 4 - Integration, Quality & Automation)
+|   `-- week5/             - Assignment 5 reports (Sprint 5 - MVP v2)
+|-- CHANGELOG.md
+|-- LICENSE
+|-- README.md
+|-- thumbor.conf
+`-- ...
 ```

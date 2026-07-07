@@ -1,0 +1,88 @@
+name: Deploy docs site
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+# Least-privilege token plus the permissions the Pages deploy needs.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never run two Pages deploys at once; let an in-flight one finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build site
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Java for PlantUML
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install Graphviz
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y graphviz
+
+      - name: Download PlantUML
+        env:
+          PLANTUML_VERSION: '1.2025.5'
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/plantuml.jar" \
+            "https://github.com/plantuml/plantuml/releases/download/v${PLANTUML_VERSION}/plantuml-${PLANTUML_VERSION}.jar"
+          echo "PLANTUML_JAR=$RUNNER_TEMP/plantuml.jar" >> "$GITHUB_ENV"
+
+      - name: Render PlantUML diagrams (.puml -> .svg)
+        run: |
+          shopt -s globstar nullglob
+          files=(docs/**/*.puml)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No .puml files found under docs/; skipping render."
+          else
+            echo "Rendering ${#files[@]} diagram(s):"
+            printf '  %s\n' "${files[@]}"
+            # Outputs an .svg next to each source so Markdown can embed a relative path.
+            java -jar "$PLANTUML_JAR" -tsvg "${files[@]}"
+          fi
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+          cache: pip
+          cache-dependency-path: requirements-docs.txt
+
+      - name: Install MkDocs
+        run: pip install -r requirements-docs.txt
+
+      - name: Build site
+        run: mkdocs build --verbose
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
