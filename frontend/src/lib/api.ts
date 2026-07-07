@@ -1,4 +1,7 @@
-const BASE = '/api'
+// Exported so URL-driven callers (useFetch pages) share the same prefix
+// instead of hardcoding '/api/...' literals.
+export const API_BASE = '/api'
+const BASE = API_BASE
 
 function token() { return localStorage.getItem('su_admin_token') ?? '' }
 

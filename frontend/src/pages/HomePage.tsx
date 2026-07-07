@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, photoUrl, type Member } from '../lib/api'
+import { api, API_BASE, photoUrl, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
@@ -29,9 +29,9 @@ export default function HomePage() {
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
   const introRef = useRef<HTMLElement>(null)
-  const { data: fetchedMembers } = useFetch<Member[]>('/api/members')
-  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>('/api/members/avatars')
-  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
+  const { data: fetchedMembers } = useFetch<Member[]>(`${API_BASE}/members`)
+  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>(`${API_BASE}/members/avatars`)
+  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>(`${API_BASE}/news`);
 
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
