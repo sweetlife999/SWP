@@ -137,9 +137,10 @@ export default function AdminMembersPage() {
 
       {(creating || editing) && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480 }}>
+          <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480, maxHeight: '75vh', display: 'flex', flexDirection: 'column' }}>
             <button className="modal-close" onClick={closeModal}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
-            <div className="member-modal-body" style={{ paddingTop: 24 }}>
+            
+            <div className="member-modal-body" style={{ padding: '24px 28px', overflowY: 'auto', flex: '1 1 auto' }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новый участник' : 'Редактировать участника'}</h3>
               <div className="col gap-3">
                 <div className="field">
@@ -182,12 +183,16 @@ export default function AdminMembersPage() {
                     Активный участник
                   </label>
                 )}
-                <div className="row gap-2" style={{ justifyContent: 'flex-end', marginTop: 8 }}>
-                  <button className="btn ghost" onClick={closeModal}>Отмена</button>
-                  <button className="btn primary" disabled={!form.name.trim() || busy} onClick={submit}>{busy ? 'Сохранение…' : 'Сохранить'}</button>
-                </div>
               </div>
             </div>
+
+            <div className="member-modal-foot" style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
+              <button className="btn ghost" onClick={closeModal}>Отмена</button>
+              <button className="btn primary" disabled={!form.name.trim() || busy} onClick={submit}>
+                {busy ? 'Сохранение…' : 'Сохранить'}
+              </button>
+            </div>
+
           </div>
         </div>
       )}
