@@ -12,8 +12,10 @@ from pydantic import BaseModel, Field, StringConstraints
 
 SlugStr = Annotated[str, StringConstraints(pattern=r"^[a-z0-9_-]+$", max_length=128)]
 
-Department = Literal["core", "active", "media"]
-DepartmentOrLabel = Literal["SU:Core", "SU:Active", "SU:Media", "core", "active", "media"]
+Department = Literal["core", "active", "media", "support"]
+DepartmentOrLabel = Literal[
+    "SU:Core", "SU:Active", "SU:Media", "SU:Support", "core", "active", "media", "support"
+]
 
 
 # ── Events ────────────────────────────────────────────────────────────────────

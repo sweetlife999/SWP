@@ -9,14 +9,15 @@ import { EmptyState } from '../components/EmptyState'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
-const DEP_KEYS = ['', 'core', 'active', 'media']
+const DEP_KEYS = ['', 'core', 'active', 'media', 'support']
 
 type Member = ApiMember
 
 const PHOTO_BG: Record<Member['dep'], string> = {
-  core:   'linear-gradient(135deg, #d1efd8, #88c595)',
-  active: 'linear-gradient(135deg, #c1d6f8, #6b89b3)',
-  media:  'linear-gradient(135deg, #f6c1da, #d65fa3)',
+  core:    'linear-gradient(135deg, #d1efd8, #88c595)',
+  active:  'linear-gradient(135deg, #c1d6f8, #6b89b3)',
+  media:   'linear-gradient(135deg, #f6c1da, #d65fa3)',
+  support: 'linear-gradient(135deg, #fde8c8, #d9a441)',
 }
 
 const DEFAULT_ROADMAP_HTML = `<p style="font-size:17px;color:var(--muted);margin-bottom:24px">Цели студсовета на 2026 учебный год по четырём квартальным блокам.</p><div class="q-block"><div class="q-title">Q1 · ЯНВ–МАР</div><div class="q-body"><h3>Запуск SU Portal v1</h3><p>Единая точка входа для студсовета: новости, ивенты, опросы, донаты, внутренние модули команды. Заменить разрозненные Google-документы и табличные опросы.</p><ul><li>5 публичных модулей и 3 внутренних</li><li>Перевод опросов с Google Forms на собственный конструктор</li><li>Адаптив для мобильных устройств</li></ul></div></div><div class="q-block"><div class="q-title">Q2 · АПР–ИЮН</div><div class="q-body"><h3>Прозрачные финансы и расширение донат-системы</h3><p>Все траты студсовета — публично, с привязкой к цели и чеками. Добавить инструмент быстрого донат-кампейна для конкретных задач (спорт, мерч, ивенты).</p><ul><li>Категории трат и публикация транзакций</li><li>Интеграция с ЮMoney / СБП</li><li>Месячные финансовые отчёты на портале</li></ul></div></div><div class="q-block"><div class="q-title">Q3 · ИЮЛ–СЕН</div><div class="q-body"><h3>Сообщество и онбординг новых студентов</h3><p>Welcome-программа для нового набора с гайдом по университету, кампусу и SU. Запуск buddy-программы для студентов-первокурсников.</p><ul><li>Welcome-неделя: 12 событий, печатный гайдбук</li><li>Buddy-программа: 80 пар по интересам</li><li>Первая сессия открытого набора в SU</li></ul></div></div><div class="q-block" style="border-bottom:0"><div class="q-title">Q4 · ОКТ–ДЕК</div><div class="q-body"><h3>Институциональная стабильность</h3><p>Передача знаний, документация процессов, выборы нового состава SU:Core. Цель — чтобы любой человек, который придёт в SU, мог войти в работу за неделю.</p><ul><li>Хендбук SU: процессы, шаблоны, история решений</li><li>Открытые выборы co-leads с публичной презентацией</li><li>Архивирование 2026: ивенты, бюджеты, опросы</li></ul></div></div>`
@@ -137,7 +138,7 @@ export default function MembersPage() {
         <div>
           <div className="members-filters-bar">
             <div className="seg">
-              {['Все', 'SU:Core', 'SU:Active', 'SU:Media'].map((l, i) => (
+              {['Все', 'SU:Core', 'SU:Active', 'SU:Media', 'SU:Support'].map((l, i) => (
                 <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => handleSeg(i)}>{l}</button>
               ))}
             </div>
