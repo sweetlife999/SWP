@@ -185,7 +185,7 @@ export default function AdminEventsPage() {
         <div className="modal-overlay" onClick={closeModal}>
           <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480 }}>
             <button className="modal-close" onClick={closeModal}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
-            <div className="member-modal-body" style={{ paddingTop: 24 }}>
+            <div className="member-modal-body" style={{ paddingTop: 24, textAlign: 'left' }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новое мероприятие' : 'Редактировать мероприятие'}</h3>
               <div className="col gap-3">
                 <div className="field">

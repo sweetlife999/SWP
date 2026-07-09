@@ -140,7 +140,7 @@ export default function AdminMembersPage() {
           <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480, maxHeight: '75vh', display: 'flex', flexDirection: 'column' }}>
             <button className="modal-close" onClick={closeModal}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
             
-            <div className="member-modal-body" style={{ padding: '24px 28px', overflowY: 'auto', flex: '1 1 auto' }}>
+            <div className="member-modal-body" style={{ padding: '24px 28px', overflowY: 'auto', flex: '1 1 auto', textAlign: 'left' }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новый участник' : 'Редактировать участника'}</h3>
               <div className="col gap-3">
                 <div className="field">

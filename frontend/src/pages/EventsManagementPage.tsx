@@ -222,7 +222,7 @@ export default function EventsManagementPage() {
             <button className="modal-close" onClick={() => setAddingEvent(false)}>
               <Icon id="i-x" style={{ width: 14, height: 14 }} />
             </button>
-            <div className="member-modal-body" style={{ paddingTop: 24 }}>
+            <div className="member-modal-body" style={{ paddingTop: 24, textAlign: 'left' }}>
               <h3 style={{ marginBottom: 20 }}>Новое событие</h3>
               <div className="col gap-3">
                 <div className="field">
