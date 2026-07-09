@@ -6,6 +6,8 @@ import { useAdmin } from '../lib/AdminContext'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
+import { sanitizeHtml } from '../lib/sanitize'
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -34,6 +36,8 @@ export default function MembersPage() {
   const [editing, setEditing] = useState(false)
   const [editingHistory, setEditingHistory] = useState(false)
   const [selected, setSelected] = useState<Member | null>(null)
+  const closeSelected = () => setSelected(null)
+  const dialogRef = useModalA11y(Boolean(selected), closeSelected)
   const [search, setSearch] = useState('')
   const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
@@ -78,7 +82,7 @@ export default function MembersPage() {
   }
 
   async function handleRoadmapSave() {
-    const html = roadmapRef.current?.innerHTML ?? roadmapHtml
+    const html = sanitizeHtml(roadmapRef.current?.innerHTML ?? roadmapHtml)
     try {
       await api.content.update('roadmap', html)
       setRoadmapHtml(html)
@@ -90,7 +94,7 @@ export default function MembersPage() {
   }
 
   async function handleHistorySave() {
-    const html = historyRef.current?.innerHTML ?? historyHtml
+    const html = sanitizeHtml(historyRef.current?.innerHTML ?? historyHtml)
     try {
       await api.content.update('history', html)
       setHistoryHtml(html)
@@ -206,7 +210,7 @@ export default function MembersPage() {
             className="history"
             contentEditable={editingHistory}
             suppressContentEditableWarning
-            dangerouslySetInnerHTML={{ __html: historyHtml }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(historyHtml) }}
             style={editingHistory ? { outline: '2px solid var(--accent)', borderRadius: 8, padding: 16 } : {}}
           />
         </div>
@@ -247,7 +251,7 @@ export default function MembersPage() {
               className="rm-edit"
               contentEditable={editing}
               suppressContentEditableWarning
-              dangerouslySetInnerHTML={{ __html: roadmapHtml }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(roadmapHtml) }}
             />
 
             {editing && (
@@ -270,9 +274,15 @@ export default function MembersPage() {
       )}
 
       {selected && (
-        <div className="modal-overlay" onClick={() => setSelected(null)}>
-          <div className="member-modal" onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setSelected(null)}>
+        <div className="modal-overlay" onClick={closeSelected}>
+          <div
+            className="member-modal"
+            onClick={e => e.stopPropagation()}
+            ref={dialogRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label={selected.name}
+          >
+            <button className="modal-close" onClick={closeSelected} aria-label="Закрыть">
               <Icon id="i-x" style={{ width: 14, height: 14 }} />
             </button>
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>

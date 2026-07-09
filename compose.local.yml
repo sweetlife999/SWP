@@ -10,8 +10,10 @@ services:
     build: ./backend
     image: swp-backend-local
     # Known local-test values (override the real backend/.env for a clean dev DB).
+    # su_app is the least-privilege DML-only role created by
+    # migrations/0010_app_role.sql — not the schema-owning su role.
     environment:
-      DATABASE_URL: postgresql://su:su_dev_password@db:5432/su_portal
+      DATABASE_URL: postgresql://su_app:su_app_dev_password@db:5432/su_portal
       ADMIN_PASSWORD: local-admin-pw
       JWT_SECRET: local-test-secret-not-for-production
       DEBUG: "true"

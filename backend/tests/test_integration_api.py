@@ -44,6 +44,17 @@ def test_admin_write_requires_auth(client):
     assert r.status_code == 401
 
 
+def test_logout_revokes_session(client):
+    pw = os.environ["ADMIN_PASSWORD"]
+    token = client.post("/api/admin/login", json={"password": pw}).json()["token"]
+    h = {"Authorization": f"Bearer {token}"}
+
+    assert client.get("/api/admin/forms", headers=h).status_code == 200
+    assert client.post("/api/admin/logout", headers=h).status_code == 204
+    # Same token, now revoked — rejected even though it hasn't expired yet.
+    assert client.get("/api/admin/forms", headers=h).status_code == 401
+
+
 def test_get_events_latency(client):
     # QR-PERF: warm the path, then assert the median of a few calls is well under budget.
     client.get("/api/events")

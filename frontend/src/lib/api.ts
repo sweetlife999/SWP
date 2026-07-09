@@ -1,4 +1,7 @@
-const BASE = '/api'
+// Exported so URL-driven callers (useFetch pages) share the same prefix
+// instead of hardcoding '/api/...' literals.
+export const API_BASE = '/api'
+const BASE = API_BASE
 
 function token() { return localStorage.getItem('su_admin_token') ?? '' }
 
@@ -210,6 +213,7 @@ export const api = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ password }),
       }),
+    logout: () => reqVoid('/admin/logout', { method: 'POST', headers: authHeaders() }),
     events: {
       list:   () => req<Event[]>('/admin/events', { headers: authHeaders() }),
       create: (e: Record<string, unknown>) => req('/admin/events', { method: 'POST', headers: authHeaders(), body: JSON.stringify(e) }),

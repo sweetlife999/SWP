@@ -1,26 +1,39 @@
-import { useState, useEffect } from 'react'
-import { utils, writeFile } from 'xlsx'
+import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../components/Icon'
+import { ErrorBanner } from '../components/ErrorBanner'
 import { api, type Form } from '../lib/api'
 
 export default function FormsViewerPage() {
   const [forms, setForms] = useState<Form[]>([])
+  const [formsError, setFormsError] = useState(false)
   const [activeForm, setActiveForm] = useState<string | null>(null)
   const [responses, setResponses] = useState<Record<string, string>[]>([])
+  const [responsesError, setResponsesError] = useState(false)
+  const [formsReloadKey, setFormsReloadKey] = useState(0)
+  const [responsesReloadKey, setResponsesReloadKey] = useState(0)
 
   useEffect(() => {
     api.admin.forms.list().then(data => {
       setForms(data)
       if (data.length > 0) setActiveForm(data[0].id)
-    }).catch(() => {})
-  }, [])
+    }).catch(() => setFormsError(true))
+  }, [formsReloadKey])
 
   useEffect(() => {
     if (!activeForm) return
+    let cancelled = false
     api.admin.forms.responses(activeForm).then(data => {
-      setResponses(data as Record<string, string>[])
-    }).catch(() => { setResponses([]) })
-  }, [activeForm])
+      if (!cancelled) setResponses(data as Record<string, string>[])
+    }).catch(() => {
+      if (!cancelled) { setResponses([]); setResponsesError(true) }
+    })
+    return () => { cancelled = true }
+  }, [activeForm, responsesReloadKey])
+
+  // Error flags are reset in event handlers (not synchronously inside the
+  // effects) per react-hooks/set-state-in-effect.
+  const retryForms = useCallback(() => { setFormsError(false); setFormsReloadKey(k => k + 1) }, [])
+  const retryResponses = useCallback(() => { setResponsesError(false); setResponsesReloadKey(k => k + 1) }, [])
 
   const activeFormData = forms.find(f => f.id === activeForm)
 
@@ -39,12 +52,21 @@ export default function FormsViewerPage() {
     return String(val ?? '')
   }
 
-  function exportXlsx() {
+  async function exportXlsx() {
     if (!responses.length) return
-    const ws = utils.json_to_sheet(responses)
-    const wb = utils.book_new()
-    utils.book_append_sheet(wb, ws, 'Responses')
-    writeFile(wb, `responses_form_${activeForm}.xlsx`)
+    const { default: ExcelJS } = await import('exceljs')
+    const wb = new ExcelJS.Workbook()
+    const ws = wb.addWorksheet('Responses')
+    ws.columns = columns.map(c => ({ header: c, key: c }))
+    ws.addRows(responses)
+    const buf = await wb.xlsx.writeBuffer()
+    const blob = new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `responses_form_${activeForm}.xlsx`
+    a.click()
+    URL.revokeObjectURL(url)
   }
 
   function exportCsv() {
@@ -83,11 +105,14 @@ export default function FormsViewerPage() {
             <h3 style={{ fontSize: 14 }}>Опросы <span className="text-muted text-mono" style={{ fontSize: 11, marginLeft: 4 }}>{forms.length}</span></h3>
           </div>
           <div className="q-list">
-            {forms.length === 0 && (
+            {formsError && (
+              <ErrorBanner message="Не удалось загрузить опросы" onRetry={retryForms} />
+            )}
+            {!formsError && forms.length === 0 && (
               <p className="text-muted" style={{ fontSize: 13, padding: '12px 0' }}>Загрузка…</p>
             )}
             {forms.map(f => (
-              <div key={f.id} className={`q-list-card${f.id === activeForm ? ' active' : ''}`} onClick={() => setActiveForm(f.id)} style={{ cursor: 'pointer' }}>
+              <div key={f.id} className={`q-list-card${f.id === activeForm ? ' active' : ''}`} onClick={() => { setResponsesError(false); setActiveForm(f.id) }} style={{ cursor: 'pointer' }}>
                 <div className="meta">
                   <span className={`tag ${f.tagClass}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{f.tag}</span>
                   <span>Опрос #{f.id}</span>
@@ -115,7 +140,11 @@ export default function FormsViewerPage() {
           </header>
 
           <div className="q-body" style={{ overflowX: 'auto' }}>
-            {responses.length === 0 ? (
+            {responsesError ? (
+              <div style={{ padding: '24px 16px' }}>
+                <ErrorBanner message="Не удалось загрузить ответы" onRetry={retryResponses} />
+              </div>
+            ) : responses.length === 0 ? (
               <p className="text-muted" style={{ padding: '24px 16px', fontSize: 13 }}>
                 {forms.length === 0 ? 'Загрузка…' : 'Нет ответов'}
               </p>

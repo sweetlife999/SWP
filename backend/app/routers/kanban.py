@@ -52,6 +52,15 @@ _CARD_SELECT = """
 """
 
 
+def _initials(name: str) -> str:
+    """Avatar initials from a free-text assignee: first letter of each word
+    (up to 3); a blind slice would garble multi-word names."""
+    parts = name.split()
+    if len(parts) > 1:
+        return "".join(p[0] for p in parts[:3]).upper()
+    return name[:3].upper()
+
+
 def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
     priority = row["priority"] or "p-low"
     att = row["attachment"]
@@ -85,7 +94,9 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
 @router.get("", response_model=list[KanbanCardOut])
 async def list_cards(request: Request) -> list[KanbanCardOut]:
     pool: asyncpg.Pool = get_pool(request)
-    rows = await pool.fetch(_CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id")
+    rows = await pool.fetch(
+        _CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id LIMIT 1000"
+    )
     return [_row_to_card(r) for r in rows]
 
 
@@ -123,7 +134,7 @@ async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut
         await pool.execute(
             "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
             new_id,
-            body.assignee[:3].upper(),
+            _initials(body.assignee),
             "linear-gradient(135deg,#a3e0ad,#32b247)",
         )
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", new_id)
@@ -203,7 +214,7 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
             await pool.execute(
                 "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
                 card_id,
-                body.assignee[:3].upper(),
+                _initials(body.assignee),
                 "linear-gradient(135deg,#a3e0ad,#32b247)",
             )
 

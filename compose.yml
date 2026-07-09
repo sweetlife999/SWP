@@ -18,6 +18,10 @@ services:
       PGUSER: ${POSTGRES_USER:-su}
       PGPASSWORD: ${POSTGRES_PASSWORD:-su_dev_password}
       PGDATABASE: ${POSTGRES_DB:-su_portal}
+      # Password for the restricted su_app role the backend should connect as
+      # (see migrations/0010_app_role.sql) — set this in production and use
+      # the same value in backend/.env's DATABASE_URL.
+      APP_DB_PASSWORD: ${APP_DB_PASSWORD:-su_app_dev_password}
     restart: "no"
     depends_on:
       db:

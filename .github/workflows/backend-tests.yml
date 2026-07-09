@@ -34,6 +34,7 @@ jobs:
     env:
       # conftest.py uses setdefault, so these CI values take precedence.
       DATABASE_URL: postgresql://su:su@localhost:5432/su_portal
+      APP_DB_PASSWORD: ci-su-app-pw
       ADMIN_PASSWORD: ci-admin-pw
       JWT_SECRET: ci-secret-not-for-production-0123456789
       DEBUG: "true"
@@ -52,7 +53,7 @@ jobs:
         run: |
           for f in $(ls ../database/migrations/*.sql | sort); do
             echo "applying $f"
-            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f "$f"
+            psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -v app_db_password="$APP_DB_PASSWORD" -f "$f"
           done
 
       - name: Run tests with coverage

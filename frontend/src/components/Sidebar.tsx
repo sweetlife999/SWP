@@ -52,29 +52,29 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
           </NavLink>
         </nav>
 
-        <div className="nav-section">Admin</div>
-        <nav className="nav-list">
-          <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
-            <Icon id="i-calendar" className="ic" />
-            Events Manager
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/members" onClick={onClose}>
-            <Icon id="i-users" className="ic" />
-            Manage members
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
-            <Icon id="i-kanban" className="ic" />
-            Kanban
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
-            <Icon id="i-calendar" className="ic" />
-            Events Manager
-          </NavLink>
-          <NavLink className="nav-item" to="/admin/forms" onClick={onClose}>
-            <Icon id="i-clipboard" className="ic" />
-            Manage questionnaires
-          </NavLink>
-        </nav>
+        {isAdmin && (
+          <>
+            <div className="nav-section">Admin</div>
+            <nav className="nav-list">
+              <NavLink className="nav-item" to="/admin/events" onClick={onClose}>
+                <Icon id="i-calendar" className="ic" />
+                Events Manager
+              </NavLink>
+              <NavLink className="nav-item" to="/admin/members" onClick={onClose}>
+                <Icon id="i-users" className="ic" />
+                Manage members
+              </NavLink>
+              <NavLink className="nav-item" to="/admin/kanban" onClick={onClose}>
+                <Icon id="i-kanban" className="ic" />
+                Kanban
+              </NavLink>
+              <NavLink className="nav-item" to="/admin/forms" onClick={onClose}>
+                <Icon id="i-clipboard" className="ic" />
+                Manage questionnaires
+              </NavLink>
+            </nav>
+          </>
+        )}
 
         <div className="sidebar-user">
           {isAdmin ? (
@@ -84,7 +84,7 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
                 <div className="name">Администратор</div>
                 <div className="role">SU:Core</div>
               </div>
-              <button className="icon-btn" title="Выйти" onClick={handleLogout}>
+              <button className="icon-btn" title="Выйти" aria-label="Выйти" onClick={handleLogout}>
                 <Icon id="i-x" style={{ width: 14, height: 14 }} />
               </button>
             </>

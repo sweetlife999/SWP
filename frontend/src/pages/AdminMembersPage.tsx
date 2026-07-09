@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { PhotoUpload } from '../components/PhotoUpload'
 import { api, type Member, type MemberPatch } from '../lib/api'
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 
 type Dep = Member['dep']
 type MemberForm = {
@@ -49,6 +50,7 @@ export default function AdminMembersPage() {
   function openCreate() { setForm(BLANK); setCreating(true); setEditing(null) }
   function openEdit(m: Member) { setForm(toForm(m)); setEditing(m); setCreating(false) }
   function closeModal() { setCreating(false); setEditing(null) }
+  const dialogRef = useModalA11y(Boolean(creating || editing), closeModal)
 
   async function submit() {
     setBusy(true)
@@ -137,43 +139,50 @@ export default function AdminMembersPage() {
 
       {(creating || editing) && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480 }}>
-            <button className="modal-close" onClick={closeModal}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+          <div
+            className="member-modal"
+            onClick={ev => ev.stopPropagation()}
+            style={{ maxWidth: 480 }}
+            ref={dialogRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label={creating ? 'Добавить участника' : 'Редактировать участника'}
+          >
+            <button className="modal-close" onClick={closeModal} aria-label="Закрыть"><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
             <div className="member-modal-body" style={{ paddingTop: 24 }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новый участник' : 'Редактировать участника'}</h3>
               <div className="col gap-3">
                 <div className="field">
-                  <label>Департамент</label>
-                  <select className="input" value={form.dep} onChange={e => setForm(f => ({ ...f, dep: e.target.value as Dep }))}>
+                  <label htmlFor="mem-dep">Департамент</label>
+                  <select id="mem-dep" className="input" value={form.dep} onChange={e => setForm(f => ({ ...f, dep: e.target.value as Dep }))}>
                     <option value="core">SU:Core</option>
                     <option value="active">SU:Active</option>
                     <option value="media">SU:Media</option>
                   </select>
                 </div>
                 <div className="field">
-                  <label>Имя</label>
-                  <input className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
+                  <label htmlFor="mem-name">Имя</label>
+                  <input id="mem-name" className="input" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 </div>
                 <div className="field">
-                  <label>Роль</label>
-                  <input className="input" placeholder="CO-LEAD · B21-AI" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} />
+                  <label htmlFor="mem-role">Роль</label>
+                  <input id="mem-role" className="input" placeholder="CO-LEAD · B21-AI" value={form.role} onChange={e => setForm(f => ({ ...f, role: e.target.value }))} />
                 </div>
                 <div className="field">
-                  <label>Meta</label>
-                  <input className="input" placeholder="2 года в SU" value={form.meta} onChange={e => setForm(f => ({ ...f, meta: e.target.value }))} />
+                  <label htmlFor="mem-meta">Meta</label>
+                  <input id="mem-meta" className="input" placeholder="2 года в SU" value={form.meta} onChange={e => setForm(f => ({ ...f, meta: e.target.value }))} />
                 </div>
                 <div className="field">
-                  <label>Bio</label>
-                  <textarea className="textarea" rows={2} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} />
+                  <label htmlFor="mem-bio">Bio</label>
+                  <textarea id="mem-bio" className="textarea" rows={2} value={form.bio} onChange={e => setForm(f => ({ ...f, bio: e.target.value }))} />
                 </div>
                 <div className="field">
-                  <label>Фото</label>
+                  <label id="mem-photo-label">Фото</label>
                   <PhotoUpload value={form.photo_url} onChange={v => setForm(f => ({ ...f, photo_url: v }))} onError={showToast} />
                 </div>
                 <div className="field">
-                  <label>Последние активности (до 3)</label>
+                  <label id="mem-recent-label">Последние активности (до 3)</label>
                   {[0, 1, 2].map(i => (
-                    <input key={i} className="input" style={{ marginBottom: 6 }} placeholder={`Активность ${i + 1}…`} value={form.recent[i] ?? ''} onChange={e => setForm(f => { const r = [...f.recent]; r[i] = e.target.value; return { ...f, recent: r } })} />
+                    <input key={i} aria-label={`Активность ${i + 1}`} className="input" style={{ marginBottom: 6 }} placeholder={`Активность ${i + 1}…`} value={form.recent[i] ?? ''} onChange={e => setForm(f => { const r = [...f.recent]; r[i] = e.target.value; return { ...f, recent: r } })} />
                   ))}
                 </div>
                 {!creating && (
