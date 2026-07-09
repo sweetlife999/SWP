@@ -105,6 +105,7 @@ class DeptAvatars(BaseModel):
     core: list[str]
     active: list[str]
     media: list[str]
+    support: list[str]
 
 
 class MemberOut(BaseModel):
