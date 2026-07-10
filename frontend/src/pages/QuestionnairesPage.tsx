@@ -214,9 +214,8 @@ export default function QuestionnairesPage() {
               </div>
             ))}
           </div>
-
         </section>
-
+        
         <section className="q-flow">
           <header className="q-flow-head">
             <div className="topbar">
