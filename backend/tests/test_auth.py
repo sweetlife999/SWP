@@ -15,13 +15,15 @@ def test_verify_password(monkeypatch):
 
 
 def test_token_roundtrip():
-    payload = auth._decode_token(auth.create_token())
+    token, jti = auth.create_token()
+    payload = auth._decode_token(token)
     assert payload["sub"] == "admin"
+    assert payload["jti"] == jti
 
 
 def test_expired_token_rejected(monkeypatch):
     monkeypatch.setattr(auth.settings, "token_expire_hours", -1)  # already expired
-    token = auth.create_token()
+    token, _jti = auth.create_token()
     with pytest.raises(HTTPException) as exc:
         auth._decode_token(token)
     assert exc.value.status_code == 401
@@ -42,7 +44,8 @@ def test_none_algorithm_attack_rejected():
 
 async def test_require_admin_without_credentials():
     with pytest.raises(HTTPException) as exc:
-        await auth.require_admin(None)
+        # credentials=None is rejected before request/pool are ever touched.
+        await auth.require_admin(request=None, credentials=None)
     assert exc.value.status_code == 401
 
 

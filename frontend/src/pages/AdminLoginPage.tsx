@@ -33,6 +33,7 @@ export default function AdminLoginPage() {
       <form onSubmit={handleSubmit} className="col gap-3">
         <input
           type="password"
+          aria-label="Пароль"
           placeholder="Пароль"
           value={password}
           onChange={e => setPassword(e.target.value)}

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { type Event } from '../lib/api'
+import { API_BASE, type Event } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -41,7 +41,7 @@ function EventCard({ ev }: { ev: Event }) {
 
 export default function EventsPage() {
   // Public endpoint — useFetch owns loading/error/retry; the list is the single source of truth.
-  const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>('/api/events')
+  const { data: fetchedEvents, loading, error, retry } = useFetch<Event[]>(`${API_BASE}/events`)
   const events = fetchedEvents ?? []
 
   const [seg1, setSeg1] = useState(0)

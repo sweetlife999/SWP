@@ -215,13 +215,6 @@ export default function QuestionnairesPage() {
             ))}
           </div>
 
-          <div className="row sb mt-6" style={{ padding: '14px 16px', background: 'var(--surface-2)', border: '1px solid var(--border)', borderRadius: 'var(--r-md)', fontSize: 12, color: 'var(--muted)' }}>
-            <div>
-              <div style={{ color: 'var(--fg)', fontWeight: 500, marginBottom: 2 }}>Пройдено вами</div>
-              <span>9 из 24 за всё время</span>
-            </div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 600, color: 'var(--accent-700)' }}>38%</div>
-          </div>
         </section>
 
         <section className="q-flow">
