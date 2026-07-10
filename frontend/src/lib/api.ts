@@ -84,7 +84,7 @@ export interface EventPatch {
 
 export interface Member {
   id: string
-  dep: 'core' | 'active' | 'media'
+  dep: 'core' | 'active' | 'media' | 'support'
   tag: string; name: string; role: string; meta: string
   bio: string; recent: string[]
   photo_url?: string

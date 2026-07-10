@@ -14,8 +14,8 @@ const BLANK: MemberForm = {
   dep: 'core', name: '', role: '', meta: '', bio: '',
   recent: ['', '', ''], photo_url: '', is_active: true,
 }
-const DEP_TAG: Record<Dep, string> = { core: 'SU:Core', active: 'SU:Active', media: 'SU:Media' }
-const DEPS: Dep[] = ['core', 'active', 'media']
+const DEP_TAG: Record<Dep, string> = { core: 'SU:Core', active: 'SU:Active', media: 'SU:Media', support: 'SU:Support' }
+const DEPS: Dep[] = ['core', 'active', 'media', 'support']
 
 function toForm(m: Member): MemberForm {
   return {
@@ -157,6 +157,7 @@ export default function AdminMembersPage() {
                     <option value="core">SU:Core</option>
                     <option value="active">SU:Active</option>
                     <option value="media">SU:Media</option>
+                    <option value="support">SU:Support</option>
                   </select>
                 </div>
                 <div className="field">

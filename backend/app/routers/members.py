@@ -71,7 +71,7 @@ async def member_avatars(request: Request) -> DeptAvatars:
         "WHERE active = TRUE AND photo_url != '' "
         "ORDER BY sort_order, id"
     )
-    buckets: dict[str, list[str]] = {"core": [], "active": [], "media": []}
+    buckets: dict[str, list[str]] = {"core": [], "active": [], "media": [], "support": []}
     for r in rows:
         dep = r["department"]
         if dep in buckets and len(buckets[dep]) < 5:
