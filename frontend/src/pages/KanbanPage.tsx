@@ -1,275 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
 import { api } from '../lib/api'
-
-// Plain-text snippet from a (possibly rich-HTML) description, for card previews.
-function stripHtml(html?: string): string {
-  if (!html) return ''
-  const el = document.createElement('div')
-  el.innerHTML = html
-  return el.textContent ?? ''
-}
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
-
-type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
-type Priority = 'p-low' | 'p-mid' | 'p-high'
-
-interface Tag { label: string; cls: string; style?: React.CSSProperties; dot?: boolean }
-interface MetaItem { icon: string; text: string; urgent?: boolean; soon?: boolean }
-interface Assignee { initials: string; bg: string; offset?: boolean }
-interface CardData {
-  id: string; col: ColKey; blocker?: boolean
-  tags: Tag[]; title: string; desc?: string
-  attachment?: { icon: string; bold: string; rest: string }
-  progressPct?: number; progressLabel?: string
-  meta?: MetaItem[]
-  priority: Priority; pLabel: string; assignees: Assignee[]
-}
-
-const PRIORITY_BORDER: Record<Priority, string> = {
-  'p-high': '#EF4444',
-  'p-mid':  '#F97316',
-  'p-low':  '#10B981',
-}
-const PRIORITY_LABEL: Record<Priority, string> = {
-  'p-high': 'Urgent',
-  'p-mid':  'High',
-  'p-low':  'Low',
-}
-
-const COLS: { key: ColKey; cls: string; label: string; color: string; eyeBtn?: boolean }[] = [
-  { key: 'backlog', cls: 'c-backlog', label: 'Backlog',         color: '#9CA3AF' },
-  { key: 'next',    cls: 'c-next',    label: 'Up next',         color: '#60A5FA' },
-  { key: 'doing',   cls: 'c-doing',   label: 'In progress',     color: '#F59E0B' },
-  { key: 'review',  cls: 'c-review',  label: 'Review',          color: '#A78BFA' },
-  { key: 'done',    cls: 'c-done',    label: 'Done · sprint 14', color: '#22C55E', eyeBtn: true },
-]
-
-const FACES = [
-  { i: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' },
-  { i: 'ДА', bg: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' },
-  { i: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' },
-  { i: 'ТК', bg: 'linear-gradient(135deg,#a8dba8,#3da152)' },
-  { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
-]
-
-interface CardPatch { title?: string; desc?: string; priority?: Priority; col?: ColKey; assignee?: string }
-interface CardDetailPanelProps {
-  card: CardData
-  col: ColKey
-  onClose: () => void
-  onMarkDone: () => void
-  onDelete: () => void
-  onSave: (patch: CardPatch) => Promise<void>
-}
-
-function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
-  const [editing, setEditing] = useState(false)
-  const [title, setTitle] = useState(card.title)
-  const [priority, setPriority] = useState<Priority>(card.priority)
-  const [colKey, setColKey] = useState<ColKey>(col)
-  const [assignee, setAssignee] = useState(card.assignees[0]?.initials ?? '')
-  const [busy, setBusy] = useState(false)
-  const descRef = useRef<HTMLDivElement>(null)
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
-
-  async function save() {
-    setBusy(true)
-    try {
-      await onSave({
-        title: title.trim() || card.title,
-        desc: descRef.current?.innerHTML ?? card.desc ?? '',
-        priority,
-        col: colKey,
-        assignee: assignee.trim(),
-      })
-      setEditing(false)
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <>
-      <div className="kb-detail-backdrop" onClick={onClose} />
-      <div className="kb-detail-panel">
-        <div style={{ padding: '20px 24px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-          <div style={{ width: 4, flexShrink: 0, borderRadius: 4, background: borderColor, alignSelf: 'stretch', minHeight: 52 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ display: 'flex', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
-              {card.tags.map((t, i) => (
-                <span key={i} className={t.cls} style={t.style}>
-                  {t.dot && <span className="dot" />}{t.label}
-                </span>
-              ))}
-            </div>
-            {editing
-              ? <input className="input" value={title} onChange={e => setTitle(e.target.value)} />
-              : <h3 style={{ fontSize: 16, fontWeight: 600, lineHeight: 1.4, color: 'var(--text)' }}>{card.title}</h3>}
-          </div>
-          <button className="icon-btn" onClick={onClose} style={{ flexShrink: 0, marginTop: -2 }}>
-            <Icon id="i-x" />
-          </button>
-        </div>
-
-        <div className="kb-detail-body">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-            {editing ? (
-              <>
-                <select className="select" style={{ width: 'auto', height: 32 }} value={priority} onChange={e => setPriority(e.target.value as Priority)}>
-                  <option value="p-high">P0 · Urgent</option>
-                  <option value="p-mid">P1 · High</option>
-                  <option value="p-low">P2 · Low</option>
-                </select>
-                <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
-                  {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
-                </select>
-                <input className="input" style={{ width: 90 }} maxLength={3} placeholder="Assignee" value={assignee} onChange={e => setAssignee(e.target.value)} />
-              </>
-            ) : (
-              <>
-                <span className={`kbc-priority ${card.priority}`}>
-                  <span className="bar" /><span className="bar" /><span className="bar" />
-                  {card.pLabel} · {PRIORITY_LABEL[card.priority]}
-                </span>
-                <div style={{ display: 'flex', gap: 4 }}>
-                  {card.assignees.map((a, i) => (
-                    <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
-                      {a.initials}
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          <div>
-            <div className="kb-detail-section-label">Описание</div>
-            {editing ? (
-              // "Block note": rich contentEditable, stored as HTML (the app's content-block pattern).
-              <div
-                ref={descRef}
-                className="rm-edit"
-                contentEditable
-                suppressContentEditableWarning
-                dangerouslySetInnerHTML={{ __html: card.desc ?? '' }}
-                style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
-              />
-            ) : card.desc ? (
-              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: card.desc }} />
-            ) : (
-              <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
-            )}
-          </div>
-        </div>
-
-        <div className="kb-detail-footer">
-          {editing ? (
-            <>
-              <button className="btn ghost" disabled={busy} onClick={() => setEditing(false)}>Отмена</button>
-              <button className="btn primary" style={{ flex: 1 }} disabled={busy} onClick={save}>
-                <Icon id="i-check" style={{ width: 14, height: 14 }} />{busy ? 'Сохранение…' : 'Сохранить'}
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="btn danger" onClick={() => { if (window.confirm(`Удалить задачу «${card.title}»?`)) onDelete() }}>
-                <Icon id="i-trash" style={{ width: 14, height: 14 }} />
-              </button>
-              <button className="btn secondary" style={{ flex: 1 }} onClick={() => setEditing(true)}>
-                <Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать
-              </button>
-              <button className="btn primary" style={{ flex: 1 }} onClick={() => { onMarkDone(); onClose() }}>
-                <Icon id="i-check" style={{ width: 14, height: 14 }} />Готово
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </>
-  )
-}
-
-interface KbCardProps {
-  card: CardData
-  isDone: boolean
-  isDragging: boolean
-  onDragStart: (e: React.DragEvent) => void
-  onDragEnd: () => void
-  onSelect: (card: CardData) => void
-}
-
-function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: KbCardProps) {
-  const [hovered, setHovered] = useState(false)
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
-
-  return (
-    <article
-      className="kbc kbc-anim"
-      draggable
-      onDragStart={e => { e.dataTransfer.setData('cardId', card.id); e.dataTransfer.effectAllowed = 'move'; onDragStart(e) }}
-      onDragEnd={onDragEnd}
-      onClick={() => onSelect(card)}
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        borderLeft: `4px solid ${borderColor}`,
-        opacity: isDragging ? 0.35 : 1,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        userSelect: 'none',
-        transform: hovered && !isDragging ? 'translateY(-2px)' : 'none',
-        boxShadow: hovered && !isDragging ? '0 4px 16px rgba(0,0,0,0.09)' : undefined,
-        transition: 'opacity 0.12s, transform 0.12s, box-shadow 0.12s',
-      }}
-    >
-      <div className="kbc-tags">
-        {card.tags.map((t, i) => (
-          <span key={i} className={t.cls} style={t.style}>
-            {t.dot && <span className="dot" />}{t.label}
-          </span>
-        ))}
-      </div>
-      <h4 className="kbc-title" style={isDone ? { textDecoration: 'line-through' } : undefined}>
-        {card.title}
-      </h4>
-      {stripHtml(card.desc) && <p className="kbc-desc">{stripHtml(card.desc)}</p>}
-      {card.attachment && (
-        <div className="kbc-attachment">
-          <Icon id={card.attachment.icon} />
-          <span><b>{card.attachment.bold}</b>{card.attachment.rest}</span>
-        </div>
-      )}
-      {card.progressPct !== undefined && (
-        <div className="kbc-progress">
-          <div className="progress"><div className="bar" style={{ width: `${card.progressPct}%` }} /></div>
-          <span>{card.progressLabel}</span>
-        </div>
-      )}
-      {card.meta && card.meta.length > 0 && (
-        <div className="kbc-meta">
-          {card.meta.map((m, i) => (
-            <span key={i} className={`mi${m.urgent ? ' urgent' : m.soon ? ' soon' : ''}`}>
-              <Icon id={m.icon} /><span>{m.text}</span>
-            </span>
-          ))}
-        </div>
-      )}
-      <div className="kbc-foot">
-        <span className={`kbc-priority ${card.priority}`}>
-          <span className="bar" /><span className="bar" /><span className="bar" />{card.pLabel}
-        </span>
-        <div style={{ display: 'flex', gap: 4 }}>
-          {card.assignees.map((a, i) => (
-            <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
-              {a.initials}
-            </div>
-          ))}
-        </div>
-      </div>
-    </article>
-  )
-}
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
+import { COLS, FACES, type CardData, type ColKey, type Priority } from '../components/kanban/types'
+import { CardDetailPanel } from '../components/kanban/CardDetailPanel'
+import { KbCard } from '../components/kanban/KbCard'
 
 export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
@@ -283,6 +20,8 @@ export default function KanbanPage() {
   const [chipP01, setChipP01] = useState(false)
   const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  const closeNewTask = () => setNewTask(t => ({ ...t, open: false }))
+  const newTaskRef = useModalA11y(newTask.open, closeNewTask)
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -587,29 +326,36 @@ export default function KanbanPage() {
       </footer>
 
       {newTask.open && (
-        <div className="modal-overlay" onClick={() => setNewTask(t => ({ ...t, open: false }))}>
-          <div className="dep-modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 420 }}>
-            <button className="modal-close" onClick={() => setNewTask(t => ({ ...t, open: false }))}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+        <div className="modal-overlay" onClick={closeNewTask}>
+          <div
+            className="dep-modal"
+            onClick={e => e.stopPropagation()}
+            style={{ maxWidth: 420 }}
+            ref={newTaskRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label="New task"
+          >
+            <button className="modal-close" onClick={closeNewTask} aria-label="Закрыть"><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
             <div className="dep-modal-header"><h2>New task</h2></div>
             <div className="dep-modal-body" style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <div className="field">
-                <label>Title</label>
-                <input className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
+                <label htmlFor="kb-title">Title</label>
+                <input id="kb-title" className="input" autoFocus placeholder="Task title…" value={newTask.title} onChange={e => setNewTask(t => ({ ...t, title: e.target.value }))} />
               </div>
               <div className="field">
-                <label>Description</label>
-                <textarea className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
+                <label htmlFor="kb-desc">Description</label>
+                <textarea id="kb-desc" className="textarea" rows={2} placeholder="Что нужно сделать…" value={newTask.desc} onChange={e => setNewTask(t => ({ ...t, desc: e.target.value }))} />
               </div>
               <div className="row gap-3">
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Column</label>
-                  <select className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
+                  <label htmlFor="kb-col">Column</label>
+                  <select id="kb-col" className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
                     {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </select>
                 </div>
                 <div className="field" style={{ flex: 1 }}>
-                  <label>Priority</label>
-                  <select className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
+                  <label htmlFor="kb-priority">Priority</label>
+                  <select id="kb-priority" className="select" value={newTask.priority} onChange={e => setNewTask(t => ({ ...t, priority: e.target.value as Priority }))}>
                     <option value="p-high">P0 · Urgent</option>
                     <option value="p-mid">P1 · High</option>
                     <option value="p-low">P2 · Low</option>
@@ -617,8 +363,8 @@ export default function KanbanPage() {
                 </div>
               </div>
               <div className="field">
-                <label>Assignee (инициалы)</label>
-                <input className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
+                <label htmlFor="kb-assignee">Assignee (инициалы)</label>
+                <input id="kb-assignee" className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>

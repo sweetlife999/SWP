@@ -18,6 +18,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Removed location, format, and age from the event card on the events page
 - Moved "Create a member" to the admin panel; added a boolean "is_active" field to the member model, so that members can be archived instead of deleted
 - Added E2E smoke-tests
+- Added "SU:Support" as a fourth member department (Core, Active, Media, Support) instead of a separate CEO/assistant role
 
 ## [2.0.0] — 2026-06-28
 

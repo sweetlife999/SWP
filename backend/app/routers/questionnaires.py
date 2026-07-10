@@ -1,6 +1,7 @@
 import asyncpg
 from fastapi import APIRouter, HTTPException, Request, Response, status
 
+from app.auth import check_submission_rate, get_client_ip
 from app.computed import dept_tag, dept_tag_cls, survey_left, survey_time, survey_time_ending
 from app.database import get_pool
 from app.models.schemas import QStep, QuestionnaireOut, SurveyResponseBody
@@ -118,6 +119,7 @@ async def submit_response(
     AC3: if cookie answered_{id} is present, returns 409 Conflict.
          On success the cookie is set so a second tab submission is also blocked.
     """
+    check_submission_rate(get_client_ip(request))
     if request.cookies.get(f"answered_{questionnaire_id}"):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,

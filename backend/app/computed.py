@@ -6,12 +6,14 @@ DEPT_TAG: dict[str, str] = {
     "core": "SU:Core",
     "active": "SU:Active",
     "media": "SU:Media",
+    "support": "SU:Support",
 }
 
 DEPT_TAG_CLS: dict[str, str] = {
     "core": "tag-core",
     "active": "tag-active",
     "media": "tag-media",
+    "support": "tag-support",
 }
 
 # Accepts both the DB enum value and the display label sent by the frontend.
@@ -22,6 +24,8 @@ DEPT_MAP: dict[str, str] = {
     "SU:Active": "active",
     "media": "media",
     "SU:Media": "media",
+    "support": "support",
+    "SU:Support": "support",
 }
 
 PRIORITY_LABEL: dict[str, str] = {

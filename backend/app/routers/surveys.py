@@ -1,6 +1,7 @@
 import asyncpg
 from fastapi import APIRouter, HTTPException, Request, status
 
+from app.auth import check_submission_rate, get_client_ip
 from app.computed import dept_tag, dept_tag_cls, survey_left, survey_time, survey_time_ending
 from app.database import get_pool
 from app.models.schemas import QStep, SurveyOut, SurveyResponseBody
@@ -73,6 +74,7 @@ async def list_surveys(request: Request) -> list[SurveyOut]:
 
 @router.post("/{survey_id}/responses", status_code=status.HTTP_204_NO_CONTENT)
 async def submit_response(survey_id: int, body: SurveyResponseBody, request: Request) -> None:
+    check_submission_rate(get_client_ip(request))
     pool: asyncpg.Pool = get_pool(request)
     exists = await pool.fetchval(
         """

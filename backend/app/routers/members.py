@@ -12,6 +12,7 @@ from app.models.schemas import (
     MemberPatch,
     MemberReorderItem,
 )
+from app.sql_patch import SqlPatchBuilder, require_fields_provided
 
 router = APIRouter(prefix="/members", tags=["members"])
 admin_router = APIRouter(
@@ -51,11 +52,13 @@ async def list_members(
     pool: asyncpg.Pool = get_pool(request)
     if dep:
         rows = await pool.fetch(
-            _SELECT + "WHERE active = TRUE AND department = $1 ORDER BY sort_order, id",
+            _SELECT + "WHERE active = TRUE AND department = $1 ORDER BY sort_order, id LIMIT 500",
             dep,
         )
     else:
-        rows = await pool.fetch(_SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id")
+        rows = await pool.fetch(
+            _SELECT + "WHERE active = TRUE ORDER BY department, sort_order, id LIMIT 500"
+        )
     return [_row_to_member(r) for r in rows]
 
 
@@ -68,7 +71,7 @@ async def member_avatars(request: Request) -> DeptAvatars:
         "WHERE active = TRUE AND photo_url != '' "
         "ORDER BY sort_order, id"
     )
-    buckets: dict[str, list[str]] = {"core": [], "active": [], "media": []}
+    buckets: dict[str, list[str]] = {"core": [], "active": [], "media": [], "support": []}
     for r in rows:
         dep = r["department"]
         if dep in buckets and len(buckets[dep]) < 5:
@@ -126,17 +129,10 @@ async def reorder_members(body: list[MemberReorderItem], request: Request) -> No
 @admin_router.patch("/{member_id}", response_model=MemberOut)
 async def patch_member(member_id: int, body: MemberPatch, request: Request) -> MemberOut:
     provided = body.model_fields_set
-    if not provided:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No fields to update"
-        )
+    require_fields_provided(provided)
 
-    updates: list[str] = []
-    params: list = []
-
-    def add(col: str, val) -> None:
-        params.append(val)
-        updates.append(f"{col} = ${len(params)}")
+    patch = SqlPatchBuilder()
+    add = patch.add
 
     # Non-nullable columns: ignore explicit null (Pydantic already rejects missing required)
     if "dep" in provided and body.dep is not None:
@@ -157,18 +153,15 @@ async def patch_member(member_id: int, body: MemberPatch, request: Request) -> M
     if "is_active" in provided and body.is_active is not None:
         add("is_active", body.is_active)
 
-    if not updates:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="No valid fields to update"
-        )
+    patch.require_updates()
 
     pool: asyncpg.Pool = get_pool(request)
-    params.append(member_id)
+    patch.params.append(member_id)
     row = await pool.fetchrow(
-        f"UPDATE members SET {', '.join(updates)} "
-        f"WHERE id = ${len(params)} AND active = TRUE "
+        f"UPDATE members SET {', '.join(patch.updates)} "
+        f"WHERE id = ${len(patch.params)} AND active = TRUE "
         f"RETURNING id, name, department, role, meta, bio, photo_url, recent, is_active",
-        *params,
+        *patch.params,
     )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found")

@@ -30,11 +30,15 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <NavLink className="nav-link" to="/members">Members</NavLink>
         <NavLink className="nav-link" to="/questionnaires">Questionnaires</NavLink>
         <NavLink className="nav-link" to="/donations">Donations</NavLink>
-        <span className="nav-sep" />
-        <NavLink className="nav-link" to="/admin/kanban">SU:Core</NavLink>
-        <NavLink className="nav-link" to="/admin/forms">Forms</NavLink>
-        <NavLink className="nav-link" to="/admin/events">Manage events</NavLink>
-        <NavLink className="nav-link" to="/admin/members">Manage members</NavLink>
+        {isAdmin && (
+          <>
+            <span className="nav-sep" />
+            <NavLink className="nav-link" to="/admin/kanban">SU:Core</NavLink>
+            <NavLink className="nav-link" to="/admin/forms">Forms</NavLink>
+            <NavLink className="nav-link" to="/admin/events">Manage events</NavLink>
+            <NavLink className="nav-link" to="/admin/members">Manage members</NavLink>
+          </>
+        )}
       </nav>
       {isAdmin && (
         <button className="btn ghost" style={{ fontSize: 12, gap: 6, marginLeft: 8 }} onClick={handleLogout}>

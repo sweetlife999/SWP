@@ -1,12 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, photoUrl, type Member } from '../lib/api'
+import { api, API_BASE, photoUrl, type Member } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
+import { sanitizeHtml } from '../lib/sanitize'
 
 interface NewsItem {
   thumbClass?: string
@@ -36,9 +37,9 @@ export default function HomePage() {
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
   const introRef = useRef<HTMLElement>(null)
-  const { data: fetchedMembers } = useFetch<Member[]>('/api/members')
-  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>('/api/members/avatars')
-  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>('/api/news');
+  const { data: fetchedMembers } = useFetch<Member[]>(`${API_BASE}/members`)
+  const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>(`${API_BASE}/members/avatars`)
+  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>(`${API_BASE}/news`);
 
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
@@ -102,7 +103,7 @@ export default function HomePage() {
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
   async function handleIntroSave() {
-    const html = introRef.current?.innerHTML ?? introHtml
+    const html = sanitizeHtml(introRef.current?.innerHTML ?? introHtml)
     try {
       await api.content.update('home-intro', html)
       setIntroHtml(html)
@@ -125,7 +126,7 @@ export default function HomePage() {
           aria-label="О студсовете"
           contentEditable={editingIntro}
           suppressContentEditableWarning
-          dangerouslySetInnerHTML={{ __html: introHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(introHtml) }}
           style={editingIntro ? { outline: '2px solid var(--accent)', borderRadius: 8, padding: 16 } : {}}
         />
         {isAdmin && !editingIntro && (

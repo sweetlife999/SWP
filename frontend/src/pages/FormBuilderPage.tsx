@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { api, type QStepType, type QuestionInput, type QuestionnaireAdmin } from '../lib/api'
 
@@ -70,7 +70,7 @@ function QuestionCard({ q, num, total, onDelete, onChange }: {
           <span className="grip"><Icon id="i-grip" style={{ width: 14, height: 14 }} /></span>
           <span className="type-tag"><Icon id={TYPE_ICON[q.type]} style={{ width: 11, height: 11 }} />{TYPE_LABEL[q.type]}</span>
           <span className="text-mono text-muted" style={{ fontSize: 11 }}>{String(num).padStart(2, '0')}</span>
-          <div className="q-actions"><button className="icon-btn" onClick={onDelete}><Icon id="i-trash" /></button></div>
+          <div className="q-actions"><button className="icon-btn" aria-label="Удалить вопрос" onClick={onDelete}><Icon id="i-trash" /></button></div>
         </header>
         <div className="q-body">
           <input className="q-title-input" value={q.title} placeholder="Заголовок секции…" onChange={e => onChange({ ...q, title: e.target.value })} />
@@ -94,13 +94,14 @@ function QuestionCard({ q, num, total, onDelete, onChange }: {
             <button
               className="icon-btn"
               title="Условные переходы"
+              aria-label="Условные переходы"
               style={q.logic?.length ? { color: 'var(--accent)' } : {}}
               onClick={() => setShowLogic(v => !v)}
             >
               <Icon id="i-share" style={{ width: 14, height: 14 }} />
             </button>
           )}
-          <button className="icon-btn" onClick={onDelete}><Icon id="i-trash" /></button>
+          <button className="icon-btn" aria-label="Удалить вопрос" onClick={onDelete}><Icon id="i-trash" /></button>
         </div>
       </header>
       <div className="q-body">
@@ -138,7 +139,7 @@ function QuestionCard({ q, num, total, onDelete, onChange }: {
               <div key={i} className={`opt-row${q.type === 'multi' ? ' multi' : ''}`}>
                 <span className="opt-dot"></span>
                 <input className="opt-input" value={opt} placeholder="Вариант ответа…" onChange={e => setOption(i, e.target.value)} />
-                <button className="icon-btn" onClick={() => removeOption(i)}><Icon id="i-x" /></button>
+                <button className="icon-btn" aria-label="Удалить вариант" onClick={() => removeOption(i)}><Icon id="i-x" /></button>
               </div>
             ))}
             <button className="q-add-option" onClick={addOption}>
@@ -199,15 +200,15 @@ export default function FormBuilderPage() {
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [list, setList] = useState<QuestionnaireAdmin[]>([])
 
-  function loadList() {
-    api.admin.questionnaires.list().then(setList).catch(() => {})
-  }
-  useEffect(() => { loadList() }, [])
-
-  function showToast(msg: string) {
+  const showToast = useCallback((msg: string) => {
     setToast(msg)
     setTimeout(() => setToast(''), 3000)
-  }
+  }, [])
+
+  const loadList = useCallback(() => {
+    api.admin.questionnaires.list().then(setList).catch(() => showToast('Не удалось загрузить список опросов'))
+  }, [showToast])
+  useEffect(() => { loadList() }, [loadList])
 
   function mapQuestion(q: Question): QuestionInput {
     const type = BACKEND_TYPE[q.type] as QStepType

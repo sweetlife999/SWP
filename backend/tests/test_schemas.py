@@ -42,3 +42,15 @@ def test_member_create_defaults():
     assert m.photo_url == ""
     assert m.recent == []
     assert m.bio == ""
+
+
+def test_member_create_accepts_support_department():
+    # Issue #81: SU:Support is a fourth department alongside Core/Active/Media,
+    # not a separate CEO/assistant role.
+    m = MemberCreate(dep="support", name="Name", role="Role")
+    assert m.dep == "support"
+
+
+def test_member_create_rejects_unknown_department():
+    with pytest.raises(ValidationError):
+        MemberCreate(dep="ceo", name="Name", role="Role")
