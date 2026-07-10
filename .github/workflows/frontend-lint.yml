@@ -27,8 +27,41 @@ jobs:
 
       - run: npm ci
 
+      - name: Install Playwright browsers
+        run: npx playwright install chromium --with-deps
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+
       - name: Lint
         run: npm run lint
 
       - name: Type-check
         run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+  audit:
+    name: npm audit (dependency vulnerability scan)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - run: npm ci
+
+      - name: Audit dependencies
+        # --omit=dev: vite/esbuild's dev-server-only advisories are unrelated
+        # noise here (never runs in production, which serves the built static
+        # bundle via nginx). Production (runtime) dependencies are still gated.
+        run: npm audit --omit=dev --audit-level=high

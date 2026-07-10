@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event, type EventPatch, type EventStatus } from '../lib/api'
+import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 
 type EventForm = {
   title: string; desc: string; date: string; time: string
@@ -54,6 +55,7 @@ export default function AdminEventsPage() {
   function openCreate() { setForm(BLANK); setCreating(true); setEditing(null) }
   function openEdit(e: Event) { setForm(toForm(e)); setEditing(e); setCreating(false) }
   function closeModal() { setCreating(false); setEditing(null) }
+  const dialogRef = useModalA11y(Boolean(creating || editing), closeModal)
 
   async function submit() {
     setBusy(true)
@@ -183,39 +185,46 @@ export default function AdminEventsPage() {
 
       {(creating || editing) && (
         <div className="modal-overlay" onClick={closeModal}>
-          <div className="member-modal" onClick={ev => ev.stopPropagation()} style={{ maxWidth: 480 }}>
-            <button className="modal-close" onClick={closeModal}><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
+          <div
+            className="member-modal"
+            onClick={ev => ev.stopPropagation()}
+            style={{ maxWidth: 480 }}
+            ref={dialogRef}
+            {...MODAL_A11Y_PROPS}
+            aria-label={creating ? 'Новое мероприятие' : 'Редактировать мероприятие'}
+          >
+            <button className="modal-close" onClick={closeModal} aria-label="Закрыть"><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
             <div className="member-modal-body" style={{ paddingTop: 24 }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новое мероприятие' : 'Редактировать мероприятие'}</h3>
               <div className="col gap-3">
                 <div className="field">
-                  <label>Название</label>
-                  <input className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
+                  <label htmlFor="ev-title">Название</label>
+                  <input id="ev-title" className="input" value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} />
                 </div>
                 <div className="field">
-                  <label>Описание</label>
-                  <textarea className="textarea" rows={2} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} />
+                  <label htmlFor="ev-desc">Описание</label>
+                  <textarea id="ev-desc" className="textarea" rows={2} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} />
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Дата</label>
-                    <input className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
+                    <label htmlFor="ev-date">Дата</label>
+                    <input id="ev-date" className="input" type="date" value={form.date} onChange={e => setForm(f => ({ ...f, date: e.target.value }))} />
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Время</label>
-                    <input className="input" type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} />
+                    <label htmlFor="ev-time">Время</label>
+                    <input id="ev-time" className="input" type="time" value={form.time} onChange={e => setForm(f => ({ ...f, time: e.target.value }))} />
                   </div>
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Департамент</label>
-                    <select className="input" value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))}>
+                    <label htmlFor="ev-tag">Департамент</label>
+                    <select id="ev-tag" className="input" value={form.tag} onChange={e => setForm(f => ({ ...f, tag: e.target.value }))}>
                       {DEPT_OPTIONS.map(d => <option key={d}>{d}</option>)}
                     </select>
                   </div>
                   <div className="field" style={{ flex: 1 }}>
-                    <label>Доп. инфо</label>
-                    <input className="input" placeholder="32 участника" value={form.foot} onChange={e => setForm(f => ({ ...f, foot: e.target.value }))} />
+                    <label htmlFor="ev-foot">Доп. инфо</label>
+                    <input id="ev-foot" className="input" placeholder="32 участника" value={form.foot} onChange={e => setForm(f => ({ ...f, foot: e.target.value }))} />
                   </div>
                 </div>
 

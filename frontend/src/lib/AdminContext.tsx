@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { api } from './api'
 
 interface AdminCtx {
   isAdmin: boolean
@@ -45,6 +46,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
+    // Best-effort: revoke the session server-side so the token can't be reused
+    // even if it leaks. Ignore failures — the client-side logout must still happen.
+    if (localStorage.getItem('su_admin_token')) api.admin.logout().catch(() => {})
     localStorage.removeItem('su_admin_token')
     setToken('')
   }

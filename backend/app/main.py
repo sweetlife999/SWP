@@ -1,4 +1,5 @@
 import asyncio
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -20,14 +21,22 @@ from app.routers import (
     uploads,
 )
 
+logging.basicConfig(level=logging.INFO if not settings.debug else logging.DEBUG)
+logger = logging.getLogger("app")
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Refuse to start in production with the default JWT secret.
+    # Refuse to start in production with the default JWT secret or admin password.
     if not settings.debug and settings.jwt_secret == "dev-secret-change-in-production":
         raise RuntimeError(
             "JWT_SECRET is set to the insecure default. "
             "Set a strong JWT_SECRET env var, or set DEBUG=true for local development."
+        )
+    if not settings.debug and settings.admin_password == "changeme":
+        raise RuntimeError(
+            "ADMIN_PASSWORD is set to the insecure default. "
+            "Set a strong ADMIN_PASSWORD env var, or set DEBUG=true for local development."
         )
     app.state.pool = await create_pool(settings.database_url)
     yield
@@ -72,4 +81,5 @@ async def health(request: Request) -> JSONResponse:
         await asyncio.wait_for(get_pool(request).fetchval("SELECT 1"), timeout=2.0)
         return JSONResponse({"status": "ok"})
     except Exception:
+        logger.exception("Health check DB probe failed")
         return JSONResponse({"status": "db_unavailable"}, status_code=503)

@@ -161,4 +161,8 @@ SELECT cron.schedule('purge-sessions', '*/15 * * * *',
 - `JSONB` only for genuinely schemaless data (kanban card `attachment`,
   survey answers) — fixed-shape data stays in real columns. Kanban tags,
   assignees and meta are normalised child tables, not JSONB.
+  Documented exception: `events.schedule` / `events.organizers` (0006) are
+  fixed-shape but stored as JSONB — they are only ever read and written
+  together with their parent event, never queried or updated per-item, so
+  child tables would add joins for no benefit.
 - `updated_at` maintained by the shared `touch_updated_at()` trigger.

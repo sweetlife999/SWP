@@ -9,6 +9,7 @@ def test_dept_tag():
     assert computed.dept_tag("core") == "SU:Core"
     assert computed.dept_tag("active") == "SU:Active"
     assert computed.dept_tag("media") == "SU:Media"
+    assert computed.dept_tag("support") == "SU:Support"  # issue #81
     assert computed.dept_tag("unknown") == "unknown"  # passthrough fallback
 
 
@@ -48,4 +49,6 @@ def test_survey_time_ending():
 def test_lookup_maps():
     assert computed.DEPT_MAP["SU:Core"] == "core"
     assert computed.DEPT_MAP["media"] == "media"
+    assert computed.DEPT_MAP["SU:Support"] == "support"
+    assert computed.DEPT_MAP["support"] == "support"
     assert computed.PRIORITY_LABEL["p-high"] == "P0"
