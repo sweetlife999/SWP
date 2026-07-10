@@ -194,7 +194,7 @@ export default function AdminEventsPage() {
             aria-label={creating ? 'Новое мероприятие' : 'Редактировать мероприятие'}
           >
             <button className="modal-close" onClick={closeModal} aria-label="Закрыть"><Icon id="i-x" style={{ width: 14, height: 14 }} /></button>
-            <div className="member-modal-body" style={{ paddingTop: 24 }}>
+            <div className="member-modal-body" style={{ paddingTop: 24, textAlign: 'left' }}>
               <h3 style={{ marginBottom: 20 }}>{creating ? 'Новое мероприятие' : 'Редактировать мероприятие'}</h3>
               <div className="col gap-3">
                 <div className="field">

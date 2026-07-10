@@ -3171,9 +3171,25 @@ h4, .h4 { font-size: 16px; font-weight: 600; line-height: 1.35; }
   border: 1px solid var(--border);
   box-shadow: var(--shadow-3);
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
+  max-height: 75vh;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   position: relative;
+}
+.member-modal-body {
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+  padding: 24px 28px;
+  text-align: center;
+}
+.member-modal-foot {
+  flex-shrink: 0;
+  padding: 16px 28px;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
 }
 .member-modal-photo {
   aspect-ratio: 16 / 9;
@@ -3214,7 +3230,6 @@ h4, .h4 { font-size: 16px; font-weight: 600; line-height: 1.35; }
   border-top-left-radius: 50% 30%;
   border-top-right-radius: 50% 30%;
 }
-.member-modal-body { padding: 8px 24px 20px; text-align: center; }
 .member-modal-body .mm-name { font-size: 20px; font-weight: 700; letter-spacing: -0.015em; margin-bottom: 4px; }
 .member-modal-body .mm-role { font-size: 11px; color: var(--muted); font-family: var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; }
 .member-modal-body .mm-bio { font-size: 13px; line-height: 1.6; color: var(--fg-2); margin-top: 14px; text-align: left; }
