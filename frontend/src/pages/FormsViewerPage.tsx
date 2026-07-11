@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Icon } from '../components/Icon'
 import { ErrorBanner } from '../components/ErrorBanner'
-import { api, type Form } from '../lib/api'
+import { QuestionResultsChart } from '../components/QuestionResultsChart'
+import { api, type Form, type QuestionnaireResults } from '../lib/api'
 
 export default function FormsViewerPage() {
   const [forms, setForms] = useState<Form[]>([])
@@ -9,8 +10,11 @@ export default function FormsViewerPage() {
   const [activeForm, setActiveForm] = useState<string | null>(null)
   const [responses, setResponses] = useState<Record<string, string>[]>([])
   const [responsesError, setResponsesError] = useState(false)
+  const [results, setResults] = useState<QuestionnaireResults | null>(null)
+  const [resultsError, setResultsError] = useState(false)
   const [formsReloadKey, setFormsReloadKey] = useState(0)
   const [responsesReloadKey, setResponsesReloadKey] = useState(0)
+  const [resultsReloadKey, setResultsReloadKey] = useState(0)
 
   useEffect(() => {
     api.admin.forms.list().then(data => {
@@ -30,10 +34,22 @@ export default function FormsViewerPage() {
     return () => { cancelled = true }
   }, [activeForm, responsesReloadKey])
 
+  useEffect(() => {
+    if (!activeForm) return
+    let cancelled = false
+    api.admin.questionnaires.results(activeForm).then(data => {
+      if (!cancelled) setResults(data)
+    }).catch(() => {
+      if (!cancelled) { setResults(null); setResultsError(true) }
+    })
+    return () => { cancelled = true }
+  }, [activeForm, resultsReloadKey])
+
   // Error flags are reset in event handlers (not synchronously inside the
   // effects) per react-hooks/set-state-in-effect.
   const retryForms = useCallback(() => { setFormsError(false); setFormsReloadKey(k => k + 1) }, [])
   const retryResponses = useCallback(() => { setResponsesError(false); setResponsesReloadKey(k => k + 1) }, [])
+  const retryResults = useCallback(() => { setResultsError(false); setResultsReloadKey(k => k + 1) }, [])
 
   const activeFormData = forms.find(f => f.id === activeForm)
 
@@ -112,7 +128,7 @@ export default function FormsViewerPage() {
               <p className="text-muted" style={{ fontSize: 13, padding: '12px 0' }}>Загрузка…</p>
             )}
             {forms.map(f => (
-              <div key={f.id} className={`q-list-card${f.id === activeForm ? ' active' : ''}`} onClick={() => { setResponsesError(false); setActiveForm(f.id) }} style={{ cursor: 'pointer' }}>
+              <div key={f.id} className={`q-list-card${f.id === activeForm ? ' active' : ''}`} onClick={() => { setResponsesError(false); setResultsError(false); setActiveForm(f.id) }} style={{ cursor: 'pointer' }}>
                 <div className="meta">
                   <span className={`tag ${f.tagClass}`} style={{ height: 18, fontSize: 10, padding: '0 6px' }}>{f.tag}</span>
                   <span>Опрос #{f.id}</span>
@@ -138,6 +154,33 @@ export default function FormsViewerPage() {
               </div>
             </div>
           </header>
+
+          {resultsError ? (
+            <div style={{ padding: '16px 16px 0' }}>
+              <ErrorBanner message="Не удалось загрузить статистику по вопросам" onRetry={retryResults} />
+            </div>
+          ) : results && results.questions.length > 0 && (
+            <div className="q-results" style={{ padding: '16px 16px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
+              {results.questions.map(q => (
+                <div key={q.question_id}>
+                  <h4 style={{ fontSize: 13, marginBottom: 8 }}>
+                    {q.title} <span className="text-muted text-mono" style={{ fontSize: 11 }}>{q.answered}/{results.total_responses}</span>
+                  </h4>
+                  {q.type === 'text' ? (
+                    q.stats.length > 0 ? (
+                      <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13 }}>
+                        {q.stats.map((s, i) => <li key={i}>{s.answer}</li>)}
+                      </ul>
+                    ) : (
+                      <p className="text-muted" style={{ fontSize: 13 }}>Нет ответов</p>
+                    )
+                  ) : (
+                    <QuestionResultsChart stats={q.stats} />
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           <div className="q-body" style={{ overflowX: 'auto' }}>
             {responsesError ? (

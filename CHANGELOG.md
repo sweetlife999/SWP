@@ -5,6 +5,8 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
+## Unreleased
+- Feat: Added a pie graph view for admin forms viewer page
 
 ## Unreleased
 Departments on homepage now don't fetch first member's info
