@@ -150,6 +150,15 @@ export interface KanbanCard {
 export interface Form { id: string; tag: string; tagClass: string; title: string; count: number }
 export interface ContentBlock { html: string; updatedAt?: string; updatedBy?: string }
 
+export interface AnswerStat { answer: string; count: number; pct: number }
+export interface QuestionResults {
+  question_id: number; position: number; type: QStepType; title: string
+  answered: number; stats: AnswerStat[]
+}
+export interface QuestionnaireResults {
+  id: number; title: string; total_responses: number; questions: QuestionResults[]
+}
+
 // ── Endpoints ────────────────────────────────────────────────────────────────
 
 export const api = {
@@ -247,6 +256,8 @@ export const api = {
       // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
       setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
         req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),
+      results:     (id: number | string) =>
+        req<QuestionnaireResults>(`/admin/questionnaires/${id}/results`, { headers: authHeaders() }),
     },
   },
 }
