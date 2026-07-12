@@ -1,5 +1,6 @@
 # Local build override — verifies the stack from source instead of GHCR images.
-# Usage: docker compose -f compose.yml -f compose.local.yml up -d --build
+# Usage: 
+# docker compose -f compose.yml -f compose.local.yml up -d --build
 # Not used by deploy (deploy.yml copies only compose.yml to the VPS).
 services:
   frontend:
