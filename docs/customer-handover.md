@@ -59,8 +59,8 @@ docker ps
 ```
 
 1. **Check health**:
-   - Web UI: `https://PLACEHOLDER_TODO` (reachable)
-   - Admin login: `https://PLACEHOLDER_TODO/admin` (SSH + JWT auth).
+   - Web UI: `https://URLFROMDOTENV` (reachable)
+   - Admin login: `https://URLFROMDOTENV/admin` (SSH + JWT auth).
    - Verified services: DB, thumbor, thumbor.conf.
 
 ## 5. Documentation & Support

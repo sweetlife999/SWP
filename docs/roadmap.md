@@ -107,11 +107,43 @@
 
 ---
 
-## Sprint 6 — Future Enhancements (if time permits)
+## Sprint 6 — MVP v2.2.0 (Week 6 Trial Release & Transition Readiness)
 
-**Goal:** Could Have stories and remaining backlog items.
+**Dates:** 2026-07-06 – 2026-07-12
+**Goal:** Deliver a stable trial release, fix bugs identified by the customer, remove the remaining mock authentication, and prepare the product for handover.
 
-- Photo gallery / media links (US-03)
-- Feedback form (US-06)
-- Anonymous survey enforcement (US-07)
-- Telegram channel sync (US-15)
+**Delivered:**
+- Removed the last mock authentication; admin endpoints run on the real JWT flow (ADR-0001) end-to-end
+- Fixed member card bugs: photo size, orientation, and add-member button positioning
+- Added photo upload support for multiple formats, sizes, and GIFs
+- Added a separate SU:Support department for the CEO and assistant
+- Added a draft system for events (create and save before publishing)
+- Removed duplicate "Manage Events" button on mobile
+- Removed the confusing statistics table on the Questionnaires page; added a pie-graph results view
+- Enforced Pydantic request validation ahead of database writes (XSS/input-validation fixes)
+- Stabilized the CI/CD deploy pipeline
+- Swagger API documentation made available
+- Release: `v2.2.0` (Week 6 trial / handover-candidate release)
+- Customer trial and transition-readiness meeting held; increment accepted by the customer
+
+---
+
+## Sprint 7 — MVP v3 (Final Transition & Delivery)
+
+**Dates:** 2026-07-13 – 2026-07-19
+**Goal:** Respond to Week 6 customer trial feedback, complete follow-up maintenance, finish the customer handover, and deliver the final course version, `MVP v3`.
+
+- Clean up accumulated SQL migrations before final handover
+- Complete or remove the "live" event-status logic on the events page
+- Rename the "Support" department to the name agreed with the customer
+- Full UI consistency audit across home, events, members, questionnaires, and admin pages
+- Bring the mobile version to a usable, consistent state
+- Finalize handover documentation (Swagger reference, run instructions, codebase overview) in `docs/customer-handover.md`
+- Complete the final repository/product transfer to the customer
+- Final transition confirmation with the customer and stated handover level
+- Release: `MVP v3`, mapped to a final SemVer tag with higher precedence than `v2.2.0`
+- Public sanitized demo video for `MVP v3`
+
+---
+
+This is the final sprint of the course. `MVP v3` is the last delivered version; no further versions are planned beyond it.
