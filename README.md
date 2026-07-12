@@ -3,6 +3,9 @@
 A centralized web platform connecting Innopolis University students with the Student Union. Students can browse upcoming events, discover SU members and departments, and participate in questionnaires. SU:Core members manage content and coordinate internal tasks through a built-in admin interface.
 
 **Live:** [https://su.fblrkus.ru](https://su.fblrkus.ru)
+**Hosted documentation:** [GitHub Pages](https://sweetlife999.github.io/SWP/)
+**Customer handover:** [docs/customer-handover.md](docs/customer-handover.md)
+**Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) · **Agent guidance:** [AGENTS.md](AGENTS.md)
 
 ---
 
