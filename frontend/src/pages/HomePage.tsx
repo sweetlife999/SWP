@@ -1,22 +1,14 @@
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, API_BASE, photoUrl, type Member } from '../lib/api'
+import { api, API_BASE, photoUrl, type Member, type Event } from '../lib/api'
 import { useAdmin } from '../lib/AdminContext'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
+import { EventsCarousel } from '../components/EventsCarousel'
 import { sanitizeHtml } from '../lib/sanitize'
-
-interface NewsItem {
-  thumbClass?: string
-  date?: string
-  category?: string
-  title: string
-  excerpt?: string
-  desc?: string
-}
 
 const DEFAULT_INTRO = `<span class="eyebrow">О студсовете</span>
 <h1>Студенческий совет<br>Университета Иннополис</h1>
@@ -26,24 +18,64 @@ type DepKey = 'core' | 'active' | 'media'
 
 const DEPARTMENT_ORDER: DepKey[] = ['core', 'active', 'media']
 
-function depLabel(dep: DepKey): string {
-  return `SU:${dep.charAt(0).toUpperCase()}${dep.slice(1)}`
+const DEPARTMENT_META: Record<DepKey, { name: string; tagline: string; desc: string }> = {
+  core: {
+    name: 'SU:Core',
+    tagline: 'Стратегия и переговоры с университетом',
+    desc: 'Определяет приоритеты студсовета, ведёт бюджет и коммуникацию с администрацией университета.',
+  },
+  active: {
+    name: 'SU:Active',
+    tagline: 'События и кампусная жизнь',
+    desc: 'Организует мероприятия, ивенты и активности для студентов на кампусе.',
+  },
+  media: {
+    name: 'SU:Media',
+    tagline: 'Контент и коммуникации',
+    desc: 'Ведёт соцсети, освещает события студсовета и отвечает за визуальный контент.',
+  },
 }
+
+type IntroPhase = 'start' | 'letters' | 'text' | 'reveal'
 
 export default function HomePage() {
   const { isAdmin } = useAdmin()
-  const [openDep, setOpenDep] = useState<DepKey | null>(null)
   const [editingIntro, setEditingIntro] = useState(false)
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
   const introRef = useRef<HTMLElement>(null)
   const { data: fetchedMembers } = useFetch<Member[]>(`${API_BASE}/members`)
   const { data: avatars } = useFetch<{ core: string[]; active: string[]; media: string[] }>(`${API_BASE}/members/avatars`)
-  const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>(`${API_BASE}/news`);
+  const { data: fetchedEvents, loading: eventsLoading, error: eventsError, retry: retryEvents } = useFetch<Event[]>(`${API_BASE}/events`)
+
+  const [introPhase, setIntroPhase] = useState<IntroPhase>('start')
+  const eventsBoxWrapRef = useRef<HTMLDivElement>(null)
+  const [contactBtnSize, setContactBtnSize] = useState<{ width: number; height: number } | null>(null)
 
   useEffect(() => {
     api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
   }, [])
+
+  // Kick off the intro sequence one frame after first paint, so the browser
+  // registers the letters' off-position starting styles before we transition
+  // them — otherwise the transition would have nothing to animate from.
+  useEffect(() => {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const raf = requestAnimationFrame(() => setIntroPhase(reduced ? 'reveal' : 'letters'))
+    return () => cancelAnimationFrame(raf)
+  }, [])
+
+  useEffect(() => {
+    if (introPhase !== 'letters') return
+    const t = setTimeout(() => setIntroPhase('text'), 1400)
+    return () => clearTimeout(t)
+  }, [introPhase])
+
+  useEffect(() => {
+    if (introPhase !== 'text') return
+    const t = setTimeout(() => setIntroPhase('reveal'), 200)
+    return () => clearTimeout(t)
+  }, [introPhase])
 
   const depCounts = useMemo(() => {
     if (!fetchedMembers) return { core: 8, active: 14, media: 6 }
@@ -53,52 +85,34 @@ export default function HomePage() {
   }, [fetchedMembers]);
 
   const departmentCards = useMemo(() => {
-    return DEPARTMENT_ORDER.map(dep => {
-      const members = (fetchedMembers ?? []).filter(m => m.dep === dep)
-      const first = members[0]
-      const name = first?.tag?.trim() || depLabel(dep)
-      const tagline = first?.role?.trim() || `Команда ${name}`
-      const desc = first?.meta?.trim() || first?.bio?.trim() || `Департамент ${name}`
-      const uniqueRecent = new Set<string>()
-      let leadCount = 0
-      members.forEach(member => {
-        if (/lead/i.test(member.role)) leadCount += 1
-        ;(member.recent ?? []).forEach(item => {
-          const text = item.trim()
-          if (text) uniqueRecent.add(text)
-        })
-      })
-      return {
-        dep,
-        testId: `dept-card-${dep}`,
-        cls: `dep-${dep}`,
-        name,
-        tagline,
-        desc,
-        count: depCounts[dep],
-        activityCount: uniqueRecent.size,
-        leadCount,
-      }
-    })
-  }, [depCounts, fetchedMembers])
+    return DEPARTMENT_ORDER.map(dep => ({
+      dep,
+      testId: `dept-card-${dep}`,
+      cls: `dep-${dep}`,
+      count: depCounts[dep],
+      ...DEPARTMENT_META[dep],
+    }))
+  }, [depCounts])
 
-  const info = openDep ? departmentCards.find(card => card.dep === openDep) ?? null : null
-  const openDepMembers = useMemo(
-    () => (openDep ? (fetchedMembers ?? []).filter(member => member.dep === openDep) : []),
-    [openDep, fetchedMembers],
-  )
-  const openDepRecent = (() => {
-    const seen = new Set<string>()
-    for (const member of openDepMembers) {
-      for (const item of member.recent ?? []) {
-        const text = item.trim()
-        if (!text || seen.has(text)) continue
-        seen.add(text)
-        if (seen.size === 3) return [...seen]
-      }
-    }
-    return [...seen]
-  })()
+  const upcomingEvents = useMemo(() => {
+    return (fetchedEvents ?? [])
+      .filter(ev => !ev.past)
+      .sort((a, b) => a.date.localeCompare(b.date))
+      .slice(0, 4)
+  }, [fetchedEvents])
+
+  // Keeps the "Contact SU" button's size in sync with the events box, whose
+  // height is intrinsic (cover aspect-ratio + description length) rather than fixed.
+  useEffect(() => {
+    const box = eventsBoxWrapRef.current?.querySelector('.events-carousel-box')
+    if (!box) { setContactBtnSize(null); return }
+    const ro = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      setContactBtnSize({ width, height })
+    })
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [eventsLoading, eventsError, upcomingEvents.length])
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -114,12 +128,32 @@ export default function HomePage() {
     setEditingIntro(false)
   }
 
+  const lettersLanded = introPhase !== 'start'
+  const heroVisible = introPhase === 'text' || introPhase === 'reveal'
+  const modulesVisible = introPhase === 'reveal'
+
   return (
     <>
       {toast && (
         <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', background: 'var(--fg)', color: 'var(--bg)', padding: '10px 20px', borderRadius: 8, fontSize: 13, zIndex: 9999, pointerEvents: 'none' }}>{toast}</div>
       )}
-      <div style={{ position: 'relative' }}>
+
+      <div className={`su-intro${lettersLanded ? ' landed' : ''}`} aria-hidden="true">
+        <svg className="su-glyph" viewBox="0 0 56 96" xmlns="http://www.w3.org/2000/svg">
+          <path
+            className="su-stroke"
+            d="M46,10 C46,3 36,0 25,0 C13,0 4,7 4,18 C4,29 15,33 27,37 C40,41 52,47 52,64 C52,80 40,90 27,90 C15,90 4,84 4,73"
+          />
+        </svg>
+        <svg className="su-glyph" viewBox="0 0 56 96" xmlns="http://www.w3.org/2000/svg">
+          <path
+            className="su-stroke"
+            d="M8,4 L8,64 C8,84 22,94 30,94 C40,94 52,84 52,64 L52,4"
+          />
+        </svg>
+      </div>
+
+      <div style={{ position: 'relative' }} className={`su-fade${heroVisible ? ' visible' : ''}`}>
         <section
           ref={introRef}
           className="intro"
@@ -142,138 +176,92 @@ export default function HomePage() {
         )}
       </div>
 
-      <section aria-label="Команда">
-        <div className="section-rule">
-          <div className="sr-left">
-            <span className="eyebrow">Команда</span>
-            <h2>Три департамента, одно сообщество</h2>
-          </div>
-          <Link className="more" to="/members">
-            Все участники
-            <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
-          </Link>
-        </div>
-
-        <div className="deps">
-          {departmentCards.map(card => (
-            <div
-              key={card.dep}
-              data-testid={card.testId}
-              className={`dep-tint ${card.cls}`}
-              onClick={() => setOpenDep(card.dep)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && setOpenDep(card.dep)}
-            >
-              <span className="dep-name">{card.name}</span>
-              <h3>{card.tagline}</h3>
-              <p className="desc">{card.desc}</p>
-              <div className="meta">
+      <div className={`home-reveal${modulesVisible ? ' visible' : ''}`}>
+        <div className="home-columns">
+          <section aria-label="Команда">
+            <div className="section-rule">
+              <div className="sr-left">
+                <span className="eyebrow">Команда</span>
+                <h2>Три департамента, одно сообщество</h2>
               </div>
-              <div className="avatars">
-                {(avatars?.[card.dep] ?? []).map((url, i) => (
-                  <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
-                    <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  </div>
-                ))}
-                {card.count > (avatars?.[card.dep]?.length ?? 0) && (
-                  <div className="more">+{card.count - (avatars?.[card.dep]?.length ?? 0)}</div>
-                )}
-              </div>
-              <div className="open-row">
-                <span>Подробнее о департаменте</span>
-                <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* News Section */}
-      <section aria-label="Новости" style={{ marginTop: 48 }}>
-        <div className="section-rule">
-          <div className="sr-left">
-            <span className="eyebrow">Новости</span>
-            <h2>Последние обновления</h2>
-          </div>
-        </div>
-
-        {newsError && (
-          <ErrorBanner
-            message="Failed to load news. Please try again."
-            onRetry={newsRetry}
-            stack={newsError}
-          />
-        )}
-
-        {newsLoading && (
-          <div className="news-list">
-            <LoadingSkeleton type="news" count={3} />
-          </div>
-        )}
-
-        {!newsLoading && !newsError && (!newsItems || newsItems.length === 0) && (
-          <EmptyState
-            title="No news yet"
-            description="Stay tuned for updates — new news will appear soon!"
-          />
-        )}
-
-        {!newsLoading && !newsError && newsItems && newsItems.length > 0 && (
-          <div className="news-list">
-            {newsItems.map((item: NewsItem, index: number) => (
-              <div key={index} className="news-row">
-                <div className={`thumb ${item.thumbClass || ''}`} />
-                <div className="news-body">
-                  <div className="meta">
-                    <span>{item.date || 'Soon'}</span>
-                    <span>{item.category || 'News'}</span>
-                  </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.excerpt || item.desc || ''}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
-
-      {info && (
-        <div className="modal-overlay" onClick={() => setOpenDep(null)}>
-          <div data-testid="dept-modal" className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setOpenDep(null)}>
-              <Icon id="i-x" style={{ width: 14, height: 14 }} />
-            </button>
-            <div className="dep-modal-header">
-              <div className="dep-name">{info.name}</div>
-              <h2 style={{ margin: '6px 0 4px' }}>{info.name}</h2>
-              <p className="tagline">{info.tagline}</p>
-            </div>
-            <div className="dep-modal-body">
-              <p>{info.desc}</p>
-              <h4>Недавние активности</h4>
-              {openDepRecent.length > 0 ? (
-                <ul>
-                  {openDepRecent.map((r, i) => <li key={i}>{r}</li>)}
-                </ul>
-              ) : (
-                <p className="text-muted">Пока нет данных об активностях.</p>
-              )}
-            </div>
-            <div className="dep-modal-foot">
-              <Link
-                className="btn primary"
-                style={{ width: '100%', justifyContent: 'center' }}
-                to={`/members?dep=${info.dep}`}
-                onClick={() => setOpenDep(null)}
-              >
-                Посмотреть участников ({fetchedMembers ? openDepMembers.length : depCounts[info.dep]} чел.)
+              <Link className="more" to="/members">
+                Все участники
                 <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
               </Link>
             </div>
-          </div>
+
+            <div className="deps-list">
+              {departmentCards.map(card => (
+                <Link
+                  key={card.dep}
+                  data-testid={card.testId}
+                  className={`dep-tint ${card.cls}`}
+                  to={`/members?dep=${card.dep}`}
+                >
+                  <span className="dep-name">{card.name}</span>
+                  <h3>{card.tagline}</h3>
+                  <p className="desc">{card.desc}</p>
+                  <div className="meta"></div>
+                  <div className="avatars">
+                    {(avatars?.[card.dep] ?? []).map((url, i) => (
+                      <div key={i} className="avatar" style={{ padding: 0, overflow: 'hidden' }}>
+                        <img src={photoUrl(url, '80x80')} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      </div>
+                    ))}
+                    {card.count > (avatars?.[card.dep]?.length ?? 0) && (
+                      <div className="more">+{card.count - (avatars?.[card.dep]?.length ?? 0)}</div>
+                    )}
+                  </div>
+                  <div className="open-row">
+                    <span>Смотреть участников</span>
+                    <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          <section aria-label="Ближайшие события">
+            <div className="section-rule">
+              <div className="sr-left">
+                <span className="eyebrow">События</span>
+                <h2>Ближайшие события</h2>
+              </div>
+              <Link className="more" to="/events">
+                Все события
+                <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
+              </Link>
+            </div>
+
+            <div ref={eventsBoxWrapRef}>
+              {eventsError ? (
+                <ErrorBanner message="Failed to load events. Please try again." onRetry={retryEvents} stack={eventsError ?? undefined} />
+              ) : eventsLoading ? (
+                <LoadingSkeleton type="event" count={1} />
+              ) : upcomingEvents.length === 0 ? (
+                <EmptyState title="Нет предстоящих событий" description="Загляните позже — здесь появятся ближайшие мероприятия студсовета." />
+              ) : (
+                <EventsCarousel events={upcomingEvents} />
+              )}
+            </div>
+
+            <div className="home-contact">
+              <div
+                className="contact-stack"
+                style={contactBtnSize ? { width: contactBtnSize.width, height: contactBtnSize.height } : undefined}
+              >
+                <button type="button" className="btn secondary contact-su-btn">
+                  Как попасть в студсовет?
+                </button>
+                <a className="btn secondary contact-su-btn" href="mailto:su@innopolis.university">
+                  <Icon id="i-mail" style={{ width: 18, height: 18 }} />
+                  Связаться с SU
+                </a>
+              </div>
+            </div>
+          </section>
         </div>
-      )}
+      </div>
     </>
   )
 }

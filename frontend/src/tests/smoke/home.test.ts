@@ -11,11 +11,10 @@ test.describe('Home page', () => {
     await expect(page.locator('h1')).toContainText('Студенческий совет');
   });
 
-  test('clicking a department card opens the modal', async ({ page }) => {
+  test('clicking a department card navigates to the filtered members page', async ({ page }) => {
     await page.goto('/#/');
     await page.locator('[data-testid="dept-card-core"]').click();
-    await expect(page.locator('[data-testid="dept-modal"]')).toBeVisible();
-    await expect(page.locator('[data-testid="dept-modal"]')).toContainText('SU:Core');
+    await expect(page).toHaveURL(/\/members\?dep=core/);
   });
 
   test('department cards are visible', async ({ page }) => {

@@ -21,7 +21,6 @@ export default function Header({ onMenuClick }: HeaderProps) {
         <Icon id="i-menu" />
       </button>
       <div className="header-brand">
-        <div className="logo-sm">SU</div>
         <span className="header-brand-name">Студсовет IU</span>
       </div>
       <nav className="header-nav">

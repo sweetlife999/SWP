@@ -21,7 +21,6 @@ export default function Sidebar({ open, onClose }: SidebarProps) {
     <>
       <aside className={`sidebar${open ? ' open' : ''}`} aria-label="Sidebar">
         <div className="sidebar-brand">
-          <div className="logo">SU</div>
           <div>
             <div className="name">Студсовет IU</div>
             <div className="sub">su.innopolis.university</div>

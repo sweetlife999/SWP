@@ -2,26 +2,24 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { API_BASE, type Event } from '../lib/api'
+import { eventStatusLabel, isEventLive } from '../lib/events'
+import { useNow } from '../hooks/useNow'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 
 
-function statusLabel(ev: Event): string {
-  if (ev.statusText) return ev.statusText
-  if (ev.status === 'published') return 'live'
-  return ''
-}
-
 function EventCard({ ev }: { ev: Event }) {
-  const label = statusLabel(ev)
+  const now = useNow()
+  const label = eventStatusLabel(ev, now)
+  const live = isEventLive(ev, now)
   const footerLabel = ev.footLabel || 'Подробнее'
   return (
     <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
       <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
-        {label && <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>}
+        {label && <span className={`status-badge${live ? ' live' : ''}`}>{label}</span>}
       </div>
       <div className="ec-body">
         <div className="ec-meta">
