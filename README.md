@@ -10,6 +10,7 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 | Assignment | Report |
 |------------|--------|
+| Assignment 6 (Sprint 6 - Enhancing the product) | [reports/week6/README.md](reports/week6/README.md) |
 | Assignment 5 (Sprint 5 - MVP v2) | [reports/week5/README.md](reports/week5/README.md) |
 | Assignment 4 (Sprint 4 — Integration, Quality & Automation) | [reports/week4/README.md](reports/week4/README.md) |
 | Assignment 3 (Sprint 3 — MVP v1) | [reports/week3/README.md](reports/week3/README.md) |

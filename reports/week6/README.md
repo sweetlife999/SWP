@@ -1,4 +1,4 @@
-# Week 6 Report — Student Union Portal (MVP v3)
+# Week 6 Report — Student Union Portal (MVP v2)
 
 **Project:** Student Union Portal — Innopolis University
 **Team:** Team 2
@@ -29,7 +29,7 @@
 | CI: backend tests + coverage | [`backend-tests.yml`](../../.github/workflows/backend-tests.yml) |
 | CI: backend lint | [`backend-lint.yml`](../../.github/workflows/backend-lint.yml) |
 | CI: frontend lint | [`frontend-lint.yml`](../../.github/workflows/frontend-lint.yml) |
-| SemVer release (MVP v3) | [`TODO`](TODO) |
+| SemVer release (MVP v2) | [`2.2.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.2.0) |
 | Public demo video (<2 min) | [Google Drive](https://drive.google.com/file/d/1I4BExEOoeFm8iQPX-2A1td5rHuiTUFhE/view?usp=sharing) |
 | Sprint review summary | [`sprint-review-summary.md`](sprint-review-summary.md) |
 | Reflection | [`reflection.md`](reflection.md) |
@@ -54,7 +54,7 @@ The **Student Union Portal** is an informational web portal for the Innopolis Un
 
 ## 5–6. Sprint Goal, dates, scope, size
 
-- **Sprint Goal:** Deliver MVP v3, fix the bugs found, remove remained mock data, polish the product in general, prepare the product for handover to customer.
+- **Sprint Goal:** Deliver MVP v2, fix the bugs found, remove remained mock data, polish the product in general, prepare the product for handover to customer.
 - **Sprint dates:** 2026-07-06 – 2026-07-12
 - **Scope summary:** Remove remained mock data, fix add member form button positioning and photo uploading (formats, sizes, rotation), add separate department/role for CEO and assistant, add graphs for questionnaires.
 - **Total Sprint size (Story Points):** 86
@@ -63,7 +63,7 @@ The **Student Union Portal** is an informational web portal for the Innopolis Un
 
 ## 7. Delivered product changes  
 
-See [`CHANGELOG.md` → `[TODO]`](../../CHANGELOG.md).
+See [`CHANGELOG.md` → `[2.2.0]`](../../CHANGELOG.md).
 
 Highlights:
 - Added separate department/role for CEO and assistant
@@ -198,8 +198,8 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ## 22-23. Release & Demo
 
-- **SemVer release (MVP v3):** [`TOOD`](TODO) — tag on `main`, mapping to Sprint 6, with links to milestone, run instructions, and demo video
-- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[TODO] — 2026-07-12` section
+- **SemVer release (MVP v2):** [`2.2.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.2.0) — tag on `main`, mapping to Sprint 6, with links to milestone, run instructions, and demo video
+- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.2.0] — 2026-07-12` section
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/1I4BExEOoeFm8iQPX-2A1td5rHuiTUFhE/view?usp=sharing)
 
 ---
@@ -215,7 +215,7 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 
 ## 29. Product status & next steps
 
-- **Current status:** MVP v3 deployed and functional; architecture documented; ADRs recorded; development process formalised; customer feedback from Sprint 5 addressed; mock data is fully removed
+- **Current status:** MVP v2 deployed and functional; architecture documented; ADRs recorded; development process formalised; customer feedback from Sprint 5 addressed; mock data is fully removed
 - **Next steps:** Make features from customer's feedback, polish the product before final presentation and handout the product to the customer
 
 ---

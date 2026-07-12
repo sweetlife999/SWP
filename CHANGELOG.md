@@ -5,7 +5,13 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
-
+## [2.2.0] — 2026-07-12
+- Resolved issues with photo size, orientation, and button positioning, improving the member profile UI.
+- Eliminated the mock authentication that had remained from the very beginning of the project, moving closer to production-ready code.
+- CI/CD pipeline now runs reliably, enabling consistent and automated deployments.
+- Clarified organizational structure in the system, supporting proper access control and reporting.
+- Added a pie graph view for admin forms viewer page.
+  
 ## [2.1.0] — 2026-07-05
 - Department avatars on the home page now show actual member photos
 - "SU:Core" admin panel nav renamed to "Kanban" to avoid confusion
