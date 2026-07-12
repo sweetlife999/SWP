@@ -289,7 +289,7 @@ export default function MembersPage() {
             <div className="member-modal-photo" style={{ background: PHOTO_BG[selected.dep] }}>
               <span className="dep-tag">{selected.tag}</span>
               {selected.photo_url
-                ? <img src={photoUrl(selected.photo_url, '480x480')} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={photoUrl(selected.photo_url, '480x480')} alt={selected.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                 : <div className="silhouette-lg"></div>}
             </div>
             <div className="member-modal-body">
