@@ -84,7 +84,7 @@ Highlights:
 **README:** [README.md](../../README.md)
 **Contributing:** [CONTRIBUTING.md](../../CONTRIBUTING.md)
 **AGENTS:** [AGENTS.md](../../AGENTS.md)
-**Customer handover:** [docs/customer-handover.md](/docs/customer-handover.md)
+**Customer handover:** [docs/customer-handover.md](../../docs/customer-handover.md)
 **Hosted documentation:** [Site](https://sweetlife999.github.io/SWP/)
 
 ---
@@ -193,8 +193,8 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 ## 21 and 24. Summary of relevant UAT or customer-trial results
 
 - **UAT results summary:** see [`sprint-review-summary.md`](sprint-review-summary.md) (UAT results table)
-- **Customer review notes:** [`sprint-review-notes.md`](sprint-review-notes.md) — published in the repository with the customer's permission
 - **Customer review summary:** [`sprint-review-summary.md`](sprint-review-summary.md)
+- **Sprint review transcript:** [`sprint-review-transcript.md`](sprint-review-transcript.md)
 
 ## 22-23. Release & Demo
 
