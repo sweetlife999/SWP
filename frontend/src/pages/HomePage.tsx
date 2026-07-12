@@ -26,13 +26,26 @@ type DepKey = 'core' | 'active' | 'media'
 
 const DEPARTMENT_ORDER: DepKey[] = ['core', 'active', 'media']
 
-function depLabel(dep: DepKey): string {
-  return `SU:${dep.charAt(0).toUpperCase()}${dep.slice(1)}`
+const DEPARTMENT_META: Record<DepKey, { name: string; tagline: string; desc: string }> = {
+  core: {
+    name: 'SU:Core',
+    tagline: 'Стратегия и переговоры с университетом',
+    desc: 'Определяет приоритеты студсовета, ведёт бюджет и коммуникацию с администрацией университета.',
+  },
+  active: {
+    name: 'SU:Active',
+    tagline: 'События и кампусная жизнь',
+    desc: 'Организует мероприятия, ивенты и активности для студентов на кампусе.',
+  },
+  media: {
+    name: 'SU:Media',
+    tagline: 'Контент и коммуникации',
+    desc: 'Ведёт соцсети, освещает события студсовета и отвечает за визуальный контент.',
+  },
 }
 
 export default function HomePage() {
   const { isAdmin } = useAdmin()
-  const [openDep, setOpenDep] = useState<DepKey | null>(null)
   const [editingIntro, setEditingIntro] = useState(false)
   const [introHtml, setIntroHtml] = useState(DEFAULT_INTRO)
   const [toast, setToast] = useState('')
@@ -55,10 +68,7 @@ export default function HomePage() {
   const departmentCards = useMemo(() => {
     return DEPARTMENT_ORDER.map(dep => {
       const members = (fetchedMembers ?? []).filter(m => m.dep === dep)
-      const first = members[0]
-      const name = first?.tag?.trim() || depLabel(dep)
-      const tagline = first?.role?.trim() || `Команда ${name}`
-      const desc = first?.meta?.trim() || first?.bio?.trim() || `Департамент ${name}`
+      const { name, tagline, desc } = DEPARTMENT_META[dep]
       const uniqueRecent = new Set<string>()
       let leadCount = 0
       members.forEach(member => {
@@ -81,24 +91,6 @@ export default function HomePage() {
       }
     })
   }, [depCounts, fetchedMembers])
-
-  const info = openDep ? departmentCards.find(card => card.dep === openDep) ?? null : null
-  const openDepMembers = useMemo(
-    () => (openDep ? (fetchedMembers ?? []).filter(member => member.dep === openDep) : []),
-    [openDep, fetchedMembers],
-  )
-  const openDepRecent = (() => {
-    const seen = new Set<string>()
-    for (const member of openDepMembers) {
-      for (const item of member.recent ?? []) {
-        const text = item.trim()
-        if (!text || seen.has(text)) continue
-        seen.add(text)
-        if (seen.size === 3) return [...seen]
-      }
-    }
-    return [...seen]
-  })()
 
   function showToast(msg: string) { setToast(msg); setTimeout(() => setToast(''), 3000) }
 
@@ -156,14 +148,11 @@ export default function HomePage() {
 
         <div className="deps">
           {departmentCards.map(card => (
-            <div
+            <Link
               key={card.dep}
               data-testid={card.testId}
               className={`dep-tint ${card.cls}`}
-              onClick={() => setOpenDep(card.dep)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={e => e.key === 'Enter' && setOpenDep(card.dep)}
+              to={`/members?dep=${card.dep}`}
             >
               <span className="dep-name">{card.name}</span>
               <h3>{card.tagline}</h3>
@@ -181,10 +170,10 @@ export default function HomePage() {
                 )}
               </div>
               <div className="open-row">
-                <span>Подробнее о департаменте</span>
+                <span>Смотреть участников</span>
                 <span className="arrow"><Icon id="i-arrow-r" style={{ width: 14, height: 14 }} /></span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </section>
@@ -237,43 +226,6 @@ export default function HomePage() {
           </div>
         )}
       </section>
-
-      {info && (
-        <div className="modal-overlay" onClick={() => setOpenDep(null)}>
-          <div data-testid="dept-modal" className={`dep-modal ${info.cls}`} onClick={e => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setOpenDep(null)}>
-              <Icon id="i-x" style={{ width: 14, height: 14 }} />
-            </button>
-            <div className="dep-modal-header">
-              <div className="dep-name">{info.name}</div>
-              <h2 style={{ margin: '6px 0 4px' }}>{info.name}</h2>
-              <p className="tagline">{info.tagline}</p>
-            </div>
-            <div className="dep-modal-body">
-              <p>{info.desc}</p>
-              <h4>Недавние активности</h4>
-              {openDepRecent.length > 0 ? (
-                <ul>
-                  {openDepRecent.map((r, i) => <li key={i}>{r}</li>)}
-                </ul>
-              ) : (
-                <p className="text-muted">Пока нет данных об активностях.</p>
-              )}
-            </div>
-            <div className="dep-modal-foot">
-              <Link
-                className="btn primary"
-                style={{ width: '100%', justifyContent: 'center' }}
-                to={`/members?dep=${info.dep}`}
-                onClick={() => setOpenDep(null)}
-              >
-                Посмотреть участников ({fetchedMembers ? openDepMembers.length : depCounts[info.dep]} чел.)
-                <Icon id="i-arrow-r" style={{ width: 14, height: 14 }} />
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   )
 }
