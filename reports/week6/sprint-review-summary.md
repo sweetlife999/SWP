@@ -1,4 +1,4 @@
-# Sprint Review Summary — Week 6 (Trial Release)
+# Sprint Review Summary — Week 6
 
 **Date:** 2026-07-11
 
