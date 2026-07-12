@@ -241,7 +241,7 @@ The architecture supports the quality requirements (QR-SEC, QR-REL, QR-PERF) and
 - Latest protected-branch CI run — `images/ci_run.png`
 ![Latest protected-branch CI run](images/ci_run.png)
 - SemVer release — `images/release.png`
-![SemVer release](images/release.png) <----- TODO
+![SemVer release](TODO) <----- TODO
 - Example reviewed issue-linked PR — `images/reviewed_pr.png`
 ![Example reviewed issue-linked PR](images/reviewed_pr.png)
 - Hosted docs site — `images/hosted_docs.png`
