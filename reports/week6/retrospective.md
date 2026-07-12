@@ -7,10 +7,6 @@
 3. **Fixed deploy pipeline** — the CI/CD pipeline now runs reliably, enabling consistent and automated deployments.
 4. **Added separate department/role for CEO and assistant** — clarified organizational structure in the system, supporting proper access control and reporting.
 
-## What did not go well
-
-TODO
-
 ## What we changed compared to the previous Sprint
 
 - We shifted from architecture documentation and smoke-test setup (Sprint 5) to concrete bug fixes and pipeline stabilization.
