@@ -21,7 +21,7 @@ interface KbCardProps {
 
 export function KbCard({ card, isDone, isDragging, onDragStart, onDragEnd, onSelect }: KbCardProps) {
   const [hovered, setHovered] = useState(false)
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[card.priority]
+  const borderColor = card.blocker ? PRIORITY_BORDER['p-high'] : PRIORITY_BORDER[card.priority]
 
   return (
     <article

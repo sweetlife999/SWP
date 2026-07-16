@@ -8,6 +8,7 @@ import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 import { sanitizeHtml } from '../lib/sanitize'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
+import { DEPT_KEYS, DEPT_LABEL } from '../lib/departments'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -152,7 +153,7 @@ export default function MembersPage() {
         <div>
           <div className="members-filters-bar">
             <div className="seg">
-              {['Все', 'SU:Core', 'SU:Active', 'SU:Media', 'SU:Support'].map((l, i) => (
+              {['Все', ...DEPT_KEYS.map(k => DEPT_LABEL[k])].map((l, i) => (
                 <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => handleSeg(i)}>{l}</button>
               ))}
             </div>

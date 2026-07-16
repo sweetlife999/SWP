@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event, type EventPatch, type EventStatus } from '../lib/api'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
+import { DEPT_LABEL } from '../lib/departments'
 
 type EventForm = {
   title: string; desc: string; date: string; time: string
@@ -10,7 +11,7 @@ type EventForm = {
 }
 
 const BLANK: EventForm = {
-  title: '', desc: '', date: '', time: '', tag: 'SU:Core', foot: '', featured: false, statusText: '',
+  title: '', desc: '', date: '', time: '', tag: DEPT_LABEL.core, foot: '', featured: false, statusText: '',
 }
 
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
@@ -19,12 +20,13 @@ const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
   archived:  { label: 'Архив',        bg: '#FEF3C7', fg: '#B45309' },
 }
 
-const DEPT_OPTIONS = ['SU:Core', 'SU:Active', 'SU:Media']
+// Events are only run by these three departments — SU:Support is intentionally excluded.
+const DEPT_OPTIONS = [DEPT_LABEL.core, DEPT_LABEL.active, DEPT_LABEL.media]
 
 function toForm(e: Event): EventForm {
   return {
     title: e.title, desc: e.desc, date: e.date, time: e.time ?? '',
-    tag: DEPT_OPTIONS.includes(e.tag) ? e.tag : 'SU:Core',
+    tag: DEPT_OPTIONS.includes(e.tag) ? e.tag : DEPT_LABEL.core,
     foot: e.foot, featured: !!e.featured, statusText: e.statusText ?? '',
   }
 }
