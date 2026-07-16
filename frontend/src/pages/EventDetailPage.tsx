@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
+import { isEventLive } from '../lib/eventStatus'
 import { useAdmin } from '../lib/AdminContext'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -150,8 +151,8 @@ function EventDetailPageInner({ id }: { id?: string }) {
           <div>
             <div className="badges">
               <span className="b">{event?.tag ?? 'SU:Core'}</span>
-              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>
-                {event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}
+              <span className={`b${event && isEventLive(event) ? ' live' : ''}`}>
+                {event?.statusText ?? (event && isEventLive(event) ? 'live' : event?.status ?? 'draft')}
               </span>
             </div>
             <h1>{event?.title ?? ''}</h1>
