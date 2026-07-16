@@ -352,11 +352,15 @@ class KanbanCardOut(BaseModel):
     priority: str
     pLabel: str
     assignees: list[KanbanAssignee]
+    deadline: dt_date | None = None
 
 
 class KanbanCardPatch(BaseModel):
     # All optional: a drag sends only col; the card editor may send any subset.
-    col: Literal["backlog", "next", "doing", "review", "done"] | None = None
+    # Column keys come from the project's kanban_columns row, not a fixed enum
+    # (issue #126 AC4/AC5) — the router 404s if the key doesn't belong to the
+    # card's project, same as it always has for column moves.
+    col: str | None = None
     title: str | None = None
     desc: str | None = None
     priority: Literal["p-low", "p-mid", "p-high"] | None = None
@@ -364,15 +368,74 @@ class KanbanCardPatch(BaseModel):
     # When provided, replaces the card's assignees (each entry a member name,
     # initials derived server-side); an empty list clears all assignees.
     assignees: list[str] | None = None
+    # Explicit null clears the deadline.
+    deadline: dt_date | None = None
 
 
 class KanbanCardCreate(BaseModel):
     title: str
-    col: Literal["backlog", "next", "doing", "review", "done"] = "backlog"
+    col: str = "backlog"
     desc: str | None = None
     priority: Literal["p-low", "p-mid", "p-high"] = "p-low"
     # Member names; stored in kanban_card_assignees (one row per assignee).
     assignees: list[str] | None = None
+    deadline: dt_date | None = None
+
+
+class KanbanColumnOut(BaseModel):
+    key: str
+    label: str
+    color: str
+    order_index: int
+
+
+# ── Kanban automations ────────────────────────────────────────────────────────
+# v1 scope: two triggers the app can actually fire, two actions with a real
+# effect. See backend/app/routers/kanban_automations.py for the engine and
+# issue #126 for the fuller trigger/condition/action model this can grow into.
+
+AutomationTriggerType = Literal["column_changed", "task_created"]
+AutomationActionType = Literal["change_column", "assign_user"]
+
+
+class AutomationAction(BaseModel):
+    type: AutomationActionType
+    params: dict[str, str] = {}
+
+
+class AutomationCreate(BaseModel):
+    name: str
+    trigger_type: AutomationTriggerType
+    # column_changed only: {"to_column": "<key>"}; omitted/empty matches any column.
+    trigger_filters: dict[str, str] = {}
+    actions: list[AutomationAction] = []
+    is_active: bool = True
+
+
+class AutomationPatch(BaseModel):
+    name: str | None = None
+    trigger_filters: dict[str, str] | None = None
+    actions: list[AutomationAction] | None = None
+    is_active: bool | None = None
+
+
+class AutomationOut(BaseModel):
+    id: int
+    name: str
+    trigger_type: AutomationTriggerType
+    trigger_filters: dict[str, str]
+    actions: list[AutomationAction]
+    is_active: bool
+    stats_runs: int
+
+
+class AutomationRunOut(BaseModel):
+    id: int
+    automation_id: int
+    card_id: int | None = None
+    status: Literal["success", "failure"]
+    details: dict
+    ran_at: datetime
 
 
 # ── Admin forms (survey list for admin) ──────────────────────────────────────
