@@ -33,13 +33,5 @@ export const COLS: { key: ColKey; cls: string; label: string; color: string; eye
   { key: 'next',    cls: 'c-next',    label: 'Up next',         color: '#60A5FA' },
   { key: 'doing',   cls: 'c-doing',   label: 'In progress',     color: '#F59E0B' },
   { key: 'review',  cls: 'c-review',  label: 'Review',          color: '#A78BFA' },
-  { key: 'done',    cls: 'c-done',    label: 'Done · sprint 14', color: '#22C55E', eyeBtn: true },
-]
-
-export const FACES = [
-  { i: 'МР', bg: 'linear-gradient(135deg,#a3e0ad,#32b247)' },
-  { i: 'ДА', bg: 'linear-gradient(135deg,#b3d5a8,#5fa44f)' },
-  { i: 'ЕВ', bg: 'linear-gradient(135deg,#c7dfa9,#74a55c)' },
-  { i: 'ТК', bg: 'linear-gradient(135deg,#a8dba8,#3da152)' },
-  { i: 'АС', bg: 'linear-gradient(135deg,#a8c0e0,#3868b8)' },
+  { key: 'done',    cls: 'c-done',    label: 'Done', color: '#22C55E', eyeBtn: true },
 ]

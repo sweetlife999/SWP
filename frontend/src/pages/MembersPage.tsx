@@ -67,8 +67,8 @@ export default function MembersPage() {
   }, [depParam, reloadKey])
 
   useEffect(() => {
-    api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
-    api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
+    api.content.get('roadmap').then(d => { if (d.html) setRoadmapHtml(d.html) }).catch(() => {})
+    api.content.get('history').then(d => { if (d.html) setHistoryHtml(d.html) }).catch(() => {})
   }, [])
 
   function showToast(msg: string) {

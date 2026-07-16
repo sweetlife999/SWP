@@ -4,7 +4,7 @@ import { api } from '../lib/api'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
-import { COLS, FACES, type CardData, type ColKey, type Priority } from '../components/kanban/types'
+import { COLS, type CardData, type ColKey, type Priority } from '../components/kanban/types'
 import { CardDetailPanel } from '../components/kanban/CardDetailPanel'
 import { KbCard } from '../components/kanban/KbCard'
 
@@ -85,7 +85,7 @@ export default function KanbanPage() {
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'kanban-sprint14.csv'; a.click()
+    const a = document.createElement('a'); a.href = url; a.download = 'kanban-board.csv'; a.click()
     URL.revokeObjectURL(url)
   }
 
@@ -136,7 +136,7 @@ export default function KanbanPage() {
         <div className="page-head">
           <div className="title">
             <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
+            <h1>Core board</h1>
           </div>
         </div>
         <div style={{ 
@@ -164,7 +164,7 @@ export default function KanbanPage() {
         <div className="page-head">
           <div className="title">
             <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
+            <h1>Core board</h1>
           </div>
         </div>
         <div className="board">
@@ -198,7 +198,7 @@ export default function KanbanPage() {
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">SU:Core · Internal backlog</span>
-          <h1>Core board · Sprint 14</h1>
+          <h1>Core board</h1>
           <p className="text-muted" style={{ fontSize: 13, marginTop: 2 }}>
             Only for SU:Core team. Students do not see this page.
           </p>
@@ -223,22 +223,6 @@ export default function KanbanPage() {
             onChange={e => setSearch(e.target.value)}
           />
         </label>
-        <span className="divider" />
-        <div className="row gap-2">
-          <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Sprint</span>
-          <select className="select" style={{ width: 'auto', minWidth: 180, height: 32, fontSize: 13, paddingRight: 28 }}>
-            <option>Sprint 14 · current</option>
-            <option>Sprint 13</option>
-            <option>Sprint 12</option>
-            <option>Backlog (no sprint)</option>
-          </select>
-        </div>
-        <span className="divider" />
-        <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Who</span>
-        <div className="kb-faces">
-          {FACES.map(a => <div key={a.i} className="avatar" style={{ background: a.bg }}>{a.i}</div>)}
-          <div className="more">+3</div>
-        </div>
         <span className="divider" />
         <button className={`filter-chip${chipP01 ? ' active' : ''}`} onClick={() => setChipP01(v => !v)}>
           <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1{chipP01 && <span className="x">×</span>}
