@@ -264,7 +264,9 @@ export default function KanbanPage() {
                   >
                     {cards.length}
                   </span>
-                  <button className="add" onClick={() => !col.eyeBtn && openNewTask(col.key)}><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
+                  {!col.eyeBtn && (
+                    <button className="add" onClick={() => openNewTask(col.key)}><Icon id="i-plus" /></button>
+                  )}
                 </header>
 
                 <div
