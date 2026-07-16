@@ -253,6 +253,8 @@ export const api = {
         req<{ id: number }>(`/admin/questionnaires/${id}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
       removeQuestion: (id: number | string, qid: number) =>
         reqVoid(`/admin/questionnaires/${id}/questions/${qid}`, { method: 'DELETE', headers: authHeaders() }),
+      remove:      (id: number | string) =>
+        reqVoid(`/admin/questionnaires/${id}`, { method: 'DELETE', headers: authHeaders() }),
       // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
       setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
         req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),

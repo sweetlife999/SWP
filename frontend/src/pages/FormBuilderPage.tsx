@@ -288,6 +288,20 @@ export default function FormBuilderPage() {
   }
 
   function deleteQuestion(id: number) { setQuestions(qs => qs.filter(q => q.id !== id)) }
+
+  // Only drafts can be deleted (mirrors the backend's 422 guard on published surveys).
+  async function deleteQuestionnaire() {
+    if (currentId === null || status !== 'draft') return
+    if (!window.confirm('Удалить черновик опроса без возможности восстановления?')) return
+    try {
+      await api.admin.questionnaires.remove(currentId)
+      showToast('Черновик удалён')
+      newQuestionnaire()
+      loadList()
+    } catch {
+      showToast('Не удалось удалить черновик')
+    }
+  }
   function updateQuestion(updated: Question) { setQuestions(qs => qs.map(q => q.id === updated.id ? updated : q)) }
 
   const nonSectionCount = questions.filter(q => q.type !== 'section').length
@@ -332,6 +346,11 @@ export default function FormBuilderPage() {
           ))}
         </select>
         <button className="btn ghost sm" disabled={saving} onClick={newQuestionnaire}><Icon id="i-plus" style={{ width: 12, height: 12 }} />Новый</button>
+        {currentId !== null && status === 'draft' && (
+          <button className="btn ghost sm" disabled={saving} onClick={deleteQuestionnaire}>
+            <Icon id="i-trash" style={{ width: 12, height: 12 }} />Удалить черновик
+          </button>
+        )}
         <span className="stat-pill"><Icon id="i-clipboard" style={{ width: 12, height: 12 }} />{nonSectionCount} вопросов</span>
 
       </div>
