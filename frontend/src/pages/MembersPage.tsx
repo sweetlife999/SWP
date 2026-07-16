@@ -40,7 +40,6 @@ export default function MembersPage() {
   const closeSelected = () => setSelected(null)
   const dialogRef = useModalA11y(Boolean(selected), closeSelected)
   const [search, setSearch] = useState('')
-  const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
@@ -119,7 +118,7 @@ export default function MembersPage() {
   const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
     .filter(p => p.is_active !== false)
     .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.role.toLowerCase().includes(search.toLowerCase()))
-  const visibleMembers = showAll ? filteredMembers : filteredMembers.slice(0, 8)
+  const visibleMembers = filteredMembers
 
   return (
     <>
@@ -159,7 +158,7 @@ export default function MembersPage() {
             </div>
             <div className="input-group" style={{ width: 280, marginLeft: 'auto' }}>
               <Icon id="i-search" className="ic" />
-              <input placeholder="Найти по имени, направлению…" value={search} onChange={e => { setSearch(e.target.value); setShowAll(true) }} />
+              <input placeholder="Найти по имени, направлению…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
@@ -193,11 +192,6 @@ export default function MembersPage() {
                 )}
               </div>
 
-              {!showAll && filteredMembers.length > 8 && (
-                <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
-                  <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
-                </div>
-              )}
             </>
           )}
         </div>

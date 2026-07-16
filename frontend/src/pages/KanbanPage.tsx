@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Member } from '../lib/api'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
@@ -18,8 +18,12 @@ export default function KanbanPage() {
   const [selected, setSelected] = useState<CardData | null>(null)
   // Off by default — otherwise newly-created low-priority cards are hidden on load.
   const [chipP01, setChipP01] = useState(false)
-  const [chipOpenDay, setChipOpenDay] = useState(false)
   const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
+  const [members, setMembers] = useState<Member[]>([])
+  useEffect(() => {
+    api.members.list('core').then(setMembers).catch(() => {})
+  }, [])
   const closeNewTask = () => setNewTask(t => ({ ...t, open: false }))
   const newTaskRef = useModalA11y(newTask.open, closeNewTask)
   const [toast, setToast] = useState('')
@@ -73,7 +77,6 @@ export default function KanbanPage() {
     return allCards.filter(c => {
       if ((cardCols[c.id] ?? c.col) !== col) return false
       if (chipP01 && c.priority === 'p-low') return false
-      if (chipOpenDay && !c.tags.some(t => t.label === 'Open Day')) return false
       if (!q) return true
       return c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q) || false
     })
@@ -227,9 +230,6 @@ export default function KanbanPage() {
         <button className={`filter-chip${chipP01 ? ' active' : ''}`} onClick={() => setChipP01(v => !v)}>
           <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1{chipP01 && <span className="x">×</span>}
         </button>
-        <button className={`filter-chip${chipOpenDay ? ' active' : ''}`} onClick={() => setChipOpenDay(v => !v)}>
-          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day{chipOpenDay && <span className="x">×</span>}
-        </button>
         <div style={{ marginLeft: 'auto' }} className="row gap-2">
           <div className="seg">
             {['Board', 'List', 'Timeline'].map((l, i) => (
@@ -349,8 +349,11 @@ export default function KanbanPage() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="kb-assignee">Assignee (инициалы)</label>
-                <input id="kb-assignee" className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
+                <label htmlFor="kb-assignee">Assignee</label>
+                <select id="kb-assignee" className="select" value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))}>
+                  <option value="">Unassigned</option>
+                  {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                </select>
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>

@@ -1,7 +1,9 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../Icon'
+import { api, type Member } from '../../lib/api'
 import { sanitizeHtml } from '../../lib/sanitize'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../../hooks/useModalA11y'
+import { CardDescriptionEditor } from './CardDescriptionEditor'
 import {
   COLS,
   PRIORITY_BORDER,
@@ -21,23 +23,46 @@ interface CardDetailPanelProps {
   onSave: (patch: CardPatch) => Promise<void>
 }
 
+// Mirrors the backend's _initials() (app/routers/kanban.py) so an existing
+// card's stored initials can be matched back to a real member for the
+// assignee picker's default selection.
+function deriveInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length > 1) return parts.slice(0, 3).map(p => p[0]).join('').toUpperCase()
+  return name.slice(0, 3).toUpperCase()
+}
+
 export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [priority, setPriority] = useState<Priority>(card.priority)
   const [colKey, setColKey] = useState<ColKey>(col)
-  const [assignee, setAssignee] = useState(card.assignees[0]?.initials ?? '')
+  const [assignee, setAssignee] = useState('')
+  const [members, setMembers] = useState<Member[]>([])
+  const [descHtml, setDescHtml] = useState(card.desc ?? '')
   const [busy, setBusy] = useState(false)
-  const descRef = useRef<HTMLDivElement>(null)
   const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
   const dialogRef = useModalA11y(true, onClose)
+
+  // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
+  useEffect(() => {
+    const currentInitials = card.assignees[0]?.initials ?? ''
+    api.members.list('core').then(list => {
+      setMembers(list)
+      const match = currentInitials && list.find(m => deriveInitials(m.name) === currentInitials)
+      if (match) setAssignee(match.name)
+    }).catch(() => {})
+    // card is the panel's identity for the lifetime of this mount (see KanbanPage), so
+    // this only needs to run once per open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function save() {
     setBusy(true)
     try {
       await onSave({
         title: title.trim() || card.title,
-        desc: sanitizeHtml(descRef.current?.innerHTML ?? card.desc ?? ''),
+        desc: sanitizeHtml(descHtml),
         priority,
         col: colKey,
         assignee: assignee.trim(),
@@ -88,7 +113,10 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                 <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
                   {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
-                <input className="input" style={{ width: 90 }} maxLength={3} placeholder="Assignee" value={assignee} onChange={e => setAssignee(e.target.value)} />
+                <select className="select" style={{ width: 'auto', height: 32 }} value={assignee} onChange={e => setAssignee(e.target.value)}>
+                  <option value="">Unassigned</option>
+                  {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                </select>
               </>
             ) : (
               <>
@@ -110,15 +138,9 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
           <div>
             <div className="kb-detail-section-label">Описание</div>
             {editing ? (
-              // "Block note": rich contentEditable, stored as HTML (the app's content-block pattern).
-              <div
-                ref={descRef}
-                className="rm-edit"
-                contentEditable
-                suppressContentEditableWarning
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc ?? '') }}
-                style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
-              />
+              <div style={{ border: '1px solid var(--border)', borderRadius: 8 }}>
+                <CardDescriptionEditor initialHtml={card.desc ?? ''} onChangeHtml={setDescHtml} />
+              </div>
             ) : card.desc ? (
               <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc) }} />
             ) : (
