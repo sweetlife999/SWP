@@ -4,15 +4,19 @@ from fastapi import APIRouter, Depends, HTTPException, Request, status
 from app.auth import require_admin
 from app.computed import PRIORITY_LABEL
 from app.database import get_pool
+from app.kanban_shared import ASSIGNEE_COLORS as _ASSIGNEE_COLORS
+from app.kanban_shared import initials as _initials
 from app.models.schemas import (
     KanbanAssignee,
     KanbanAttachment,
     KanbanCardCreate,
     KanbanCardOut,
     KanbanCardPatch,
+    KanbanColumnOut,
     KanbanMeta,
     KanbanTag,
 )
+from app.routers.kanban_automations import run_automations
 
 router = APIRouter(prefix="/admin/kanban", tags=["kanban"], dependencies=[Depends(require_admin)])
 
@@ -27,6 +31,7 @@ _CARD_SELECT = """
         c.attachment,
         c.progress_pct,
         c.progress_label,
+        c.deadline,
         COALESCE(
             (SELECT json_agg(jsonb_build_object('label', t.label, 'color', t.color))
              FROM kanban_card_tags t WHERE t.card_id = c.id),
@@ -52,14 +57,6 @@ _CARD_SELECT = """
 """
 
 
-_ASSIGNEE_COLORS = [
-    "linear-gradient(135deg,#a3e0ad,#32b247)",
-    "linear-gradient(135deg,#a8c0e0,#3868b8)",
-    "linear-gradient(135deg,#e0a8c8,#c93f8b)",
-    "linear-gradient(135deg,#f6d365,#fda085)",
-]
-
-
 async def _replace_assignees(pool: asyncpg.Pool, card_id: int, names: list[str]) -> None:
     await pool.execute("DELETE FROM kanban_card_assignees WHERE card_id = $1", card_id)
     for i, name in enumerate(n for n in names if n.strip()):
@@ -69,15 +66,6 @@ async def _replace_assignees(pool: asyncpg.Pool, card_id: int, names: list[str])
             _initials(name.strip()),
             _ASSIGNEE_COLORS[i % len(_ASSIGNEE_COLORS)],
         )
-
-
-def _initials(name: str) -> str:
-    """Avatar initials from a free-text assignee: first letter of each word
-    (up to 3); a blind slice would garble multi-word names."""
-    parts = name.split()
-    if len(parts) > 1:
-        return "".join(p[0] for p in parts[:3]).upper()
-    return name[:3].upper()
 
 
 def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
@@ -110,6 +98,7 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
             KanbanAssignee(initials=a["initials"], bg=a["bg"], offset=i > 0)
             for i, a in enumerate(row["assignees"])
         ],
+        deadline=row["deadline"],
     )
 
 
@@ -120,6 +109,22 @@ async def list_cards(request: Request) -> list[KanbanCardOut]:
         _CARD_SELECT + "ORDER BY col.order_index, c.order_index, c.id LIMIT 1000"
     )
     return [_row_to_card(r) for r in rows]
+
+
+@router.get("/columns", response_model=list[KanbanColumnOut])
+async def list_columns(request: Request) -> list[KanbanColumnOut]:
+    """Columns for the (single) SU:Core board, in board order (issue #126 AC4/AC5)."""
+    pool: asyncpg.Pool = get_pool(request)
+    rows = await pool.fetch(
+        """
+        SELECT col.key, col.label, col.color, col.order_index
+        FROM kanban_columns col
+        JOIN kanban_projects p ON p.id = col.project_id
+        WHERE p.slug = 'su-core'
+        ORDER BY col.order_index
+        """
+    )
+    return [KanbanColumnOut(**dict(r)) for r in rows]
 
 
 @router.post("", response_model=KanbanCardOut, status_code=status.HTTP_201_CREATED)
@@ -140,8 +145,9 @@ async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut
     )
     new_id = await pool.fetchval(
         """
-        INSERT INTO kanban_cards (project_id, column_id, title, description, priority, order_index)
-        VALUES ($1, $2, $3, $4, $5, $6)
+        INSERT INTO kanban_cards
+            (project_id, column_id, title, description, priority, deadline, order_index)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id
         """,
         col_row["project_id"],
@@ -149,10 +155,12 @@ async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut
         body.title,
         body.desc,
         body.priority,
+        body.deadline,
         next_order,
     )
     if body.assignees:
         await _replace_assignees(pool, new_id, body.assignees)
+    await run_automations(pool, col_row["project_id"], "task_created", new_id, {})
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", new_id)
     return _row_to_card(row)
 
@@ -177,10 +185,11 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
 
     # Column move: resolve the target column within the card's own project.
+    column_changed = False
     if body.col is not None:
         col_row = await pool.fetchrow(
             """
-            SELECT col.id AS target_column_id, c.column_id AS current_column_id
+            SELECT col.id AS target_column_id, c.column_id AS current_column_id, c.project_id
             FROM kanban_columns col
             JOIN kanban_cards c ON c.project_id = col.project_id
             WHERE c.id = $1 AND col.key = $2
@@ -193,7 +202,8 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Column does not belong to the card's project",
             )
-        if col_row["target_column_id"] != col_row["current_column_id"]:
+        column_changed = col_row["target_column_id"] != col_row["current_column_id"]
+        if column_changed:
             await pool.execute(
                 "UPDATE kanban_cards SET column_id = $1, updated_at = now() WHERE id = $2",
                 col_row["target_column_id"],
@@ -215,6 +225,9 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
     if "blocker" in provided and body.blocker is not None:
         params.append(body.blocker)
         updates.append(f"blocker = ${len(params)}")
+    if "deadline" in provided:
+        params.append(body.deadline)
+        updates.append(f"deadline = ${len(params)}")
     if updates:
         params.append(card_id)
         await pool.execute(
@@ -226,6 +239,11 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
     # Assignee replacement.
     if "assignees" in provided:
         await _replace_assignees(pool, card_id, body.assignees or [])
+
+    if column_changed:
+        await run_automations(
+            pool, col_row["project_id"], "column_changed", card_id, {"to_column": body.col}
+        )
 
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", card_id)
     return _row_to_card(row)

@@ -4,19 +4,21 @@ import { api, type Member } from '../../lib/api'
 import { sanitizeHtml } from '../../lib/sanitize'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../../hooks/useModalA11y'
 import { CardDescriptionEditor } from './CardDescriptionEditor'
+import { CardDescriptionView } from './CardDescriptionView'
 import {
-  COLS,
   PRIORITY_BORDER,
   PRIORITY_LABEL,
   type CardData,
   type CardPatch,
   type ColKey,
+  type KbColumn,
   type Priority,
 } from './types'
 
 interface CardDetailPanelProps {
   card: CardData
   col: ColKey
+  cols: KbColumn[]
   onClose: () => void
   onMarkDone: () => void
   onDelete: () => void
@@ -32,7 +34,7 @@ function deriveInitials(name: string): string {
   return name.slice(0, 3).toUpperCase()
 }
 
-export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
+export function CardDetailPanel({ card, col, cols, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [priority, setPriority] = useState<Priority>(card.priority)
@@ -40,8 +42,9 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
   const [assignees, setAssignees] = useState<string[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [descHtml, setDescHtml] = useState(card.desc ?? '')
+  const [deadline, setDeadline] = useState(card.deadline ?? '')
   const [busy, setBusy] = useState(false)
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
+  const borderColor = card.blocker ? PRIORITY_BORDER['p-high'] : PRIORITY_BORDER[priority]
   const dialogRef = useModalA11y(true, onClose)
 
   // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
@@ -65,6 +68,7 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
         priority,
         col: colKey,
         assignees,
+        deadline: deadline || null,
       })
       setEditing(false)
     } finally {
@@ -110,7 +114,7 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                   <option value="p-low">P2 · Low</option>
                 </select>
                 <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
-                  {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                  {cols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
                 <select
                   className="select"
@@ -122,6 +126,14 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                 >
                   {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
                 </select>
+                <input
+                  type="date"
+                  className="input"
+                  aria-label="Deadline"
+                  style={{ width: 'auto', height: 32 }}
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                />
               </>
             ) : (
               <>
@@ -129,6 +141,11 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                   <span className="bar" /><span className="bar" /><span className="bar" />
                   {card.pLabel} · {PRIORITY_LABEL[card.priority]}
                 </span>
+                {card.deadline && (
+                  <span className="text-muted" style={{ fontSize: 12.5 }}>
+                    <Icon id="i-calendar" style={{ width: 12, height: 12, verticalAlign: -2 }} /> {card.deadline}
+                  </span>
+                )}
                 <div style={{ display: 'flex', gap: 4 }}>
                   {card.assignees.map((a, i) => (
                     <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
@@ -147,7 +164,7 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                 <CardDescriptionEditor initialHtml={card.desc ?? ''} onChangeHtml={setDescHtml} />
               </div>
             ) : card.desc ? (
-              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc) }} />
+              <CardDescriptionView html={sanitizeHtml(card.desc)} />
             ) : (
               <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
             )}
