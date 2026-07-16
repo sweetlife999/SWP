@@ -23,6 +23,14 @@ type Details = { schedule: Keyed<ScheduleItem>[]; organizers: Keyed<OrganizerIte
 let draftKey = 0
 const nextKey = () => ++draftKey
 
+function isLiveNow(event: Event | undefined | null): boolean {
+  if (!event?.date || !event?.endDate) return false
+  const now = new Date()
+  const start = new Date(event.date)
+  const end = new Date(event.endDate)
+  return now >= start && now <= end
+}
+
 function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
@@ -150,9 +158,7 @@ function EventDetailPageInner({ id }: { id?: string }) {
           <div>
             <div className="badges">
               <span className="b">{event?.tag ?? 'SU:Core'}</span>
-              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>
-                {event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}
-              </span>
+              {isLiveNow(event) && <span className="b live">live</span>}
             </div>
             <h1>{event?.title ?? ''}</h1>
             <p className="sub">{event?.desc ?? ''}</p>
