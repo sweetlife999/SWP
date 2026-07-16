@@ -231,10 +231,10 @@ export const api = {
     },
     kanban: {
       list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
-      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignee?: string }) =>
+      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignees?: string[] }) =>
         req<KanbanCard>('/admin/kanban', { method: 'POST', headers: authHeaders(), body: JSON.stringify(card) }),
       // Edit any subset of a card's fields (a column-only move is just patch({ col })).
-      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignee?: string }) =>
+      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignees?: string[] }) =>
         req<KanbanCard>(`/admin/kanban/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
       remove: (id: string) => reqVoid(`/admin/kanban/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },

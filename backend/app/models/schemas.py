@@ -361,9 +361,9 @@ class KanbanCardPatch(BaseModel):
     desc: str | None = None
     priority: Literal["p-low", "p-mid", "p-high"] | None = None
     blocker: bool | None = None
-    # When provided, replaces the card's assignees with a single one (initials);
-    # empty string clears assignees.
-    assignee: str | None = None
+    # When provided, replaces the card's assignees (each entry a member name,
+    # initials derived server-side); an empty list clears all assignees.
+    assignees: list[str] | None = None
 
 
 class KanbanCardCreate(BaseModel):
@@ -371,8 +371,8 @@ class KanbanCardCreate(BaseModel):
     col: Literal["backlog", "next", "doing", "review", "done"] = "backlog"
     desc: str | None = None
     priority: Literal["p-low", "p-mid", "p-high"] = "p-low"
-    # Optional assignee initials (e.g. "МР"); stored in kanban_card_assignees.
-    assignee: str | None = None
+    # Member names; stored in kanban_card_assignees (one row per assignee).
+    assignees: list[str] | None = None
 
 
 # ── Admin forms (survey list for admin) ──────────────────────────────────────

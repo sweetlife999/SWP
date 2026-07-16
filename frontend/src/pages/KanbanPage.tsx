@@ -18,7 +18,7 @@ export default function KanbanPage() {
   const [selected, setSelected] = useState<CardData | null>(null)
   // Off by default — otherwise newly-created low-priority cards are hidden on load.
   const [chipP01, setChipP01] = useState(false)
-  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignees: string[] }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignees: [] })
   // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
   const [members, setMembers] = useState<Member[]>([])
   useEffect(() => {
@@ -93,7 +93,7 @@ export default function KanbanPage() {
   }
 
   function openNewTask(col: ColKey) {
-    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignee: '' })
+    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignees: [] })
   }
 
   async function submitNewTask() {
@@ -104,9 +104,9 @@ export default function KanbanPage() {
         col: newTask.col,
         desc: newTask.desc.trim() || undefined,
         priority: newTask.priority,
-        assignee: newTask.assignee.trim() || undefined,
+        assignees: newTask.assignees.length ? newTask.assignees : undefined,
       })
-      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignees: [] })
       retry()  // reload the board so the persisted card appears
       showToast('Задача создана')
     } catch {
@@ -349,9 +349,15 @@ export default function KanbanPage() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="kb-assignee">Assignee</label>
-                <select id="kb-assignee" className="select" value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))}>
-                  <option value="">Unassigned</option>
+                <label htmlFor="kb-assignee">Assignees (Ctrl/Cmd-click for multiple)</label>
+                <select
+                  id="kb-assignee"
+                  className="select"
+                  multiple
+                  style={{ height: 'auto', minHeight: 72 }}
+                  value={newTask.assignees}
+                  onChange={e => setNewTask(t => ({ ...t, assignees: Array.from(e.target.selectedOptions, o => o.value) }))}
+                >
                   {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
                 </select>
               </div>

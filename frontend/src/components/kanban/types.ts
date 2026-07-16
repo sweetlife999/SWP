@@ -15,7 +15,7 @@ export interface CardData {
   priority: Priority; pLabel: string; assignees: Assignee[]
 }
 
-export interface CardPatch { title?: string; desc?: string; priority?: Priority; col?: ColKey; assignee?: string }
+export interface CardPatch { title?: string; desc?: string; priority?: Priority; col?: ColKey; assignees?: string[] }
 
 export const PRIORITY_BORDER: Record<Priority, string> = {
   'p-high': '#EF4444',

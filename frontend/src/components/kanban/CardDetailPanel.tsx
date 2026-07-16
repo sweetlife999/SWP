@@ -37,7 +37,7 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
   const [title, setTitle] = useState(card.title)
   const [priority, setPriority] = useState<Priority>(card.priority)
   const [colKey, setColKey] = useState<ColKey>(col)
-  const [assignee, setAssignee] = useState('')
+  const [assignees, setAssignees] = useState<string[]>([])
   const [members, setMembers] = useState<Member[]>([])
   const [descHtml, setDescHtml] = useState(card.desc ?? '')
   const [busy, setBusy] = useState(false)
@@ -46,11 +46,10 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
 
   // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
   useEffect(() => {
-    const currentInitials = card.assignees[0]?.initials ?? ''
+    const currentInitials = card.assignees.map(a => a.initials)
     api.members.list('core').then(list => {
       setMembers(list)
-      const match = currentInitials && list.find(m => deriveInitials(m.name) === currentInitials)
-      if (match) setAssignee(match.name)
+      setAssignees(list.filter(m => currentInitials.includes(deriveInitials(m.name))).map(m => m.name))
     }).catch(() => {})
     // card is the panel's identity for the lifetime of this mount (see KanbanPage), so
     // this only needs to run once per open.
@@ -65,7 +64,7 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
         desc: sanitizeHtml(descHtml),
         priority,
         col: colKey,
-        assignee: assignee.trim(),
+        assignees,
       })
       setEditing(false)
     } finally {
@@ -113,8 +112,14 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                 <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
                   {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
-                <select className="select" style={{ width: 'auto', height: 32 }} value={assignee} onChange={e => setAssignee(e.target.value)}>
-                  <option value="">Unassigned</option>
+                <select
+                  className="select"
+                  multiple
+                  aria-label="Assignees (Ctrl/Cmd-click for multiple)"
+                  style={{ width: 140, height: 60 }}
+                  value={assignees}
+                  onChange={e => setAssignees(Array.from(e.target.selectedOptions, o => o.value))}
+                >
                   {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
                 </select>
               </>

@@ -52,6 +52,25 @@ _CARD_SELECT = """
 """
 
 
+_ASSIGNEE_COLORS = [
+    "linear-gradient(135deg,#a3e0ad,#32b247)",
+    "linear-gradient(135deg,#a8c0e0,#3868b8)",
+    "linear-gradient(135deg,#e0a8c8,#c93f8b)",
+    "linear-gradient(135deg,#f6d365,#fda085)",
+]
+
+
+async def _replace_assignees(pool: asyncpg.Pool, card_id: int, names: list[str]) -> None:
+    await pool.execute("DELETE FROM kanban_card_assignees WHERE card_id = $1", card_id)
+    for i, name in enumerate(n for n in names if n.strip()):
+        await pool.execute(
+            "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
+            card_id,
+            _initials(name.strip()),
+            _ASSIGNEE_COLORS[i % len(_ASSIGNEE_COLORS)],
+        )
+
+
 def _initials(name: str) -> str:
     """Avatar initials from a free-text assignee: first letter of each word
     (up to 3); a blind slice would garble multi-word names."""
@@ -87,7 +106,10 @@ def _row_to_card(row: asyncpg.Record) -> KanbanCardOut:
         or None,
         priority=priority,
         pLabel=PRIORITY_LABEL.get(priority, "P2"),
-        assignees=[KanbanAssignee(initials=a["initials"], bg=a["bg"]) for a in row["assignees"]],
+        assignees=[
+            KanbanAssignee(initials=a["initials"], bg=a["bg"], offset=i > 0)
+            for i, a in enumerate(row["assignees"])
+        ],
     )
 
 
@@ -129,14 +151,8 @@ async def create_card(body: KanbanCardCreate, request: Request) -> KanbanCardOut
         body.priority,
         next_order,
     )
-    if body.assignee:
-        # Deterministic green gradient so the avatar has a colour without a picker.
-        await pool.execute(
-            "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
-            new_id,
-            _initials(body.assignee),
-            "linear-gradient(135deg,#a3e0ad,#32b247)",
-        )
+    if body.assignees:
+        await _replace_assignees(pool, new_id, body.assignees)
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", new_id)
     return _row_to_card(row)
 
@@ -208,15 +224,8 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
         )
 
     # Assignee replacement.
-    if "assignee" in provided:
-        await pool.execute("DELETE FROM kanban_card_assignees WHERE card_id = $1", card_id)
-        if body.assignee:
-            await pool.execute(
-                "INSERT INTO kanban_card_assignees (card_id, initials, bg) VALUES ($1, $2, $3)",
-                card_id,
-                _initials(body.assignee),
-                "linear-gradient(135deg,#a3e0ad,#32b247)",
-            )
+    if "assignees" in provided:
+        await _replace_assignees(pool, card_id, body.assignees or [])
 
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", card_id)
     return _row_to_card(row)
