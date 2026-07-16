@@ -70,19 +70,23 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
 
 @router.get("", response_model=list[EventOut])
 async def list_events(request: Request) -> list[EventOut]:
-    """AC1: only published events are visible in the public listing (drafts/archived excluded)."""
+    """AC1: drafts are excluded; published and archived are both public (frontend buckets
+    archived under "past" regardless of date — see EventsPage.tsx)."""
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(
-        _SELECT + "WHERE status = 'published' ORDER BY event_date DESC, id DESC LIMIT 500"
+        _SELECT
+        + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC LIMIT 500"
     )
     return [_row_to_event(r) for r in rows]
 
 
 @router.get("/{event_id}", response_model=EventOut)
 async def get_event(event_id: int, request: Request) -> EventOut:
-    """Public. Returns a published event by id."""
+    """Public. Returns a published or archived event by id."""
     pool: asyncpg.Pool = get_pool(request)
-    row = await pool.fetchrow(_SELECT + "WHERE id = $1 AND status = 'published'", event_id)
+    row = await pool.fetchrow(
+        _SELECT + "WHERE id = $1 AND status IN ('published', 'archived')", event_id
+    )
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return _row_to_event(row)

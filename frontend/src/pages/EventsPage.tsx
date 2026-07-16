@@ -15,13 +15,20 @@ function statusLabel(ev: Event): string {
   return ''
 }
 
+// Archived events are retired regardless of their date, so they display
+// (and bucket into "Прошедшие") the same as a naturally past event.
+function isPastForDisplay(ev: Event): boolean {
+  return !!ev.past || ev.status === 'archived'
+}
+
 function EventCard({ ev }: { ev: Event }) {
   const label = statusLabel(ev)
   const live = isEventLive(ev)
+  const past = isPastForDisplay(ev)
   const footerLabel = ev.footLabel || 'Подробнее'
   return (
-    <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
-      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
+    <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
+      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
         {label && <span className={`status-badge${live ? ' live' : ''}`}>{label}</span>}
       </div>
@@ -62,8 +69,8 @@ export default function EventsPage() {
     })
   }
 
-  const allCurrent = applyFilter(events.filter(ev => !ev.past))
-  const allPast    = applyFilter(events.filter(ev => !!ev.past))
+  const allCurrent = applyFilter(events.filter(ev => !isPastForDisplay(ev)))
+  const allPast    = applyFilter(events.filter(ev => isPastForDisplay(ev)))
   const current    = allCurrent.slice(0, limit)
   const past       = allPast.slice(0, limit)
   const hasMore    = seg1 === 0 ? allCurrent.length > limit : allPast.length > limit

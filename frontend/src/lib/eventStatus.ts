@@ -5,7 +5,7 @@ import type { Event } from './api'
 // endDate/endTime are honored when a caller sets them, but default to the
 // start values for the common single-day, start-time-only case.
 export function isEventLive(ev: Event): boolean {
-  if (ev.past) return false
+  if (ev.past || ev.status === 'archived') return false
 
   const now = new Date()
   const today = now.toISOString().slice(0, 10)
