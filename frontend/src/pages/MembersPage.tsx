@@ -274,9 +274,8 @@ export default function MembersPage() {
           {isAdmin && (
             <div className="row sb mt-4">
               <span className="text-muted" style={{ fontSize: 12 }}>
-                {roadmapMeta.updatedAt
-                  ? `Последнее изменение: ${roadmapMeta.updatedBy ?? 'admin'} · ${new Date(roadmapMeta.updatedAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`
-                  : 'Ещё не редактировалось'}
+                {roadmapMeta.updatedAt &&
+                  `Последнее изменение: ${roadmapMeta.updatedBy ?? 'admin'} · ${new Date(roadmapMeta.updatedAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
               </span>
               <div className="row gap-2 read-actions">
                 {!editing && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
