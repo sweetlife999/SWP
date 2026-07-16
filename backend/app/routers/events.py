@@ -82,9 +82,7 @@ async def list_events(request: Request) -> list[EventOut]:
 async def get_event(event_id: int, request: Request) -> EventOut:
     """Public. Returns a published event by id."""
     pool: asyncpg.Pool = get_pool(request)
-    row = await pool.fetchrow(
-        _SELECT + "WHERE id = $1 AND status = 'published'", event_id
-    )
+    row = await pool.fetchrow(_SELECT + "WHERE id = $1 AND status = 'published'", event_id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return _row_to_event(row)
