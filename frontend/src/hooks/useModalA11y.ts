@@ -24,7 +24,9 @@ export function useModalA11y(open: boolean, onClose: () => void) {
   // would otherwise retrigger this effect and steal focus back to the
   // dialog container on every render.
   const onCloseRef = useRef(onClose)
-  onCloseRef.current = onClose
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
 
   useEffect(() => {
     if (!open) return

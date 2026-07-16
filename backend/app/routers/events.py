@@ -70,7 +70,7 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
 
 @router.get("", response_model=list[EventOut])
 async def list_events(request: Request) -> list[EventOut]:
-    """AC1: only published events are visible in the public listing (drafts and archived are excluded)."""
+    """AC1: only published events are visible in the public listing (drafts/archived excluded)."""
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(
         _SELECT + "WHERE status = 'published' ORDER BY event_date DESC, id DESC LIMIT 500"
