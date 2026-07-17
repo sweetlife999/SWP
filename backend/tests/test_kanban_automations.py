@@ -123,7 +123,8 @@ def test_task_created_automation_fires_and_logs_history(client, auth_headers):
         assert "moved to next" in history[0]["details"]["actions"]
 
         moved_card = next(
-            c for c in client.get("/api/admin/kanban", headers=auth_headers).json()
+            c
+            for c in client.get("/api/admin/kanban", headers=auth_headers).json()
             if c["id"] == card_id
         )
         assert moved_card["col"] == "next"

@@ -185,7 +185,9 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Card not found")
 
     # Column move: resolve the target column within the card's own project.
-    column_changed = False
+    # Holds the target column key only when the card actually changed column —
+    # doubles as the flag for firing column_changed automations below.
+    moved_to_col: str | None = None
     if body.col is not None:
         col_row = await pool.fetchrow(
             """
@@ -202,8 +204,8 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Column does not belong to the card's project",
             )
-        column_changed = col_row["target_column_id"] != col_row["current_column_id"]
-        if column_changed:
+        if col_row["target_column_id"] != col_row["current_column_id"]:
+            moved_to_col = body.col
             await pool.execute(
                 "UPDATE kanban_cards SET column_id = $1, updated_at = now() WHERE id = $2",
                 col_row["target_column_id"],
@@ -240,9 +242,9 @@ async def move_card(card_id: int, body: KanbanCardPatch, request: Request) -> Ka
     if "assignees" in provided:
         await _replace_assignees(pool, card_id, body.assignees or [])
 
-    if column_changed:
+    if moved_to_col is not None:
         await run_automations(
-            pool, col_row["project_id"], "column_changed", card_id, {"to_column": body.col}
+            pool, col_row["project_id"], "column_changed", card_id, {"to_column": moved_to_col}
         )
 
     row = await pool.fetchrow(_CARD_SELECT + "WHERE c.id = $1", card_id)
