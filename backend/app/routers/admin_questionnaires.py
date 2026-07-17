@@ -190,6 +190,19 @@ async def patch_questionnaire(
     return await _build_admin_out(pool, questionnaire_id)
 
 
+@admin_router.delete("/{questionnaire_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_questionnaire(questionnaire_id: int, request: Request) -> None:
+    """Only draft (unpublished) questionnaires may be deleted; open/closed return 422."""
+    pool: asyncpg.Pool = get_pool(request)
+    row = await _get_survey_or_404(pool, questionnaire_id)
+    if row["published"]:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Cannot delete a published questionnaire; set it back to draft first",
+        )
+    await pool.execute("DELETE FROM surveys WHERE id = $1", questionnaire_id)
+
+
 @admin_router.post(
     "/{questionnaire_id}/questions", response_model=QuestionOut, status_code=status.HTTP_201_CREATED
 )

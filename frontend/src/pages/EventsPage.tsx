@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { API_BASE, type Event } from '../lib/api'
+import { isEventLive } from '../lib/eventStatus'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -10,18 +11,20 @@ import { EmptyState } from '../components/EmptyState'
 
 function statusLabel(ev: Event): string {
   if (ev.statusText) return ev.statusText
-  if (ev.status === 'published') return 'live'
+  if (isEventLive(ev)) return 'live'
   return ''
 }
 
 function EventCard({ ev }: { ev: Event }) {
   const label = statusLabel(ev)
+  const live = isEventLive(ev)
+  const past = !!ev.past
   const footerLabel = ev.footLabel || 'Подробнее'
   return (
-    <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
-      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
+    <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
+      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${past ? ' passed-cover' : ''}`}>
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
-        {label && <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>}
+        {label && <span className={`status-badge${live ? ' live' : ''}`}>{label}</span>}
       </div>
       <div className="ec-body">
         <div className="ec-meta">

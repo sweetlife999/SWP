@@ -8,6 +8,7 @@ import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 import { sanitizeHtml } from '../lib/sanitize'
+import { DEPT_LABEL } from '../lib/departments'
 
 interface NewsItem {
   thumbClass?: string
@@ -28,17 +29,17 @@ const DEPARTMENT_ORDER: DepKey[] = ['core', 'active', 'media']
 
 const DEPARTMENT_META: Record<DepKey, { name: string; tagline: string; desc: string }> = {
   core: {
-    name: 'SU:Core',
+    name: DEPT_LABEL.core,
     tagline: 'Стратегия и переговоры с университетом',
     desc: 'Определяет приоритеты студсовета, ведёт бюджет и коммуникацию с администрацией университета.',
   },
   active: {
-    name: 'SU:Active',
+    name: DEPT_LABEL.active,
     tagline: 'События и кампусная жизнь',
     desc: 'Организует мероприятия, ивенты и активности для студентов на кампусе.',
   },
   media: {
-    name: 'SU:Media',
+    name: DEPT_LABEL.media,
     tagline: 'Контент и коммуникации',
     desc: 'Ведёт соцсети, освещает события студсовета и отвечает за визуальный контент.',
   },
@@ -55,7 +56,9 @@ export default function HomePage() {
   const { data: newsItems, loading: newsLoading, error: newsError, retry: newsRetry } = useFetch<NewsItem[]>(`${API_BASE}/news`);
 
   useEffect(() => {
-    api.content.get('home-intro').then(d => setIntroHtml(d.html)).catch(() => {})
+    api.content.get('home-intro').then(d => {
+      if (d.html) setIntroHtml(d.html)
+    }).catch(() => {})
   }, [])
 
   const depCounts = useMemo(() => {
