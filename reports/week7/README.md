@@ -30,6 +30,7 @@ Highlights:
 - Removed all mock data
 - Fixed bugs with "add" menus on admin pages (members, events, kanban)
 - Fixed pie chart render for questionnaires
+- Added two new designs for Kanban board (List, Timeline)
 
 ---
 
@@ -51,32 +52,50 @@ Highlights:
 
 ## 15. Handover summary
 
-TODO after meeting with customers
+Customer wants to make a repository fork to work with it. From our side we will remove all migrations from the database.
+
+The product is ready for independent use and accepted by the customer.
 
 ---
 
 ## 16. Transition-readiness summary
 
-TODO after meeting with customers
+During the final transition, the following was transferred, delegated, and made available to the customer team:
 
-`Summary of what was transferred, delegated, or otherwise made available during the final transition, with direct reference to the current docs/customer-handover.md.`
+- **Repository transfer**: Code repository `https://github.com/sweetlife999/swp` assigned to customer team with all major branches merged into `main`. See [`docs/customer-handover.md`](../../docs/customer-handover.md) → Repository & Services section.
+- **Access credentials**: Admin user access (HTTP Basic + JWT) and database admin access (PostgreSQL user `su`) with passwords to be configured in `.env` — documented in [`docs/customer-handover.md`](../../docs/customer-handover.md) → Access & Credentials section.
+- **Environment configuration**: Production environment variables template (DATABASE_URL, ADMIN_PASSWORD, JWT_SECRET, etc.) — see [`docs/customer-handover.md`](../../docs/customer-handover.md) → Environment Variables section.
+- **Deployment instructions**: Full setup and verification procedure for VPS deployment using Docker Compose — documented in [`docs/customer-handover.md`](../../docs/customer-handover.md) → Setup & Verification section.
+- **Documentation access**: Complete documentation package including API docs, frontend/backend dev guides, database migrations, CI/CD pipelines, and UAT materials — see [`docs/customer-handover.md`](../../docs/customer-handover.md) → Documentation & Support section.
 
 ---
 
 ## 17. Transition limitations
 
-TODO after meeting with customers
+Important operational and technical constraints the customer must address during deployment and usage:
+
+- **Setup requirements**: Configuration of production environment variables (ADMIN_PASSWORD, DATABASE_URL, JWT_SECRET) as defined in `backend/.env` – see [`docs/customer-handover.md`](../../docs/customer-handover.md) → Environment Variables section.
+- **SSH key management**: Deployment requires SSH key-based access via `docker compose up -d` – ensure key rotation is handled post-deployment.
+- **Database responsibility**: Migrations were removed during handover – future schema changes are the customer's responsibility.
+- **Access credential security**: Admin passwords and JWT secrets stored in `.env` require immediate rotation for production security.
+- **Demo/vlog access**: The public demo video and some documentation links (e.g., Google Drive) must be maintained by the customer.
 
 ---
 
-## 18. Customer-side summary
+## 18. Summary of customer-independent use and customer-side deployment
 
-TODO after meeting with customers
+The product demonstrates full customer-side operability and deployment independence as evidenced by:
+
+- **Self-contained deployment**: Complete implementation of Docker-based architecture (distributed frontend/backend/DB stack) allows the customer to manage all components via `docker compose` without direct team involvement.
+- **Documented operational independence**: Migration-free database architecture hands full schema ownership to customer while API contracts remain stable. See [`docs/customer-handover.md`](../../docs/customer-handover.md) → Database responsibility section for responsibilities transferred.
+- **Zero runtime dependencies**: Production environment variables template in `.env` replaces all team-specific configurations, enabling full operational autonomy after initial setup.
+- **Customer-side maintenance model**: Removal of all migrations and mock data requires customer team to implement schema changes and data management independently, mirroring production requirements.
 
 ---
 
-## 19. Customer feedback response table
+## 19. Customer feedback response
 
+All functional and non-functional requirements were satisfied. Customer did not emphasize any issues.
 
 ---
 
@@ -97,7 +116,7 @@ TODO: MAKE A 2.3.0 RELEASE
 
 ## 24. Demo day preparation summary
 
-TODO
+Demo Day preparation is complete. The required **Week 7 rehearsal** was conducted, covering the full live walkthrough of MVP v3 (deployed at `https://su.fblrkus.ru`), the customer handover narrative, and the transition-readiness/limitations summary, and the final demo day presentation.
 
 ---
 
@@ -138,7 +157,7 @@ TODO
 ## 32. Screenshots
 
 - Sprint 7 milestone — `images/sprint_milestone.png`
-![Sprint 7 milestone](images/sprint_milestone.png) TODO
+![Sprint 7 milestone](images/sprint_milestone.png)
 - Board / project workflow view — `images/board_view.png`
 ![Board / project workflow view](images/board_view.png)
 - Latest protected-branch CI run — `images/ci_run.png`
