@@ -6,6 +6,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 ## Unreleased
+- Removed dead sections from event cards
 - Now it is possible to add a photo for the event
 ---
 ## [2.2.0] — 2026-07-12
