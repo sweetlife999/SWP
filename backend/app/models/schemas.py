@@ -23,18 +23,6 @@ DepartmentOrLabel = Literal[
 EventStatus = Literal["draft", "published", "archived"]
 
 
-class ScheduleItem(BaseModel):
-    time: str = ""
-    title: str = ""
-    where: str = ""
-
-
-class OrganizerItem(BaseModel):
-    initials: str = ""
-    name: str = ""
-    role: str = ""
-
-
 class EventOut(BaseModel):
     id: int
     title: str
@@ -56,8 +44,6 @@ class EventOut(BaseModel):
     format: str = "Оффлайн"
     age: str = "0+"
     locationAddress: str = ""
-    schedule: list[ScheduleItem] = []
-    organizers: list[OrganizerItem] = []
 
 
 class EventCreate(BaseModel):
@@ -76,8 +62,6 @@ class EventCreate(BaseModel):
     format: str = "Оффлайн"
     age: str = "0+"
     locationAddress: str = ""
-    schedule: list[ScheduleItem] = []
-    organizers: list[OrganizerItem] = []
 
 
 class EventPatch(BaseModel):
@@ -97,8 +81,6 @@ class EventPatch(BaseModel):
     format: str | None = None
     age: str | None = None
     locationAddress: str | None = None
-    schedule: list[ScheduleItem] | None = None
-    organizers: list[OrganizerItem] | None = None
 
 
 # ── Members ───────────────────────────────────────────────────────────────────

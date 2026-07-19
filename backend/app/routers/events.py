@@ -25,14 +25,14 @@ admin_router = APIRouter(
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
            cover_class, photo_url, foot_text, foot_label, featured, status, status_text,
-           event_format, age_limit, location_address, schedule, organizers
+           event_format, age_limit, location_address
     FROM events
 """
 
 _RETURNING = (
     "id, title, description, event_date, event_time, department, "
     "cover_class, photo_url, foot_text, foot_label, featured, status, status_text, "
-    "event_format, age_limit, location_address, schedule, organizers"
+    "event_format, age_limit, location_address"
 )
 
 
@@ -61,8 +61,6 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         format=row["event_format"],
         age=row["age_limit"],
         locationAddress=row["location_address"] or "",
-        schedule=list(row["schedule"] or []),
-        organizers=list(row["organizers"] or []),
     )
 
 
@@ -109,8 +107,8 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         INSERT INTO events
           (title, description, event_date, event_time, department,
            cover_class, photo_url, foot_text, foot_label, featured, status_text,
-           event_format, age_limit, location_address, schedule, organizers)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+           event_format, age_limit, location_address)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING """
         + _RETURNING,
         body.title,
@@ -127,8 +125,6 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.format,
         body.age,
         body.locationAddress,
-        [s.model_dump() for s in body.schedule],
-        [o.model_dump() for o in body.organizers],
     )
     return _row_to_event(row)
 
@@ -222,10 +218,6 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("age_limit", body.age)
     if "locationAddress" in provided and body.locationAddress is not None:
         add("location_address", body.locationAddress)
-    if "schedule" in provided and body.schedule is not None:
-        add("schedule", [s.model_dump() for s in body.schedule])
-    if "organizers" in provided and body.organizers is not None:
-        add("organizers", [o.model_dump() for o in body.organizers])
 
     patch.require_updates()
 

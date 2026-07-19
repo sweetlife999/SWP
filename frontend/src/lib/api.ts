@@ -57,9 +57,6 @@ export function photoUrl(path: string | undefined, size = '320x320'): string {
 // Lifecycle status from the backend; 'live'/'passed' are legacy display values still tolerated.
 export type EventStatus = 'draft' | 'published' | 'archived'
 
-export interface ScheduleItem { time: string; title: string; where: string }
-export interface OrganizerItem { initials: string; name: string; role: string }
-
 export interface Event {
   id: number
   title: string; desc: string
@@ -71,7 +68,7 @@ export interface Event {
   featured?: boolean; past?: boolean
   status?: 'draft' | 'published' | 'archived'; statusText?: string
   format?: string; age?: string
-  locationAddress?: string; schedule?: ScheduleItem[]; organizers?: OrganizerItem[]
+  locationAddress?: string
 }
 
 export interface EventPatch {
@@ -79,7 +76,7 @@ export interface EventPatch {
   tag?: string; cover?: string; photo_url?: string; foot?: string; footLabel?: string | null
   featured?: boolean; status?: EventStatus; statusText?: string | null
   format?: string; age?: string
-  locationAddress?: string; schedule?: ScheduleItem[]; organizers?: OrganizerItem[]
+  locationAddress?: string
 }
 
 export interface Member {
