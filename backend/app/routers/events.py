@@ -24,14 +24,14 @@ admin_router = APIRouter(
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status, status_text,
+           cover_class, photo_url, foot_text, foot_label, featured, status, status_text,
            event_format, age_limit, location_address, schedule, organizers
     FROM events
 """
 
 _RETURNING = (
     "id, title, description, event_date, event_time, department, "
-    "cover_class, foot_text, foot_label, featured, status, status_text, "
+    "cover_class, photo_url, foot_text, foot_label, featured, status, status_text, "
     "event_format, age_limit, location_address, schedule, organizers"
 )
 
@@ -48,6 +48,7 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         dd=event_dd(d),
         mm=event_mm(d),
         cover=row["cover_class"] or "",
+        photo_url=row["photo_url"] or "",
         tag=dept_tag(row["department"]),
         tagCls=dept_tag_cls(row["department"]),
         time=f"{t.hour:02d}:{t.minute:02d}" if t else None,
@@ -107,9 +108,9 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         """
         INSERT INTO events
           (title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status_text,
+           cover_class, photo_url, foot_text, foot_label, featured, status_text,
            event_format, age_limit, location_address, schedule, organizers)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
         RETURNING """
         + _RETURNING,
         body.title,
@@ -118,6 +119,7 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.time or None,
         DEPT_MAP[body.tag],
         body.cover,
+        body.photo_url,
         body.foot,
         body.footLabel,
         body.featured,
@@ -206,6 +208,8 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("status", body.status)
 
     # Nullable columns: explicit null clears the field.
+    if "photo_url" in provided:
+        add("photo_url", body.photo_url or "")
     if "time" in provided:
         add("event_time", body.time or None)
     if "footLabel" in provided:

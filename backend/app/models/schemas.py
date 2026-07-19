@@ -43,6 +43,7 @@ class EventOut(BaseModel):
     dd: str
     mm: str
     cover: str
+    photo_url: str
     tag: str
     tagCls: str
     time: str | None = None
@@ -64,6 +65,7 @@ class EventCreate(BaseModel):
     desc: str
     date: dt_date
     cover: str = ""
+    photo_url: str = ""
     tag: DepartmentOrLabel
     # Parsed from an "HH:MM" string into a time so asyncpg can bind the TIME column.
     time: dt_time | None = None
@@ -86,6 +88,7 @@ class EventPatch(BaseModel):
     time: dt_time | None = None
     tag: DepartmentOrLabel | None = None
     cover: str | None = None
+    photo_url: str | None = None
     foot: str | None = None
     footLabel: str | None = None
     featured: bool | None = None

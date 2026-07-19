@@ -1,17 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Icon } from '../components/Icon'
+import { PhotoUpload } from '../components/PhotoUpload'
 import { api, type Event, type EventPatch, type EventStatus } from '../lib/api'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
 import { DEPT_LABEL } from '../lib/departments'
 
 type EventForm = {
   title: string; desc: string; date: string; time: string
-  tag: string; foot: string; featured: boolean; statusText: string
+  tag: string; foot: string; featured: boolean; statusText: string; photo_url: string
 }
 
 const BLANK: EventForm = {
-  title: '', desc: '', date: '', time: '', tag: DEPT_LABEL.core, foot: '', featured: false, statusText: '',
+  title: '', desc: '', date: '', time: '', tag: DEPT_LABEL.core, foot: '', featured: false, statusText: '', photo_url: '',
 }
 
 const STATUS: Record<string, { label: string; bg: string; fg: string }> = {
@@ -28,6 +29,7 @@ function toForm(e: Event): EventForm {
     title: e.title, desc: e.desc, date: e.date, time: e.time ?? '',
     tag: DEPT_OPTIONS.includes(e.tag) ? e.tag : DEPT_LABEL.core,
     foot: e.foot, featured: !!e.featured, statusText: e.statusText ?? '',
+    photo_url: e.photo_url ?? '',
   }
 }
 
@@ -66,7 +68,7 @@ export default function AdminEventsPage() {
         // Backend creates a draft; admin publishes it explicitly from the table.
         await api.events.create({
           title: form.title, desc: form.desc, date: form.date,
-          dd: '', mm: '', cover: '', tag: form.tag, tagCls: '',
+          dd: '', mm: '', cover: '', photo_url: form.photo_url, tag: form.tag, tagCls: '',
           time: form.time || undefined, foot: form.foot,
           featured: form.featured,
           statusText: form.statusText || undefined,
@@ -76,7 +78,7 @@ export default function AdminEventsPage() {
         const patch: EventPatch = {
           title: form.title, desc: form.desc, date: form.date,
           time: form.time || null, tag: form.tag, foot: form.foot,
-          featured: form.featured,
+          featured: form.featured, photo_url: form.photo_url,
           statusText: form.statusText || null,
         }
         await api.events.update(editing.id, patch)
@@ -206,6 +208,10 @@ export default function AdminEventsPage() {
                 <div className="field">
                   <label htmlFor="ev-desc">Описание</label>
                   <textarea id="ev-desc" className="textarea" rows={2} value={form.desc} onChange={e => setForm(f => ({ ...f, desc: e.target.value }))} />
+                </div>
+                <div className="field">
+                  <label id="ev-photo-label">Фото</label>
+                  <PhotoUpload value={form.photo_url} onChange={v => setForm(f => ({ ...f, photo_url: v }))} onError={showToast} />
                 </div>
                 <div className="row gap-3">
                   <div className="field" style={{ flex: 1 }}>

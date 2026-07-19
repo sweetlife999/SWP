@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { api, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
+import { api, photoUrl, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
 import { isEventLive } from '../lib/eventStatus'
 import { useAdmin } from '../lib/AdminContext'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
@@ -143,7 +143,10 @@ function EventDetailPageInner({ id }: { id?: string }) {
         </div>
       )}
 
-      <section className="event-banner">
+      <section
+        className="event-banner"
+        style={event?.photo_url ? { backgroundImage: `url(${photoUrl(event.photo_url, '1200x400')})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className="banner-inner">
           <div>
             <div className="badges">
