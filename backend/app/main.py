@@ -78,7 +78,9 @@ app.include_router(uploads.router, prefix="/api")
 
 
 @app.exception_handler(asyncpg.exceptions.CheckViolationError)
-async def check_violation_handler(request: Request, exc: asyncpg.exceptions.CheckViolationError) -> JSONResponse:
+async def check_violation_handler(
+    request: Request, exc: asyncpg.exceptions.CheckViolationError
+) -> JSONResponse:
     # A CHECK constraint violation means the request data was incomplete/invalid
     # for its type (e.g. a scale question missing its bounds) — that's a client
     # error (422), not a server fault, and the bare 500 FastAPI would otherwise
