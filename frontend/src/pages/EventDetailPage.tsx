@@ -13,21 +13,6 @@ export default function EventDetailPage() {
   return <EventDetailPageInner key={id} id={id} />
 }
 
-// Draft rows carry a client-only _k so React keys stay stable when a middle
-// row is deleted (index keys would misplace focus); _k is stripped on save.
-type Keyed<T> = T & { _k: number }
-type Details = { schedule: Keyed<ScheduleItem>[]; organizers: Keyed<OrganizerItem>[] }
-let draftKey = 0
-const nextKey = () => ++draftKey
-
-function isLiveNow(event: Event | undefined | null): boolean {
-  if (!event?.date || !event?.endDate) return false
-  const now = new Date()
-  const start = new Date(event.date)
-  const end = new Date(event.endDate)
-  return now >= start && now <= end
-}
-
 function EventDetailPageInner({ id }: { id?: string }) {
   const { isAdmin } = useAdmin()
   const [toast, setToast] = useState('')
@@ -125,8 +110,10 @@ function EventDetailPageInner({ id }: { id?: string }) {
         <div className="banner-inner">
           <div>
             <div className="badges">
-              <span className="b">{event?.tag ?? 'SU:Core'}</span>
-              {isLiveNow(event) && <span className="b live">live</span>}
+              <span className="b">{event?.tag ?? DEPT_LABEL.core}</span>
+              <span className={`b${event && isEventLive(event) ? ' live' : ''}`}>
+                {event?.statusText ?? (event && isEventLive(event) ? 'live' : event?.status ?? 'draft')}
+              </span>
             </div>
             <h1>{event?.title ?? ''}</h1>
             <p className="sub">{event?.desc ?? ''}</p>
