@@ -16,7 +16,7 @@ Deliver MVP v3, fix the bugs found, remove all mock data, and prepare the produc
 
 ## Delivered Increment Discussed
 
-### Fixes Delivered in MVP v3 (v2.3.0)
+### Fixes Delivered in MVP v3 (v3.0.0)
 - Donation page rendering fixed
 - All remaining mock data eliminated
 - Questionnaires rendering fixed after a user fills and sends them
@@ -30,7 +30,7 @@ Deliver MVP v3, fix the bugs found, remove all mock data, and prepare the produc
 - **Member management:** create/edit/delete members, archived instead of deleted (`is_active` flag)
 - **Event management:** create, edit, publish, archive, delete drafts
 - **Questionnaires:** build, publish, fill out, view responses
-- **Kanban board:** persisted cards, now with List and Timeline view options (added in v2.3.0)
+- **Kanban board:** persisted cards, now with List and Timeline view options (added in v3.0.0)
 
 ### Technical Stack Context Shared
 - Backend: **Python + FastAPI** (other Student Council teams used Java + Spring)
@@ -51,8 +51,8 @@ The customer confirmed the product is ready for use; no UAT defects were raised 
 | Scenario | Result | Notes |
 |---|---|---|
 | Functionality walkthrough (events, members, forms, donations, Kanban) | Accepted | Customer reviewed the live scope |
-| Mock data removal | Passed | All mock data eliminated in v2.3.0 |
-| Bug fixes (donation, questionnaires, typing, pie charts) | Passed | Shipped in v2.3.0 |
+| Mock data removal | Passed | All mock data eliminated in v3.0.0 |
+| Bug fixes (donation, questionnaires, typing, pie charts) | Passed | Shipped in v3.0.0 |
 | Handover readiness | Accepted | Product accepted by the customer |
 
 ---
@@ -100,5 +100,5 @@ Product increment accepted by the customer. No new feature changes requested.
 
 ## Product Status & Next Steps
 
-- **Current status:** MVP v3 (v2.3.0) deployed and functional at `https://su.fblrkus.ru`; all bugs fixed; mock data removed; product accepted by the customer and ready for independent use.
+- **Current status:** MVP v3 deployed and functional at `https://su.fblrkus.ru`; all bugs fixed; mock data removed; product accepted by the customer and ready for independent use.
 - **Next steps:** Clean up migrations, then the customer forks the repository. Development within the SWP framework is concluded.

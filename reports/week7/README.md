@@ -17,14 +17,14 @@
 
 - **Sprint Goal:** Deliver MVP v3, fix the bugs found, remove all mock data, prepare the product for the final handover to customer.
 - **Sprint dates:** 2026-07-13 – 2026-07-19
-- **Scope summary:** Remove all mock data, fix "add" menus on Kanban, events, and members admin pages, fix pie charts render, archieved events visibility, fix questionnaires and donation page render. 
+- **Scope summary:** Remove all mock data, fix "add" menus on Kanban, events, and members admin pages, fix pie charts render, archived events visibility, fix questionnaires and donation page render. 
 - **Total Sprint size (Story Points):** 17
 
 ---
 
 ## 7. Delivered product changes  
 
-See [`CHANGELOG.md` → `[2.3.0]`](../../CHANGELOG.md).
+See [`CHANGELOG.md` → `[3.0.0]`](../../CHANGELOG.md).
 
 Highlights:
 - Removed all mock data
@@ -107,9 +107,8 @@ All functional and non-functional requirements were satisfied. Customer did not 
 
 ## 21-23. Maintained quality & architecture docs
 
-TODO: MAKE A 2.3.0 RELEASE
-- **SemVer release (MVP v3):** [`2.3.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.3.0) — tag on `main`, mapping to Sprint 7, with links to milestone, run instructions, and demo video
-- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.3.0] — 2026-07-19` section
+- **SemVer release (MVP v3):** [`3.0.0`](https://github.com/sweetlife999/SWP/releases/tag/v3.0.0) — tag on `main`, mapping to Sprint 7, with links to milestone, run instructions, and demo video
+- **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[3.0.0] — 2026-07-19` section
 - **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/1UUVxBwEFhcyekX3bYbG27DfvUFGH270a/view?usp=sharing)
 
 ---

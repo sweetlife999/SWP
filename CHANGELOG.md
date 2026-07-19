@@ -6,7 +6,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
-## [2.3.0] — 2026-07-19
+## [3.0.0] — 2026-07-19
 
 - Resolved issue with Donation page rendering
 - Eliminated all remained mock data.
@@ -14,7 +14,7 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 - Resolved issue with typing in kanban, events, and members admin pages.
 - Fixed the pie charts rendering.
 - Survey draft now are not visible in the menu with questionnaire answers.
-- Archieved events now are not visible for default users. 
+- Archived events now are not visible for default users. 
   
 ## [2.2.0] — 2026-07-12
 - Resolved issues with photo size, orientation, and button positioning, improving the member profile UI.
