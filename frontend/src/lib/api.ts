@@ -23,10 +23,29 @@ function handleUnauthorized() {
   window.dispatchEvent(new Event('su:unauthorized'))
 }
 
+// Reads the response body for a failed request so callers get the backend's
+// actual `detail` message (e.g. a 422 validation reason) instead of a bare
+// status code that gives no clue what went wrong.
+async function extractErrorDetail(res: Response): Promise<string> {
+  try {
+    const text = await res.text()
+    if (!text) return String(res.status)
+    try {
+      const body = JSON.parse(text)
+      if (typeof body?.detail === 'string') return body.detail
+    } catch {
+      // Not JSON — fall through to raw text.
+    }
+    return text
+  } catch {
+    return String(res.status)
+  }
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init)
   if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
-  if (!res.ok) throw new Error(String(res.status))
+  if (!res.ok) throw new Error(await extractErrorDetail(res))
   if (res.status === 204) return undefined as T
   const text = await res.text()
   return (text ? JSON.parse(text) : undefined) as T
@@ -37,7 +56,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 async function reqVoid(path: string, init?: RequestInit): Promise<void> {
   const res = await fetch(`${BASE}${path}`, init)
   if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
-  if (!res.ok) throw new Error(String(res.status))
+  if (!res.ok) throw new Error(await extractErrorDetail(res))
 }
 
 function authHeaders(): HeadersInit {
@@ -57,29 +76,26 @@ export function photoUrl(path: string | undefined, size = '320x320'): string {
 // Lifecycle status from the backend; 'live'/'passed' are legacy display values still tolerated.
 export type EventStatus = 'draft' | 'published' | 'archived'
 
-export interface ScheduleItem { time: string; title: string; where: string }
-export interface OrganizerItem { initials: string; name: string; role: string }
-
 export interface Event {
   id: number
   title: string; desc: string
   date: string; dd: string; mm: string
   endDate?: string; endDd?: string; endMm?: string
-  cover: string; tag: string; tagCls: string
+  cover: string; photo_url?: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
   endTime?: string
   featured?: boolean; past?: boolean
   status?: 'draft' | 'published' | 'archived'; statusText?: string
   format?: string; age?: string
-  locationAddress?: string; schedule?: ScheduleItem[]; organizers?: OrganizerItem[]
+  locationAddress?: string
 }
 
 export interface EventPatch {
   title?: string; desc?: string; date?: string; time?: string | null
-  tag?: string; cover?: string; foot?: string; footLabel?: string | null
+  tag?: string; cover?: string; photo_url?: string; foot?: string; footLabel?: string | null
   featured?: boolean; status?: EventStatus; statusText?: string | null
   format?: string; age?: string
-  locationAddress?: string; schedule?: ScheduleItem[]; organizers?: OrganizerItem[]
+  locationAddress?: string
 }
 
 export interface Member {
@@ -137,7 +153,8 @@ export interface Tag { label: string; cls: string; style?: React.CSSProperties; 
 export interface MetaItem { icon: string; text: string; urgent?: boolean; soon?: boolean }
 export interface Assignee { initials: string; bg: string; offset?: boolean }
 export type Priority = 'p-low' | 'p-mid' | 'p-high'
-export type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
+// Columns come from GET /admin/kanban/columns (issue #126) — no longer a fixed union.
+export type ColKey = string
 export interface KanbanCard {
   id: string; col: ColKey; blocker?: boolean
   tags: Tag[]; title: string; desc?: string
@@ -145,6 +162,26 @@ export interface KanbanCard {
   progressPct?: number; progressLabel?: string
   meta?: MetaItem[]
   priority: Priority; pLabel: string; assignees: Assignee[]
+  deadline?: string
+}
+
+export interface KanbanColumn { key: ColKey; label: string; color: string; order_index: number }
+
+export type AutomationTriggerType = 'column_changed' | 'task_created'
+export type AutomationActionType = 'change_column' | 'assign_user'
+export interface AutomationAction { type: AutomationActionType; params: Record<string, string> }
+export interface Automation {
+  id: number; name: string; trigger_type: AutomationTriggerType
+  trigger_filters: Record<string, string>; actions: AutomationAction[]
+  is_active: boolean; stats_runs: number
+}
+export interface AutomationCreate {
+  name: string; trigger_type: AutomationTriggerType
+  trigger_filters?: Record<string, string>; actions: AutomationAction[]; is_active?: boolean
+}
+export interface AutomationRun {
+  id: number; automation_id: number; card_id: number | null
+  status: 'success' | 'failure'; details: { actions?: string[]; error?: string }; ran_at: string
 }
 
 export interface Form { id: string; tag: string; tagClass: string; title: string; count: number }
@@ -230,13 +267,24 @@ export const api = {
       delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },
     kanban: {
-      list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
-      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignee?: string }) =>
+      list:    () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
+      columns: () => req<KanbanColumn[]>('/admin/kanban/columns', { headers: authHeaders() }),
+      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignees?: string[]; deadline?: string | null }) =>
         req<KanbanCard>('/admin/kanban', { method: 'POST', headers: authHeaders(), body: JSON.stringify(card) }),
       // Edit any subset of a card's fields (a column-only move is just patch({ col })).
-      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignee?: string }) =>
+      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignees?: string[]; deadline?: string | null }) =>
         req<KanbanCard>(`/admin/kanban/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
       remove: (id: string) => reqVoid(`/admin/kanban/${id}`, { method: 'DELETE', headers: authHeaders() }),
+      automations: {
+        list:   () => req<Automation[]>('/admin/kanban/automations', { headers: authHeaders() }),
+        create: (body: AutomationCreate) =>
+          req<Automation>('/admin/kanban/automations', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) }),
+        patch:  (id: number, body: Partial<AutomationCreate>) =>
+          req<Automation>(`/admin/kanban/automations/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
+        remove: (id: number) => reqVoid(`/admin/kanban/automations/${id}`, { method: 'DELETE', headers: authHeaders() }),
+        history:    () => req<AutomationRun[]>('/admin/kanban/automations/history', { headers: authHeaders() }),
+        runHistory: (id: number) => req<AutomationRun[]>(`/admin/kanban/automations/${id}/history`, { headers: authHeaders() }),
+      },
     },
     forms: {
       list:      () => req<Form[]>('/admin/forms', { headers: authHeaders() }),
@@ -253,6 +301,8 @@ export const api = {
         req<{ id: number }>(`/admin/questionnaires/${id}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
       removeQuestion: (id: number | string, qid: number) =>
         reqVoid(`/admin/questionnaires/${id}/questions/${qid}`, { method: 'DELETE', headers: authHeaders() }),
+      remove:      (id: number | string) =>
+        reqVoid(`/admin/questionnaires/${id}`, { method: 'DELETE', headers: authHeaders() }),
       // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
       setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
         req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),

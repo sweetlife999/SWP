@@ -15,7 +15,12 @@ const SLICE_COLORS = [
 
 const SIZE = 120
 const RADIUS = SIZE / 2
-const CIRCUMFERENCE = 2 * Math.PI * RADIUS
+// The circle is drawn with r = RADIUS / 2 and strokeWidth = RADIUS (a ring
+// thick enough to fill the disc, turning it into a pie). The dash math must
+// use that same drawn radius, not the outer RADIUS, or slices past 50% wrap
+// all the way around and paint over the rest of the chart.
+const CIRCLE_R = RADIUS / 2
+const CIRCUMFERENCE = 2 * Math.PI * CIRCLE_R
 
 export function QuestionResultsChart({ stats }: QuestionResultsChartProps) {
   const total = stats.reduce((sum, s) => sum + s.count, 0)
@@ -44,7 +49,7 @@ export function QuestionResultsChart({ stats }: QuestionResultsChartProps) {
               key={i}
               cx={RADIUS}
               cy={RADIUS}
-              r={RADIUS / 2}
+              r={CIRCLE_R}
               fill="none"
               stroke={SLICE_COLORS[i % SLICE_COLORS.length]}
               strokeWidth={RADIUS}

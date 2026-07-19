@@ -3,6 +3,7 @@ import { Icon } from '../components/Icon'
 import { PhotoUpload } from '../components/PhotoUpload'
 import { api, type Member, type MemberPatch } from '../lib/api'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
+import { DEPT_LABEL as DEP_TAG, DEPT_KEYS as DEPS } from '../lib/departments'
 
 type Dep = Member['dep']
 type MemberForm = {
@@ -14,8 +15,6 @@ const BLANK: MemberForm = {
   dep: 'core', name: '', role: '', meta: '', bio: '',
   recent: ['', '', ''], photo_url: '', is_active: true,
 }
-const DEP_TAG: Record<Dep, string> = { core: 'SU:Core', active: 'SU:Active', media: 'SU:Media', support: 'SU:Support' }
-const DEPS: Dep[] = ['core', 'active', 'media', 'support']
 
 function toForm(m: Member): MemberForm {
   return {

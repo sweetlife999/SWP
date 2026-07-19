@@ -1,46 +1,74 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Icon } from '../Icon'
+import { api, type Member } from '../../lib/api'
 import { sanitizeHtml } from '../../lib/sanitize'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../../hooks/useModalA11y'
+import { CardDescriptionEditor } from './CardDescriptionEditor'
+import { CardDescriptionView } from './CardDescriptionView'
 import {
-  COLS,
   PRIORITY_BORDER,
   PRIORITY_LABEL,
   type CardData,
   type CardPatch,
   type ColKey,
+  type KbColumn,
   type Priority,
 } from './types'
 
 interface CardDetailPanelProps {
   card: CardData
   col: ColKey
+  cols: KbColumn[]
   onClose: () => void
   onMarkDone: () => void
   onDelete: () => void
   onSave: (patch: CardPatch) => Promise<void>
 }
 
-export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
+// Mirrors the backend's _initials() (app/routers/kanban.py) so an existing
+// card's stored initials can be matched back to a real member for the
+// assignee picker's default selection.
+function deriveInitials(name: string): string {
+  const parts = name.trim().split(/\s+/)
+  if (parts.length > 1) return parts.slice(0, 3).map(p => p[0]).join('').toUpperCase()
+  return name.slice(0, 3).toUpperCase()
+}
+
+export function CardDetailPanel({ card, col, cols, onClose, onMarkDone, onDelete, onSave }: CardDetailPanelProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(card.title)
   const [priority, setPriority] = useState<Priority>(card.priority)
   const [colKey, setColKey] = useState<ColKey>(col)
-  const [assignee, setAssignee] = useState(card.assignees[0]?.initials ?? '')
+  const [assignees, setAssignees] = useState<string[]>([])
+  const [members, setMembers] = useState<Member[]>([])
+  const [descHtml, setDescHtml] = useState(card.desc ?? '')
+  const [deadline, setDeadline] = useState(card.deadline ?? '')
   const [busy, setBusy] = useState(false)
-  const descRef = useRef<HTMLDivElement>(null)
-  const borderColor = card.blocker ? '#EF4444' : PRIORITY_BORDER[priority]
+  const borderColor = card.blocker ? PRIORITY_BORDER['p-high'] : PRIORITY_BORDER[priority]
   const dialogRef = useModalA11y(true, onClose)
+
+  // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
+  useEffect(() => {
+    const currentInitials = card.assignees.map(a => a.initials)
+    api.members.list('core').then(list => {
+      setMembers(list)
+      setAssignees(list.filter(m => currentInitials.includes(deriveInitials(m.name))).map(m => m.name))
+    }).catch(() => {})
+    // card is the panel's identity for the lifetime of this mount (see KanbanPage), so
+    // this only needs to run once per open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function save() {
     setBusy(true)
     try {
       await onSave({
         title: title.trim() || card.title,
-        desc: sanitizeHtml(descRef.current?.innerHTML ?? card.desc ?? ''),
+        desc: sanitizeHtml(descHtml),
         priority,
         col: colKey,
-        assignee: assignee.trim(),
+        assignees,
+        deadline: deadline || null,
       })
       setEditing(false)
     } finally {
@@ -86,9 +114,26 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                   <option value="p-low">P2 · Low</option>
                 </select>
                 <select className="select" style={{ width: 'auto', height: 32 }} value={colKey} onChange={e => setColKey(e.target.value as ColKey)}>
-                  {COLS.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                  {cols.map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                 </select>
-                <input className="input" style={{ width: 90 }} maxLength={3} placeholder="Assignee" value={assignee} onChange={e => setAssignee(e.target.value)} />
+                <select
+                  className="select"
+                  multiple
+                  aria-label="Assignees (Ctrl/Cmd-click for multiple)"
+                  style={{ width: 140, height: 60 }}
+                  value={assignees}
+                  onChange={e => setAssignees(Array.from(e.target.selectedOptions, o => o.value))}
+                >
+                  {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                </select>
+                <input
+                  type="date"
+                  className="input"
+                  aria-label="Deadline"
+                  style={{ width: 'auto', height: 32 }}
+                  value={deadline}
+                  onChange={e => setDeadline(e.target.value)}
+                />
               </>
             ) : (
               <>
@@ -96,6 +141,11 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
                   <span className="bar" /><span className="bar" /><span className="bar" />
                   {card.pLabel} · {PRIORITY_LABEL[card.priority]}
                 </span>
+                {card.deadline && (
+                  <span className="text-muted" style={{ fontSize: 12.5 }}>
+                    <Icon id="i-calendar" style={{ width: 12, height: 12, verticalAlign: -2 }} /> {card.deadline}
+                  </span>
+                )}
                 <div style={{ display: 'flex', gap: 4 }}>
                   {card.assignees.map((a, i) => (
                     <div key={i} className="avatar" style={{ background: a.bg, ...(a.offset ? { marginLeft: -8, border: '2px solid var(--surface)' } : {}) }}>
@@ -110,17 +160,11 @@ export function CardDetailPanel({ card, col, onClose, onMarkDone, onDelete, onSa
           <div>
             <div className="kb-detail-section-label">Описание</div>
             {editing ? (
-              // "Block note": rich contentEditable, stored as HTML (the app's content-block pattern).
-              <div
-                ref={descRef}
-                className="rm-edit"
-                contentEditable
-                suppressContentEditableWarning
-                dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc ?? '') }}
-                style={{ minHeight: 120, border: '1px solid var(--border)', borderRadius: 8, padding: 12, fontSize: 14, lineHeight: 1.6, outline: 'none' }}
-              />
+              <div style={{ border: '1px solid var(--border)', borderRadius: 8 }}>
+                <CardDescriptionEditor initialHtml={card.desc ?? ''} onChangeHtml={setDescHtml} />
+              </div>
             ) : card.desc ? (
-              <div style={{ fontSize: 14, color: 'var(--text)', lineHeight: 1.65 }} dangerouslySetInnerHTML={{ __html: sanitizeHtml(card.desc) }} />
+              <CardDescriptionView html={sanitizeHtml(card.desc)} />
             ) : (
               <p className="text-muted" style={{ fontSize: 13 }}>Описание не задано.</p>
             )}

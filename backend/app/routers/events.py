@@ -24,15 +24,15 @@ admin_router = APIRouter(
 
 _SELECT = """
     SELECT id, title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status, status_text,
-           event_format, age_limit, location_address, schedule, organizers
+           cover_class, photo_url, foot_text, foot_label, featured, status, status_text,
+           event_format, age_limit, location_address
     FROM events
 """
 
 _RETURNING = (
     "id, title, description, event_date, event_time, department, "
-    "cover_class, foot_text, foot_label, featured, status, status_text, "
-    "event_format, age_limit, location_address, schedule, organizers"
+    "cover_class, photo_url, foot_text, foot_label, featured, status, status_text, "
+    "event_format, age_limit, location_address"
 )
 
 
@@ -48,6 +48,7 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         dd=event_dd(d),
         mm=event_mm(d),
         cover=row["cover_class"] or "",
+        photo_url=row["photo_url"] or "",
         tag=dept_tag(row["department"]),
         tagCls=dept_tag_cls(row["department"]),
         time=f"{t.hour:02d}:{t.minute:02d}" if t else None,
@@ -60,8 +61,6 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
         format=row["event_format"],
         age=row["age_limit"],
         locationAddress=row["location_address"] or "",
-        schedule=list(row["schedule"] or []),
-        organizers=list(row["organizers"] or []),
     )
 
 
@@ -70,22 +69,19 @@ def _row_to_event(row: asyncpg.Record) -> EventOut:
 
 @router.get("", response_model=list[EventOut])
 async def list_events(request: Request) -> list[EventOut]:
-    """AC1: drafts are excluded from the public listing."""
+    """AC1: only published events are visible in the public listing (drafts/archived excluded)."""
     pool: asyncpg.Pool = get_pool(request)
     rows = await pool.fetch(
-        _SELECT
-        + "WHERE status IN ('published', 'archived') ORDER BY event_date DESC, id DESC LIMIT 500"
+        _SELECT + "WHERE status = 'published' ORDER BY event_date DESC, id DESC LIMIT 500"
     )
     return [_row_to_event(r) for r in rows]
 
 
 @router.get("/{event_id}", response_model=EventOut)
 async def get_event(event_id: int, request: Request) -> EventOut:
-    """Public. Returns any non-draft event by id."""
+    """Public. Returns a published event by id."""
     pool: asyncpg.Pool = get_pool(request)
-    row = await pool.fetchrow(
-        _SELECT + "WHERE id = $1 AND status IN ('published', 'archived')", event_id
-    )
+    row = await pool.fetchrow(_SELECT + "WHERE id = $1 AND status = 'published'", event_id)
     if row is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Event not found")
     return _row_to_event(row)
@@ -110,9 +106,9 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         """
         INSERT INTO events
           (title, description, event_date, event_time, department,
-           cover_class, foot_text, foot_label, featured, status_text,
-           event_format, age_limit, location_address, schedule, organizers)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+           cover_class, photo_url, foot_text, foot_label, featured, status_text,
+           event_format, age_limit, location_address)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING """
         + _RETURNING,
         body.title,
@@ -121,6 +117,7 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.time or None,
         DEPT_MAP[body.tag],
         body.cover,
+        body.photo_url,
         body.foot,
         body.footLabel,
         body.featured,
@@ -128,8 +125,6 @@ async def create_event(body: EventCreate, request: Request) -> EventOut:
         body.format,
         body.age,
         body.locationAddress,
-        [s.model_dump() for s in body.schedule],
-        [o.model_dump() for o in body.organizers],
     )
     return _row_to_event(row)
 
@@ -209,6 +204,8 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("status", body.status)
 
     # Nullable columns: explicit null clears the field.
+    if "photo_url" in provided:
+        add("photo_url", body.photo_url or "")
     if "time" in provided:
         add("event_time", body.time or None)
     if "footLabel" in provided:
@@ -221,10 +218,6 @@ async def _apply_patch(event_id: int, body: EventPatch, pool: asyncpg.Pool) -> E
         add("age_limit", body.age)
     if "locationAddress" in provided and body.locationAddress is not None:
         add("location_address", body.locationAddress)
-    if "schedule" in provided and body.schedule is not None:
-        add("schedule", [s.model_dump() for s in body.schedule])
-    if "organizers" in provided and body.organizers is not None:
-        add("organizers", [o.model_dump() for o in body.organizers])
 
     patch.require_updates()
 

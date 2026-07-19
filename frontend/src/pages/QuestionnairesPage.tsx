@@ -69,8 +69,13 @@ export default function QuestionnairesPage() {
     setSubmitError('')
     try {
       await api.questionnaires.submit(active.id, payload)
-      setSubmitted(true)
       markAnswered(active.id)
+      // Fall through to the next unanswered survey (or the blank state if none left)
+      // instead of leaving selectedId pinned to the one just submitted.
+      setSelectedId(null)
+      setStep(0)
+      setAnswers({})
+      setSubmitted(false)
     } catch (e) {
       // 409 = the one-response-per-student cookie guard already fired.
       setSubmitError(e instanceof Error && e.message === '409' ? 'Вы уже проходили этот опрос' : 'Не удалось отправить ответ')
