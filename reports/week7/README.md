@@ -1,4 +1,4 @@
-# Week 6 Report — Student Union Portal (MVP v2)
+# Week 7 Report — Student Union Portal (MVP v2)
 
 **Project:** Student Union Portal — Innopolis University
 **Team:** Team 2
