@@ -5,6 +5,9 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
+## Unreleased
+- Now it is possible to add a photo for the event
+---
 ## [2.2.0] — 2026-07-12
 - Resolved issues with photo size, orientation, and button positioning, improving the member profile UI.
 - Eliminated the mock authentication that had remained from the very beginning of the project, moving closer to production-ready code.
