@@ -432,12 +432,6 @@ export default function FormBuilderPage() {
 
         <aside className="builder-settings">
           <div className="settings-card">
-            <h4><Icon id="i-shield" className="ic" />Доступ</h4>
-            <div className="row sb"><span>Открыт для</span><span className="text-mono" style={{ fontSize: 12 }}>All students</span></div>
-            <div className="row sb"><span>Анонимные ответы</span><label className="switch"><input type="checkbox" defaultChecked /><span className="track"></span></label></div>
-            <div className="row sb"><span>1 ответ на студента</span><label className="switch"><input type="checkbox" defaultChecked /><span className="track"></span></label></div>
-          </div>
-          <div className="settings-card">
             <h4><Icon id="i-calendar" className="ic" />Сроки</h4>
             <div className="field" style={{ marginBottom: 12 }}>
               <label>Открыть</label>
