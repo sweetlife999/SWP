@@ -12,6 +12,8 @@ import { DEPT_LABEL } from '../lib/departments'
 
 interface NewsItem {
   thumbClass?: string
+  photo_url?: string
+  cover?: string
   date?: string
   category?: string
   title: string
@@ -213,19 +215,25 @@ export default function HomePage() {
 
         {!newsLoading && !newsError && newsItems && newsItems.length > 0 && (
           <div className="news-list">
-            {newsItems.map((item: NewsItem, index: number) => (
-              <div key={index} className="news-row">
-                <div className={`thumb ${item.thumbClass || ''}`} />
-                <div className="news-body">
-                  <div className="meta">
-                    <span>{item.date || 'Soon'}</span>
-                    <span>{item.category || 'News'}</span>
+            {newsItems.map((item: NewsItem, index: number) => {
+              const thumb = photoUrl(item.photo_url, '400x320')
+              return (
+                <div key={index} className="news-row">
+                  <div
+                    className={`thumb${!thumb && item.thumbClass ? ` ${item.thumbClass}` : ''}`}
+                    style={thumb ? { backgroundImage: `url(${thumb})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                  />
+                  <div className="news-body">
+                    <div className="meta">
+                      <span>{item.date || 'Soon'}</span>
+                      <span>{item.category || 'News'}</span>
+                    </div>
+                    <h3>{item.title}</h3>
+                    <p>{item.excerpt || item.desc || ''}</p>
                   </div>
-                  <h3>{item.title}</h3>
-                  <p>{item.excerpt || item.desc || ''}</p>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </section>
