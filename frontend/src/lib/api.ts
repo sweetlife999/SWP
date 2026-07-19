@@ -23,10 +23,29 @@ function handleUnauthorized() {
   window.dispatchEvent(new Event('su:unauthorized'))
 }
 
+// Reads the response body for a failed request so callers get the backend's
+// actual `detail` message (e.g. a 422 validation reason) instead of a bare
+// status code that gives no clue what went wrong.
+async function extractErrorDetail(res: Response): Promise<string> {
+  try {
+    const text = await res.text()
+    if (!text) return String(res.status)
+    try {
+      const body = JSON.parse(text)
+      if (typeof body?.detail === 'string') return body.detail
+    } catch {
+      // Not JSON — fall through to raw text.
+    }
+    return text
+  } catch {
+    return String(res.status)
+  }
+}
+
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init)
   if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
-  if (!res.ok) throw new Error(String(res.status))
+  if (!res.ok) throw new Error(await extractErrorDetail(res))
   if (res.status === 204) return undefined as T
   const text = await res.text()
   return (text ? JSON.parse(text) : undefined) as T
@@ -37,7 +56,7 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 async function reqVoid(path: string, init?: RequestInit): Promise<void> {
   const res = await fetch(`${BASE}${path}`, init)
   if (res.status === 401 && hasAuthHeader(init)) handleUnauthorized()
-  if (!res.ok) throw new Error(String(res.status))
+  if (!res.ok) throw new Error(await extractErrorDetail(res))
 }
 
 function authHeaders(): HeadersInit {

@@ -215,6 +215,7 @@ export default function FormBuilderPage() {
     const input: QuestionInput = { type, title: q.title.trim() || '(без названия)', hint: q.hint }
     if (type === 'single' || type === 'multi') input.options = q.options.filter(Boolean)
     if (q.type === 'stars') { input.scale_low = '1'; input.scale_high = '5' }
+    if (q.type === 'scale') { input.scale_low = '1'; input.scale_high = '10' }
     return input
   }
 
@@ -256,6 +257,8 @@ export default function FormBuilderPage() {
     const real = questions.filter(q => BACKEND_TYPE[q.type] !== null)
     if (!formTitle.trim()) { showToast('Укажите название опроса'); return }
     if (real.length === 0) { showToast('Добавьте хотя бы один вопрос'); return }
+    const emptyOptions = real.find(q => (q.type === 'single' || q.type === 'multi') && q.options.filter(Boolean).length < 2)
+    if (emptyOptions) { showToast(`Вопрос «${emptyOptions.title || '(без названия)'}»: добавьте варианты ответа`); return }
     setSaving(true)
     try {
       let id = currentId
@@ -275,8 +278,10 @@ export default function FormBuilderPage() {
       if (publishIt) { await api.admin.questionnaires.setStatus(id, 'open'); setStatus('published') }
       showToast(publishIt ? 'Опрос опубликован — открыт в Questionnaires' : 'Сохранено')
       loadList()
-    } catch {
-      showToast('Не удалось сохранить опрос')
+    } catch (err) {
+      console.error(err)
+      const msg = err instanceof Error ? err.message : ''
+      showToast(msg ? `Не удалось сохранить опрос: ${msg}` : 'Не удалось сохранить опрос')
     } finally {
       setSaving(false)
     }
