@@ -13,6 +13,7 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 | Assignment | Report |
 |------------|--------|
+| Assignment 6 (Sprint 7 - MVP v3) | [reports/week7/README.md](reports/week7/README.md) |
 | Assignment 6 (Sprint 6 - Enhancing the product) | [reports/week6/README.md](reports/week6/README.md) |
 | Assignment 5 (Sprint 5 - MVP v2) | [reports/week5/README.md](reports/week5/README.md) |
 | Assignment 4 (Sprint 4 — Integration, Quality & Automation) | [reports/week4/README.md](reports/week4/README.md) |
@@ -21,7 +22,7 @@ A centralized web platform connecting Innopolis University students with the Stu
 
 ---
 
-## Access to MVP v2
+## Access to MVP v3
 
 The deployed site is publicly accessible at [https://su.fblrkus.ru](https://su.fblrkus.ru).
 
@@ -164,7 +165,9 @@ The site is deployed on a VPS behind nginx (TLS via Let's Encrypt). On every pus
 |   |-- week2/             - Assignment 2 reports
 |   |-- week3/             - Assignment 3 reports (Sprint 3 - MVP v1)
 |   |-- week4/             - Assignment 4 reports (Sprint 4 - Integration, Quality & Automation)
-|   `-- week5/             - Assignment 5 reports (Sprint 5 - MVP v2)
+|   |-- week5/             - Assignment 5 reports (Sprint 5 - MVP v2)
+|   |-- week6/             - Assignment 6 reports (Sprint 6 - Enhancing the product)
+|   `-- week7/             - Assignment 6 reports (Sprint 7 - MVP v3)
 |-- CHANGELOG.md
 |-- LICENSE
 |-- README.md
