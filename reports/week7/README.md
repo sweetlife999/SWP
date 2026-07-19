@@ -161,7 +161,8 @@ Demo Day preparation is complete. The required **Week 7 rehearsal** was conducte
 ![Board / project workflow view](images/board_view.png)
 - Latest protected-branch CI run — `images/ci_run.png`
 ![Latest protected-branch CI run](images/ci_run.png)
-- SemVer release — TODO
+- SemVer release — `images/release.png`
+![SemVer release](images/release.png)
 - Example reviewed issue-linked PR — `images/reviewed_pr.png`
 ![Example reviewed issue-linked PR](images/reviewed_pr.png)
 - Hosted docs site — `images/hosted_docs.png`
