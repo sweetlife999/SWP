@@ -110,7 +110,7 @@ All functional and non-functional requirements were satisfied. Customer did not 
 TODO: MAKE A 2.3.0 RELEASE
 - **SemVer release (MVP v3):** [`2.3.0`](https://github.com/sweetlife999/SWP/releases/tag/v2.3.0) — tag on `main`, mapping to Sprint 7, with links to milestone, run instructions, and demo video
 - **`CHANGELOG.md`:** [link](../../CHANGELOG.md) — `[Unreleased]` moved into the dated `[2.3.0] — 2026-07-19` section
-- **Public sanitized demo video (<2 min):** [Google Drive](TODO)
+- **Public sanitized demo video (<2 min):** [Google Drive](https://drive.google.com/file/d/1UUVxBwEFhcyekX3bYbG27DfvUFGH270a/view?usp=sharing)
 
 ---
 
