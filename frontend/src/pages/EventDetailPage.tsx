@@ -151,12 +151,18 @@ function EventDetailPageInner({ id }: { id?: string }) {
             <article className="content-block">
               <h2>Похожие мероприятия</h2>
               <div className="related-grid">
-                {related.map(r => (
-                  <Link className="related-card" to={`/events/${r.id}`} key={r.id}>
-                    <div className="img"></div>
-                    <div className="body"><div className="meta">{r.dd} {r.mm} · {r.tag}</div><h4>{r.title}</h4></div>
-                  </Link>
-                ))}
+                {related.map(r => {
+                  const rPhoto = photoUrl(r.photo_url, '480x300')
+                  return (
+                    <Link className="related-card" to={`/events/${r.id}`} key={r.id}>
+                      <div
+                        className={`img${!rPhoto && r.cover ? ` ${r.cover}` : ''}`}
+                        style={rPhoto ? { backgroundImage: `url(${rPhoto})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+                      ></div>
+                      <div className="body"><div className="meta">{r.dd} {r.mm} · {r.tag}</div><h4>{r.title}</h4></div>
+                    </Link>
+                  )
+                })}
               </div>
             </article>
           )}

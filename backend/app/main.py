@@ -2,6 +2,7 @@ import asyncio
 import logging
 from contextlib import asynccontextmanager
 
+import asyncpg
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -74,6 +75,18 @@ app.include_router(questionnaires.router, prefix="/api")
 app.include_router(admin_questionnaires.admin_router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(uploads.router, prefix="/api")
+
+
+@app.exception_handler(asyncpg.exceptions.CheckViolationError)
+async def check_violation_handler(
+    request: Request, exc: asyncpg.exceptions.CheckViolationError
+) -> JSONResponse:
+    # A CHECK constraint violation means the request data was incomplete/invalid
+    # for its type (e.g. a scale question missing its bounds) — that's a client
+    # error (422), not a server fault, and the bare 500 FastAPI would otherwise
+    # return gives the frontend/admin no way to explain the failure to the user.
+    logger.warning("Database check constraint violated: %s", exc)
+    return JSONResponse({"detail": "Invalid data for this request"}, status_code=422)
 
 
 @app.get("/health")
