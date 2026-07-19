@@ -5,10 +5,17 @@ Format follows [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
-## Unreleased
-- Removed dead sections from event cards
-- Now it is possible to add a photo for the event
----
+
+## [3.0.0] — 2026-07-19
+
+- Resolved issue with Donation page rendering
+- Eliminated all remained mock data.
+- Fixed the questionnaires rendering after the user fills and sends them.
+- Resolved issue with typing in kanban, events, and members admin pages.
+- Fixed the pie charts rendering.
+- Survey draft now are not visible in the menu with questionnaire answers.
+- Archived events now are not visible for default users. 
+  
 ## [2.2.0] — 2026-07-12
 - Resolved issues with photo size, orientation, and button positioning, improving the member profile UI.
 - Eliminated the mock authentication that had remained from the very beginning of the project, moving closer to production-ready code.

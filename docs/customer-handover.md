@@ -1,5 +1,7 @@
 # Student Union Portal – Handover Documentation
 
+The product is ready for independent use and accepted by the customer.
+
 ## 1. Repository & Services
 
 | Artifact | Location | Notes |
