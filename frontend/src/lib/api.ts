@@ -65,7 +65,7 @@ export interface Event {
   title: string; desc: string
   date: string; dd: string; mm: string
   endDate?: string; endDd?: string; endMm?: string
-  cover: string; tag: string; tagCls: string
+  cover: string; photo_url?: string; tag: string; tagCls: string
   time?: string; foot: string; footLabel?: string
   endTime?: string
   featured?: boolean; past?: boolean
@@ -76,7 +76,7 @@ export interface Event {
 
 export interface EventPatch {
   title?: string; desc?: string; date?: string; time?: string | null
-  tag?: string; cover?: string; foot?: string; footLabel?: string | null
+  tag?: string; cover?: string; photo_url?: string; foot?: string; footLabel?: string | null
   featured?: boolean; status?: EventStatus; statusText?: string | null
   format?: string; age?: string
   locationAddress?: string; schedule?: ScheduleItem[]; organizers?: OrganizerItem[]

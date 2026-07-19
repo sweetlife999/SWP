@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Icon } from '../components/Icon'
-import { API_BASE, type Event } from '../lib/api'
+import { API_BASE, photoUrl, type Event } from '../lib/api'
 import { useFetch } from '../hooks/useFetch'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
@@ -17,9 +17,13 @@ function statusLabel(ev: Event): string {
 function EventCard({ ev }: { ev: Event }) {
   const label = statusLabel(ev)
   const footerLabel = ev.footLabel || 'Подробнее'
+  const photo = photoUrl(ev.photo_url, '480x300')
   return (
     <Link data-testid="event-card" className={`event-card${ev.featured ? ' featured' : ''}${ev.past ? ' passed' : ''}`} to={`/events/${ev.id}`}>
-      <div className={`ec-cover${ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}>
+      <div
+        className={`ec-cover${!photo && ev.cover ? ` ${ev.cover}` : ''}${ev.past ? ' passed-cover' : ''}`}
+        style={photo ? { backgroundImage: `url(${photo})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined}
+      >
         <div className="date-badge"><div className="d">{ev.dd}</div><div className="m">{ev.mm}</div></div>
         {label && <span className={`status-badge${ev.status === 'published' ? ' live' : ''}`}>{label}</span>}
       </div>
