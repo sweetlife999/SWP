@@ -1,12 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Icon } from '../components/Icon'
-import { api } from '../lib/api'
+import { api, type Member } from '../lib/api'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
-import { COLS, FACES, type CardData, type ColKey, type Priority } from '../components/kanban/types'
+import { colClass, FALLBACK_COLS, PRIORITY_BORDER, type CardData, type ColKey, type KbColumn, type Priority } from '../components/kanban/types'
 import { CardDetailPanel } from '../components/kanban/CardDetailPanel'
 import { KbCard } from '../components/kanban/KbCard'
+import { AutomationsPanel } from '../components/kanban/AutomationsPanel'
 
 export default function KanbanPage() {
   const [viewSeg, setViewSeg] = useState(0)
@@ -18,8 +19,23 @@ export default function KanbanPage() {
   const [selected, setSelected] = useState<CardData | null>(null)
   // Off by default — otherwise newly-created low-priority cards are hidden on load.
   const [chipP01, setChipP01] = useState(false)
-  const [chipOpenDay, setChipOpenDay] = useState(false)
-  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignee: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+  const [newTask, setNewTask] = useState<{ open: boolean; col: ColKey; title: string; desc: string; priority: Priority; assignees: string[]; deadline: string }>({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignees: [], deadline: '' })
+  // The board is SU:Core-only, so the assignee picker only offers SU:Core members.
+  const [members, setMembers] = useState<Member[]>([])
+  useEffect(() => {
+    api.members.list('core').then(setMembers).catch(() => {})
+  }, [])
+  // Columns come from the DB (issue #126 AC4/AC5); FALLBACK_COLS only covers the gap before this resolves.
+  const [cols, setCols] = useState<KbColumn[]>(FALLBACK_COLS)
+  useEffect(() => {
+    api.admin.kanban.columns()
+      .then(fetched => setCols(fetched.map(c => ({
+        key: c.key, label: c.label, color: c.color,
+        cls: colClass(c.order_index), eyeBtn: c.key === 'done',
+      }))))
+      .catch(() => {})
+  }, [])
+  const [showAutomations, setShowAutomations] = useState(false)
   const closeNewTask = () => setNewTask(t => ({ ...t, open: false }))
   const newTaskRef = useModalA11y(newTask.open, closeNewTask)
   const [toast, setToast] = useState('')
@@ -53,6 +69,33 @@ export default function KanbanPage() {
     setTimeout(() => setToast(''), 3000)
   }
 
+  // Automations run server-side inside the same request that moves/creates a
+  // card, so by the time that request resolves any triggered rule has already
+  // run — this diffs stats_runs against the last known baseline and surfaces
+  // it as a toast right on the board, instead of only inside the Automations
+  // panel's own history view (issue #126 follow-up: runs weren't visible in
+  // real time).
+  const automationRunsRef = useRef<Record<number, number>>({})
+  useEffect(() => {
+    api.admin.kanban.automations.list()
+      .then(list => { automationRunsRef.current = Object.fromEntries(list.map(a => [a.id, a.stats_runs])) })
+      .catch(() => {})
+  }, [])
+  async function checkAutomationRuns() {
+    try {
+      const list = await api.admin.kanban.automations.list()
+      for (const a of list) {
+        // 0, not a.stats_runs, so an automation created after the initial
+        // baseline fetch still toasts on its very first observed run.
+        const prev = automationRunsRef.current[a.id] ?? 0
+        if (a.stats_runs > prev) showToast(`⚡ Автоматизация «${a.name}» сработала`)
+      }
+      automationRunsRef.current = Object.fromEntries(list.map(a => [a.id, a.stats_runs]))
+    } catch {
+      // best-effort — a failed check here shouldn't disrupt the board
+    }
+  }
+
   // Optimistic move: update the UI immediately, persist via PATCH, roll back + toast on failure (US-10 AC2/AC3).
   async function moveCard(cardId: string, col: ColKey) {
     const prev = cardCols[cardId] ?? allCards.find(c => c.id === cardId)?.col
@@ -62,6 +105,7 @@ export default function KanbanPage() {
     if (cardId.startsWith('kb-x')) return
     try {
       await api.admin.kanban.patch(cardId, { col })
+      checkAutomationRuns()
     } catch {
       setCardCols(p => ({ ...p, [cardId]: prev }))
       showToast('Не удалось переместить карточку')
@@ -73,7 +117,6 @@ export default function KanbanPage() {
     return allCards.filter(c => {
       if ((cardCols[c.id] ?? c.col) !== col) return false
       if (chipP01 && c.priority === 'p-low') return false
-      if (chipOpenDay && !c.tags.some(t => t.label === 'Open Day')) return false
       if (!q) return true
       return c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q) || false
     })
@@ -85,12 +128,12 @@ export default function KanbanPage() {
     const csv = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n')
     const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement('a'); a.href = url; a.download = 'kanban-sprint14.csv'; a.click()
+    const a = document.createElement('a'); a.href = url; a.download = 'kanban-board.csv'; a.click()
     URL.revokeObjectURL(url)
   }
 
   function openNewTask(col: ColKey) {
-    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignee: '' })
+    setNewTask({ open: true, col, title: '', desc: '', priority: 'p-mid', assignees: [], deadline: '' })
   }
 
   async function submitNewTask() {
@@ -101,15 +144,53 @@ export default function KanbanPage() {
         col: newTask.col,
         desc: newTask.desc.trim() || undefined,
         priority: newTask.priority,
-        assignee: newTask.assignee.trim() || undefined,
+        assignees: newTask.assignees.length ? newTask.assignees : undefined,
+        deadline: newTask.deadline || undefined,
       })
-      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignee: '' })
+      setNewTask({ open: false, col: 'backlog', title: '', desc: '', priority: 'p-mid', assignees: [], deadline: '' })
       retry()  // reload the board so the persisted card appears
       showToast('Задача создана')
+      checkAutomationRuns()
     } catch {
       showToast('Не удалось создать задачу')
     }
   }
+
+  // List/Timeline (issue #125 AC1/AC2) apply the same search+priority filters
+  // as the board, but across all columns at once instead of per-column.
+  function matchesFilters(c: CardData): boolean {
+    if (chipP01 && c.priority === 'p-low') return false
+    const q = search.trim().toLowerCase()
+    if (!q) return true
+    return c.title.toLowerCase().includes(q) || c.desc?.toLowerCase().includes(q) || false
+  }
+  const visibleCards = allCards.filter(matchesFilters)
+
+  const [listSort, setListSort] = useState<{ key: 'title' | 'col' | 'priority' | 'assignees' | 'deadline'; dir: 1 | -1 }>({ key: 'col', dir: 1 })
+  function toggleSort(key: typeof listSort.key) {
+    setListSort(s => (s.key === key ? { key, dir: s.dir === 1 ? -1 : 1 } : { key, dir: 1 }))
+  }
+  const colOrderIndex = (key: ColKey) => { const i = cols.findIndex(c => c.key === key); return i === -1 ? cols.length : i }
+  const PRIORITY_ORDER: Record<Priority, number> = { 'p-high': 0, 'p-mid': 1, 'p-low': 2 }
+  const sortedListCards = [...visibleCards].sort((a, b) => {
+    let cmp = 0
+    switch (listSort.key) {
+      case 'title': cmp = a.title.localeCompare(b.title); break
+      case 'col': cmp = colOrderIndex(cardCols[a.id] ?? a.col) - colOrderIndex(cardCols[b.id] ?? b.col); break
+      case 'priority': cmp = PRIORITY_ORDER[a.priority] - PRIORITY_ORDER[b.priority]; break
+      case 'assignees': cmp = (a.assignees[0]?.initials ?? '').localeCompare(b.assignees[0]?.initials ?? ''); break
+      case 'deadline': cmp = (a.deadline ?? '9999-99-99').localeCompare(b.deadline ?? '9999-99-99'); break
+    }
+    return cmp * listSort.dir
+  })
+
+  const LIST_COLUMNS = [
+    { key: 'title' as const, label: 'Задача' },
+    { key: 'col' as const, label: 'Колонка' },
+    { key: 'priority' as const, label: 'Приоритет' },
+    { key: 'assignees' as const, label: 'Исполнители' },
+    { key: 'deadline' as const, label: 'Срок' },
+  ]
 
   async function deleteCard(id: string) {
     try {
@@ -136,7 +217,7 @@ export default function KanbanPage() {
         <div className="page-head">
           <div className="title">
             <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
+            <h1>Core board</h1>
           </div>
         </div>
         <div style={{ 
@@ -164,11 +245,11 @@ export default function KanbanPage() {
         <div className="page-head">
           <div className="title">
             <span className="eyebrow">SU:Core · Internal backlog</span>
-            <h1>Core board · Sprint 14</h1>
+            <h1>Core board</h1>
           </div>
         </div>
         <div className="board">
-          {COLS.map(col => (
+          {cols.map(col => (
             <div key={col.key} className={`kb-col ${col.cls}`}>
               <header className="col-head">
                 <span className="marker" style={{ background: col.color }} />
@@ -198,7 +279,7 @@ export default function KanbanPage() {
       <div className="page-head">
         <div className="title">
           <span className="eyebrow">SU:Core · Internal backlog</span>
-          <h1>Core board · Sprint 14</h1>
+          <h1>Core board</h1>
           <p className="text-muted" style={{ fontSize: 13, marginTop: 2 }}>
             Only for SU:Core team. Students do not see this page.
           </p>
@@ -206,6 +287,9 @@ export default function KanbanPage() {
         <div className="row gap-2">
           <button className="btn secondary" onClick={exportCsv}>
             <Icon id="i-download" style={{ width: 14, height: 14 }} />Export CSV
+          </button>
+          <button className="btn secondary" onClick={() => setShowAutomations(true)}>
+            <Icon id="i-spark" style={{ width: 14, height: 14 }} />Automations
           </button>
           <button className="btn primary" onClick={() => openNewTask('backlog')}>
             <Icon id="i-plus" style={{ width: 14, height: 14 }} />New task
@@ -224,27 +308,8 @@ export default function KanbanPage() {
           />
         </label>
         <span className="divider" />
-        <div className="row gap-2">
-          <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Sprint</span>
-          <select className="select" style={{ width: 'auto', minWidth: 180, height: 32, fontSize: 13, paddingRight: 28 }}>
-            <option>Sprint 14 · current</option>
-            <option>Sprint 13</option>
-            <option>Sprint 12</option>
-            <option>Backlog (no sprint)</option>
-          </select>
-        </div>
-        <span className="divider" />
-        <span className="text-mono" style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Who</span>
-        <div className="kb-faces">
-          {FACES.map(a => <div key={a.i} className="avatar" style={{ background: a.bg }}>{a.i}</div>)}
-          <div className="more">+3</div>
-        </div>
-        <span className="divider" />
         <button className={`filter-chip${chipP01 ? ' active' : ''}`} onClick={() => setChipP01(v => !v)}>
           <Icon id="i-flag" style={{ width: 12, height: 12 }} />Priority: P0–P1{chipP01 && <span className="x">×</span>}
-        </button>
-        <button className={`filter-chip${chipOpenDay ? ' active' : ''}`} onClick={() => setChipOpenDay(v => !v)}>
-          <Icon id="i-target" style={{ width: 12, height: 12 }} />Tag: Open Day{chipOpenDay && <span className="x">×</span>}
         </button>
         <div style={{ marginLeft: 'auto' }} className="row gap-2">
           <div className="seg">
@@ -255,9 +320,10 @@ export default function KanbanPage() {
         </div>
       </section>
 
+      {viewSeg === 0 && (
       <div className="board-wrap">
         <div className="board">
-          {COLS.map(col => {
+          {cols.map(col => {
             const cards = colCards(col.key)
             const isOver = dragOver === col.key && dragging !== null && cardCols[dragging] !== col.key
             return (
@@ -280,7 +346,9 @@ export default function KanbanPage() {
                   >
                     {cards.length}
                   </span>
-                  <button className="add" onClick={() => !col.eyeBtn && openNewTask(col.key)}><Icon id={col.eyeBtn ? 'i-eye' : 'i-plus'} /></button>
+                  {!col.eyeBtn && (
+                    <button className="add" onClick={() => openNewTask(col.key)}><Icon id="i-plus" /></button>
+                  )}
                 </header>
 
                 <div
@@ -320,6 +388,94 @@ export default function KanbanPage() {
           })}
         </div>
       </div>
+      )}
+
+      {viewSeg === 1 && (
+        <div className="board-wrap">
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr>
+                {LIST_COLUMNS.map(c => (
+                  <th
+                    key={c.key}
+                    onClick={() => toggleSort(c.key)}
+                    style={{ textAlign: 'left', padding: '8px 12px', cursor: 'pointer', borderBottom: '1px solid var(--border)', fontSize: 12, color: 'var(--muted)', userSelect: 'none' }}
+                  >
+                    {c.label}{listSort.key === c.key && (listSort.dir === 1 ? ' ↑' : ' ↓')}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sortedListCards.map(card => {
+                const colKeyForCard = cardCols[card.id] ?? card.col
+                const colMeta = cols.find(c => c.key === colKeyForCard)
+                return (
+                  <tr key={card.id} onClick={() => setSelected(card)} style={{ cursor: 'pointer', borderBottom: '1px solid var(--border)' }}>
+                    <td style={{ padding: '8px 12px', fontSize: 13 }}>{card.title}</td>
+                    <td style={{ padding: '8px 12px', fontSize: 12.5, color: colMeta?.color }}>{colMeta?.label ?? colKeyForCard}</td>
+                    <td style={{ padding: '8px 12px', fontSize: 12.5 }}>{card.pLabel}</td>
+                    <td style={{ padding: '8px 12px', fontSize: 12.5 }}>{card.assignees.map(a => a.initials).join(', ') || '—'}</td>
+                    <td style={{ padding: '8px 12px', fontSize: 12.5 }}>{card.deadline ?? '—'}</td>
+                  </tr>
+                )
+              })}
+              {sortedListCards.length === 0 && (
+                <tr><td colSpan={LIST_COLUMNS.length} style={{ padding: 20, textAlign: 'center', color: 'var(--muted)' }}>No tasks</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {viewSeg === 2 && (
+        <div className="board-wrap">
+          {(() => {
+            const withDeadline = [...visibleCards].filter(c => c.deadline).sort((a, b) => (a.deadline ?? '').localeCompare(b.deadline ?? ''))
+            const noDeadline = visibleCards.filter(c => !c.deadline)
+            const groups: [string, CardData[]][] = []
+            for (const c of withDeadline) {
+              const last = groups[groups.length - 1]
+              if (last && last[0] === c.deadline) last[1].push(c)
+              else groups.push([c.deadline!, [c]])
+            }
+            const renderCard = (card: CardData) => (
+              <div
+                key={card.id}
+                onClick={() => setSelected(card)}
+                className="kbc"
+                style={{ borderLeft: `4px solid ${card.blocker ? PRIORITY_BORDER['p-high'] : PRIORITY_BORDER[card.priority]}`, cursor: 'pointer', padding: '10px 12px' }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 500 }}>{card.title}</div>
+                <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+                  {cols.find(c => c.key === (cardCols[card.id] ?? card.col))?.label}
+                </div>
+              </div>
+            )
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {groups.map(([date, dateCards]) => (
+                  <div key={date}>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--muted)', marginBottom: 8, borderLeft: '3px solid var(--brand, #60A5FA)', paddingLeft: 8 }}>
+                      {new Date(date).toLocaleDateString('ru-RU', { day: '2-digit', month: 'long', year: 'numeric' })}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{dateCards.map(renderCard)}</div>
+                  </div>
+                ))}
+                {noDeadline.length > 0 && (
+                  <div>
+                    <div style={{ fontSize: 12.5, fontWeight: 600, color: 'var(--muted)', marginBottom: 8 }}>Без срока</div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{noDeadline.map(renderCard)}</div>
+                  </div>
+                )}
+                {visibleCards.length === 0 && (
+                  <div style={{ padding: 20, textAlign: 'center', color: 'var(--muted)' }}>No tasks</div>
+                )}
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       <footer className="text-muted" style={{ fontSize: 12, textAlign: 'center', padding: '18px 0 8px', marginTop: 8, borderTop: '1px solid var(--border)' }}>
         Internal backlog · visible only to SU:Core team · <span className="text-mono">drag card ↔ to change status · click to open details</span>
@@ -350,7 +506,7 @@ export default function KanbanPage() {
                 <div className="field" style={{ flex: 1 }}>
                   <label htmlFor="kb-col">Column</label>
                   <select id="kb-col" className="select" value={newTask.col} onChange={e => setNewTask(t => ({ ...t, col: e.target.value as ColKey }))}>
-                    {COLS.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
+                    {cols.filter(c => c.key !== 'done').map(c => <option key={c.key} value={c.key}>{c.label}</option>)}
                   </select>
                 </div>
                 <div className="field" style={{ flex: 1 }}>
@@ -363,8 +519,27 @@ export default function KanbanPage() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="kb-assignee">Assignee (инициалы)</label>
-                <input id="kb-assignee" className="input" placeholder="МР" maxLength={3} value={newTask.assignee} onChange={e => setNewTask(t => ({ ...t, assignee: e.target.value }))} />
+                <label htmlFor="kb-assignee">Assignees (Ctrl/Cmd-click for multiple)</label>
+                <select
+                  id="kb-assignee"
+                  className="select"
+                  multiple
+                  style={{ height: 'auto', minHeight: 72 }}
+                  value={newTask.assignees}
+                  onChange={e => setNewTask(t => ({ ...t, assignees: Array.from(e.target.selectedOptions, o => o.value) }))}
+                >
+                  {members.map(m => <option key={m.id} value={m.name}>{m.name}</option>)}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="kb-deadline">Deadline</label>
+                <input
+                  id="kb-deadline"
+                  type="date"
+                  className="input"
+                  value={newTask.deadline}
+                  onChange={e => setNewTask(t => ({ ...t, deadline: e.target.value }))}
+                />
               </div>
             </div>
             <div className="dep-modal-foot" style={{ display: 'flex', gap: 8 }}>
@@ -379,6 +554,7 @@ export default function KanbanPage() {
         <CardDetailPanel
           card={selected}
           col={cardCols[selected.id] ?? selected.col}
+          cols={cols}
           onClose={() => setSelected(null)}
           onMarkDone={() => moveCard(selected.id, 'done')}
           onDelete={() => deleteCard(selected.id)}
@@ -388,11 +564,16 @@ export default function KanbanPage() {
               setSelected(null)
               retry()
               showToast('Карточка сохранена')
+              checkAutomationRuns()
             } catch {
               showToast('Не удалось сохранить карточку')
             }
           }}
         />
+      )}
+
+      {showAutomations && (
+        <AutomationsPanel cols={cols} members={members} onClose={() => setShowAutomations(false)} />
       )}
     </>
   )

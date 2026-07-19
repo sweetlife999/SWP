@@ -137,7 +137,8 @@ export interface Tag { label: string; cls: string; style?: React.CSSProperties; 
 export interface MetaItem { icon: string; text: string; urgent?: boolean; soon?: boolean }
 export interface Assignee { initials: string; bg: string; offset?: boolean }
 export type Priority = 'p-low' | 'p-mid' | 'p-high'
-export type ColKey = 'backlog' | 'next' | 'doing' | 'review' | 'done'
+// Columns come from GET /admin/kanban/columns (issue #126) — no longer a fixed union.
+export type ColKey = string
 export interface KanbanCard {
   id: string; col: ColKey; blocker?: boolean
   tags: Tag[]; title: string; desc?: string
@@ -145,6 +146,26 @@ export interface KanbanCard {
   progressPct?: number; progressLabel?: string
   meta?: MetaItem[]
   priority: Priority; pLabel: string; assignees: Assignee[]
+  deadline?: string
+}
+
+export interface KanbanColumn { key: ColKey; label: string; color: string; order_index: number }
+
+export type AutomationTriggerType = 'column_changed' | 'task_created'
+export type AutomationActionType = 'change_column' | 'assign_user'
+export interface AutomationAction { type: AutomationActionType; params: Record<string, string> }
+export interface Automation {
+  id: number; name: string; trigger_type: AutomationTriggerType
+  trigger_filters: Record<string, string>; actions: AutomationAction[]
+  is_active: boolean; stats_runs: number
+}
+export interface AutomationCreate {
+  name: string; trigger_type: AutomationTriggerType
+  trigger_filters?: Record<string, string>; actions: AutomationAction[]; is_active?: boolean
+}
+export interface AutomationRun {
+  id: number; automation_id: number; card_id: number | null
+  status: 'success' | 'failure'; details: { actions?: string[]; error?: string }; ran_at: string
 }
 
 export interface Form { id: string; tag: string; tagClass: string; title: string; count: number }
@@ -230,13 +251,24 @@ export const api = {
       delete: (id: number | string) => req<void>(`/admin/events/${id}`, { method: 'DELETE', headers: authHeaders() }),
     },
     kanban: {
-      list:   () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
-      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignee?: string }) =>
+      list:    () => req<KanbanCard[]>('/admin/kanban', { headers: authHeaders() }),
+      columns: () => req<KanbanColumn[]>('/admin/kanban/columns', { headers: authHeaders() }),
+      create: (card: { title: string; col: ColKey; desc?: string; priority?: Priority; assignees?: string[]; deadline?: string | null }) =>
         req<KanbanCard>('/admin/kanban', { method: 'POST', headers: authHeaders(), body: JSON.stringify(card) }),
       // Edit any subset of a card's fields (a column-only move is just patch({ col })).
-      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignee?: string }) =>
+      patch: (id: string, body: { col?: ColKey; title?: string; desc?: string; priority?: Priority; blocker?: boolean; assignees?: string[]; deadline?: string | null }) =>
         req<KanbanCard>(`/admin/kanban/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
       remove: (id: string) => reqVoid(`/admin/kanban/${id}`, { method: 'DELETE', headers: authHeaders() }),
+      automations: {
+        list:   () => req<Automation[]>('/admin/kanban/automations', { headers: authHeaders() }),
+        create: (body: AutomationCreate) =>
+          req<Automation>('/admin/kanban/automations', { method: 'POST', headers: authHeaders(), body: JSON.stringify(body) }),
+        patch:  (id: number, body: Partial<AutomationCreate>) =>
+          req<Automation>(`/admin/kanban/automations/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify(body) }),
+        remove: (id: number) => reqVoid(`/admin/kanban/automations/${id}`, { method: 'DELETE', headers: authHeaders() }),
+        history:    () => req<AutomationRun[]>('/admin/kanban/automations/history', { headers: authHeaders() }),
+        runHistory: (id: number) => req<AutomationRun[]>(`/admin/kanban/automations/${id}/history`, { headers: authHeaders() }),
+      },
     },
     forms: {
       list:      () => req<Form[]>('/admin/forms', { headers: authHeaders() }),
@@ -253,6 +285,8 @@ export const api = {
         req<{ id: number }>(`/admin/questionnaires/${id}/questions`, { method: 'POST', headers: authHeaders(), body: JSON.stringify(q) }),
       removeQuestion: (id: number | string, qid: number) =>
         reqVoid(`/admin/questionnaires/${id}/questions/${qid}`, { method: 'DELETE', headers: authHeaders() }),
+      remove:      (id: number | string) =>
+        reqVoid(`/admin/questionnaires/${id}`, { method: 'DELETE', headers: authHeaders() }),
       // status 'open' publishes, 'draft' unpublishes, 'closed' closes.
       setStatus:   (id: number | string, status: 'draft' | 'open' | 'closed') =>
         req(`/admin/questionnaires/${id}`, { method: 'PATCH', headers: authHeaders(), body: JSON.stringify({ status }) }),

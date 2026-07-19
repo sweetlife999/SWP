@@ -26,7 +26,9 @@ export default function DonationsPage() {
   const ref = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    api.content.get('donations').then(d => setHtml(d.html)).catch(() => {})
+    api.content.get('donations').then(d => {
+      if (d.html) setHtml(d.html)
+    }).catch(() => {})
   }, [])
 
   function showToast(msg: string) {

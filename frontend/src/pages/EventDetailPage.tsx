@@ -2,14 +2,12 @@ import { useState, useEffect, useCallback } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Icon } from '../components/Icon'
 import { api, photoUrl, type Event, type ScheduleItem, type OrganizerItem } from '../lib/api'
+import { isEventLive } from '../lib/eventStatus'
 import { useAdmin } from '../lib/AdminContext'
 import { LoadingSkeleton } from '../components/LoadingSkeleton'
 import { ErrorBanner } from '../components/ErrorBanner'
-
-const ORG_BG = [
-  'linear-gradient(135deg,#a3e0ad,#32b247)', 'linear-gradient(135deg,#b3d5a8,#5fa44f)',
-  'linear-gradient(135deg,#a8c0e0,#3868b8)', 'linear-gradient(135deg,#e0a8c8,#c93f8b)',
-]
+import { AVATAR_GRADIENTS as ORG_BG } from '../lib/avatarColors'
+import { DEPT_LABEL } from '../lib/departments'
 
 export default function EventDetailPage() {
   const { id } = useParams()
@@ -152,9 +150,9 @@ function EventDetailPageInner({ id }: { id?: string }) {
         <div className="banner-inner">
           <div>
             <div className="badges">
-              <span className="b">{event?.tag ?? 'SU:Core'}</span>
-              <span className={`b${event?.status === 'published' ? ' live' : ''}`}>
-                {event?.statusText ?? (event?.status === 'published' ? 'live' : event?.status ?? 'draft')}
+              <span className="b">{event?.tag ?? DEPT_LABEL.core}</span>
+              <span className={`b${event && isEventLive(event) ? ' live' : ''}`}>
+                {event?.statusText ?? (event && isEventLive(event) ? 'live' : event?.status ?? 'draft')}
               </span>
             </div>
             <h1>{event?.title ?? ''}</h1>

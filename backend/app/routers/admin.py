@@ -49,6 +49,7 @@ async def list_forms(request: Request) -> list[FormOut]:
                COUNT(r.id)::int AS response_count
         FROM surveys s
         LEFT JOIN survey_responses r ON r.survey_id = s.id
+        WHERE s.published
         GROUP BY s.id, s.department, s.title, s.created_at
         ORDER BY s.created_at DESC
         """

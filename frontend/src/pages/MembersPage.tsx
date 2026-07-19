@@ -8,6 +8,7 @@ import { ErrorBanner } from '../components/ErrorBanner'
 import { EmptyState } from '../components/EmptyState'
 import { sanitizeHtml } from '../lib/sanitize'
 import { useModalA11y, MODAL_A11Y_PROPS } from '../hooks/useModalA11y'
+import { DEPT_KEYS, DEPT_LABEL } from '../lib/departments'
 
 type TabKey = 'members' | 'history' | 'roadmap'
 
@@ -40,7 +41,6 @@ export default function MembersPage() {
   const closeSelected = () => setSelected(null)
   const dialogRef = useModalA11y(Boolean(selected), closeSelected)
   const [search, setSearch] = useState('')
-  const [showAll, setShowAll] = useState(false)
   const [toast, setToast] = useState('')
   const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
@@ -49,6 +49,7 @@ export default function MembersPage() {
   const retry = () => { setError(null); setLoading(true); setReloadKey(k => k + 1) }
   const [roadmapHtml, setRoadmapHtml] = useState(DEFAULT_ROADMAP_HTML)
   const [historyHtml, setHistoryHtml] = useState(DEFAULT_HISTORY_HTML)
+  const [roadmapMeta, setRoadmapMeta] = useState<{ updatedAt?: string; updatedBy?: string }>({})
   const roadmapRef = useRef<HTMLDivElement>(null)
   const historyRef = useRef<HTMLElement>(null)
 
@@ -67,8 +68,16 @@ export default function MembersPage() {
   }, [depParam, reloadKey])
 
   useEffect(() => {
-    api.content.get('roadmap').then(d => setRoadmapHtml(d.html)).catch(() => {})
-    api.content.get('history').then(d => setHistoryHtml(d.html)).catch(() => {})
+    api.content.get('roadmap').then(d => {
+      // content_blocks rows are seeded empty with a real updated_at/updated_by
+      // default, so those columns alone can't distinguish "never edited" from
+      // "edited" — only trust them once there's actual saved html.
+      if (d.html) {
+        setRoadmapHtml(d.html)
+        setRoadmapMeta({ updatedAt: d.updatedAt, updatedBy: d.updatedBy })
+      }
+    }).catch(() => {})
+    api.content.get('history').then(d => { if (d.html) setHistoryHtml(d.html) }).catch(() => {})
   }, [])
 
   function showToast(msg: string) {
@@ -85,8 +94,9 @@ export default function MembersPage() {
   async function handleRoadmapSave() {
     const html = sanitizeHtml(roadmapRef.current?.innerHTML ?? roadmapHtml)
     try {
-      await api.content.update('roadmap', html)
+      const saved = await api.content.update('roadmap', html)
       setRoadmapHtml(html)
+      setRoadmapMeta({ updatedAt: saved.updatedAt, updatedBy: saved.updatedBy })
       showToast('Roadmap сохранён')
     } catch {
       showToast('Ошибка сохранения')
@@ -107,8 +117,9 @@ export default function MembersPage() {
   }
 
   const filteredMembers = (memberSeg === 0 ? members : members.filter(p => p.dep === DEP_KEYS[memberSeg]))
+    .filter(p => p.is_active !== false)
     .filter(p => !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.role.toLowerCase().includes(search.toLowerCase()))
-  const visibleMembers = showAll ? filteredMembers : filteredMembers.slice(0, 8)
+  const visibleMembers = filteredMembers
 
   return (
     <>
@@ -142,13 +153,13 @@ export default function MembersPage() {
         <div>
           <div className="members-filters-bar">
             <div className="seg">
-              {['Все', 'SU:Core', 'SU:Active', 'SU:Media', 'SU:Support'].map((l, i) => (
+              {['Все', ...DEPT_KEYS.map(k => DEPT_LABEL[k])].map((l, i) => (
                 <button key={i} className={memberSeg === i ? 'active' : ''} onClick={() => handleSeg(i)}>{l}</button>
               ))}
             </div>
             <div className="input-group" style={{ width: 280, marginLeft: 'auto' }}>
               <Icon id="i-search" className="ic" />
-              <input placeholder="Найти по имени, направлению…" value={search} onChange={e => { setSearch(e.target.value); setShowAll(true) }} />
+              <input placeholder="Найти по имени, направлению…" value={search} onChange={e => setSearch(e.target.value)} />
             </div>
             <button className="btn secondary" onClick={() => showToast('Расширенные фильтры — в разработке')}><Icon id="i-filter" style={{ width: 14, height: 14 }} />Фильтры</button>
           </div>
@@ -182,11 +193,6 @@ export default function MembersPage() {
                 )}
               </div>
 
-              {!showAll && filteredMembers.length > 8 && (
-                <div className="row" style={{ justifyContent: 'center', marginTop: 28 }}>
-                  <button className="btn secondary" onClick={() => setShowAll(true)}>Показать всех {filteredMembers.length} участников <Icon id="i-chevron-d" style={{ width: 14, height: 14 }} /></button>
-                </div>
-              )}
             </>
           )}
         </div>
@@ -225,7 +231,10 @@ export default function MembersPage() {
               <h2 style={{ fontSize: 22, marginTop: 4 }}>Что мы хотим закрыть в этом году</h2>
             </div>
             <div className="row gap-2 read-actions">
-              <span className="tag green"><span className="dot"></span>Опубликовано · 4 июня</span>
+              <span className="tag green">
+                <span className="dot"></span>Опубликовано
+                {roadmapMeta.updatedAt && ` · ${new Date(roadmapMeta.updatedAt).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' })}`}
+              </span>
             </div>
           </div>
 
@@ -265,7 +274,10 @@ export default function MembersPage() {
 
           {isAdmin && (
             <div className="row sb mt-4">
-              <span className="text-muted" style={{ fontSize: 12 }}>Последнее изменение: Михаил Раянов · 4 июня 2026, 14:22</span>
+              <span className="text-muted" style={{ fontSize: 12 }}>
+                {roadmapMeta.updatedAt &&
+                  `Последнее изменение: ${roadmapMeta.updatedBy ?? 'admin'} · ${new Date(roadmapMeta.updatedAt).toLocaleString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' })}`}
+              </span>
               <div className="row gap-2 read-actions">
                 {!editing && <button className="btn primary" onClick={() => setEditing(true)}><Icon id="i-edit" style={{ width: 14, height: 14 }} />Редактировать</button>}
               </div>
